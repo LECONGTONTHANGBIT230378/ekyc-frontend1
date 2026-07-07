@@ -1,0 +1,24 @@
+.navbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 32px 40px;
+}
+
+.titleGroup { display: flex; flex-direction: column; }
+.supTitle { font-size: 10px; letter-spacing: 0.2em; color: var(--gray-color); margin-bottom: 4px; }
+.mainTitle { font-family: var(--font-serif); font-size: 32px; font-weight: 600; margin: 0; }
+
+.actions { display: flex; gap: 16px; }
+.iconBtn {
+    width: 40px; height: 40px; border-radius: 50%;
+    border: 1px solid var(--border-color); background: #fff; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+}
+.logoutBtn {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 20px; border-radius: 100px;
+    border: 1px solid var(--border-color); background: #fff;
+    font-size: 13px; font-weight: 500; cursor: pointer;
+}
+.logoutBtn:hover { background: #FFF5F5; color: #E53E3E; border-color: #FEB2B2; }

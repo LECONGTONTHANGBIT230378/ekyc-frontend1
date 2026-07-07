@@ -1,0 +1,225 @@
+.container {
+    display: flex;
+    min-height: 100vh;
+    background-color: var(--bg-color);
+}
+
+/* --- CỘT TRÁI --- */
+.leftSide {
+    flex: 1;
+    padding: 60px 80px;
+    display: flex;
+    flex-direction: column;
+}
+
+.logoWrapper {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: auto;
+}
+
+.logoIcon {
+    width: 40px;
+    height: 40px;
+    background-color: var(--primary-color);
+    color: #fff;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-serif);
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.logoText h1 {
+    margin: 0;
+    font-family: var(--font-serif);
+    font-size: 20px;
+    color: var(--text-color);
+}
+
+.logoText span {
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    color: var(--gray-color);
+}
+
+.mainContent {
+    margin-top: 80px;
+    margin-bottom: auto;
+}
+
+.badge {
+    background-color: rgba(229, 170, 93, 0.2);
+    color: #B27B2B;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 6px 16px;
+    border-radius: 20px;
+    display: inline-block;
+    margin-bottom: 24px;
+}
+
+.heading {
+    font-family: var(--font-serif);
+    font-size: 48px;
+    font-weight: 500;
+    color: var(--text-color);
+    line-height: 1.15;
+    margin: 0 0 24px 0;
+}
+
+.description {
+    font-size: 16px;
+    color: var(--gray-color);
+    line-height: 1.6;
+    max-width: 500px;
+}
+
+.featureCards {
+    display: flex;
+    gap: 16px;
+}
+
+.card {
+    background: rgba(255, 255, 255, 0.7);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 10px 16px;
+    font-size: 13px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.checkIcon {
+    color: var(--primary-color);
+}
+
+/* --- CỘT PHẢI --- */
+.rightSide {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+}
+
+.loginBox {
+    background: #FFFFFF;
+    border-radius: 24px;
+    padding: 40px;
+    width: 100%;
+    max-width: 420px;
+    box-shadow: var(--shadow-light);
+}
+
+.boxHeader h3 {
+    font-size: 24px;
+    font-weight: 700;
+    margin: 0 0 8px 0;
+}
+
+.boxHeader p {
+    font-size: 14px;
+    color: var(--gray-color);
+    margin: 0 0 32px 0;
+}
+
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.passwordWrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.passwordHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.passwordHeader label {
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.passwordHeader a {
+    font-size: 13px;
+    color: var(--gray-color);
+    text-decoration: none;
+}
+
+.submitBtn {
+    background-color: var(--primary-color);
+    color: #FFF;
+    border: none;
+    padding: 14px;
+    border-radius: var(--radius-btn);
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 8px;
+}
+
+.divider {
+    text-align: center;
+    margin: 24px 0;
+    position: relative;
+}
+
+.divider::before {
+    content: "";
+    position: absolute;
+    left: 0; top: 50%; width: 100%; height: 1px;
+    background: var(--border-color);
+    z-index: 1;
+}
+
+.divider span {
+    background: #FFF;
+    padding: 0 12px;
+    font-size: 11px;
+    color: var(--gray-color);
+    position: relative;
+    z-index: 2;
+}
+
+.socialGroup {
+    display: flex;
+    gap: 16px;
+}
+
+.socialBtn {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    padding: 12px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-btn);
+    background: #FFF;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.footer {
+    text-align: center;
+    margin-top: 24px;
+    font-size: 13px;
+    color: var(--gray-color);
+}
+.footer a {
+    color: var(--text-color);
+    font-weight: 600;
+    text-decoration: none;
+}

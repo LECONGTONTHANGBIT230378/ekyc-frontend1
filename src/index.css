@@ -1,0 +1,35 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap');
+
+:root {
+    /* Bảng màu chuẩn từ Figma */
+    --primary-color: #0F5B4C;
+    --primary-hover: #0A473B;
+    --bg-color: #F8F5EE;
+    --text-color: #1D1D1D;
+    --gray-color: #8A8A8A;
+    --border-color: #E7E7E7;
+
+    /* Hiệu ứng & Bo góc */
+    --shadow-light: 0 20px 40px rgba(0, 0, 0, 0.08);
+    --radius-large: 20px;
+    --radius-btn: 12px;
+
+    /* Font chữ */
+    --font-sans: 'Inter', system-ui, sans-serif;
+    --font-serif: 'Playfair Display', serif;
+    --transition-base: 0.3s ease;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: var(--font-sans);
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    -webkit-font-smoothing: antialiased;
+}
+
+/* Bắt buộc các thẻ Form phải nhận font hiện đại */
+input, button, textarea, select {
+    font-family: inherit;
+}

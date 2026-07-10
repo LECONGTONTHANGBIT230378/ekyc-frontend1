@@ -1,0 +1,250 @@
+.container {
+    animation: fadeIn 0.4s ease-out;
+}
+
+.formWrapper {
+    width: 100%;
+}
+
+/* Grid layout chia đều thành 2 cột cân xứng */
+.contentGrid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+}
+
+/* Khung Card nền trắng bo góc cho cả cột trái và cột phải */
+.card {
+    background-color: #FFFFFF;
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+}
+
+.cardTitle {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-color);
+    margin: 0 0 20px 0;
+}
+
+/* --- VÙNG TẢI ẢNH (CÁCH 1) --- */
+.uploadSection {
+    margin-bottom: 24px;
+}
+
+/* --- VÙNG CAMERA (CÁCH 2) --- */
+.cameraSection {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    margin-bottom: auto; /* Đẩy cụm nút bấm điều hướng xuống sát đáy card */
+}
+
+/* Khung hiển thị Camera (Nền đen đặc) */
+.videoBox {
+    flex: 1.2;
+    background-color: #111827;
+    border-radius: 12px;
+    aspect-ratio: 1 / 1.1; /* Tỉ lệ gần vuông giúp vừa vặn khuôn hình selfie */
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.videoPlaceholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+}
+
+/* Luồng hình ảnh thực tế từ Camera */
+.videoStream {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transform: scaleX(-1); /* Lật ngược ảnh theo chiều ngang để tạo hiệu ứng gương soi tự nhiên */
+}
+
+/* Cột điều khiển kế bên Camera */
+.cameraControls {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* Các nhãn điều kiện xanh mượt */
+.checklist {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.checklist li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--primary-color);
+    background-color: #F0FDF4;
+    padding: 10px 12px;
+    border-radius: 6px;
+}
+
+/* Nút kích hoạt Camera */
+.openCameraBtn {
+    width: 100%;
+    padding: 12px;
+    background-color: var(--primary-color);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition-base);
+}
+
+.openCameraBtn:hover {
+    background-color: var(--primary-hover);
+}
+
+/* Cụm nút bấm khi Camera đang hoạt động */
+.actionBtns {
+    display: flex;
+    gap: 8px;
+}
+
+.captureBtn {
+    flex: 1;
+    padding: 10px;
+    background-color: var(--primary-color);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.cancelBtn {
+    padding: 10px 16px;
+    background-color: #EF4444;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+/* --- CỤM NÚT ĐIỀU HƯỚNG DƯỚI CÙNG --- */
+.bottomAction {
+    display: flex;
+    justify-content: space-between; /* Đẩy nút Quay lại sang bìa trái, nút Tiếp tục sang bìa phải */
+    margin-top: 32px;
+    align-items: center;
+}
+
+/* Nút Quay lại bước trước */
+.backBtn {
+    padding: 12px 24px;
+    background-color: #FFFFFF;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-btn);
+    font-weight: 600;
+    color: var(--text-color);
+    cursor: pointer;
+    transition: var(--transition-base);
+}
+
+.backBtn:hover {
+    background-color: var(--bg-color);
+}
+
+/* Nút Chuyển sang So sánh khuôn mặt */
+.nextBtn {
+    padding: 12px 24px;
+    background-color: var(--primary-color);
+    border: none;
+    border-radius: var(--radius-btn);
+    font-weight: 600;
+    color: #fff;
+    cursor: pointer;
+    transition: var(--transition-base);
+}
+
+.nextBtn:hover {
+    background-color: var(--primary-hover);
+}
+
+.nextBtn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* --- CỘT PHẢI: XEM TRƯỚC HÌNH ẢNH --- */
+.previewBox {
+    flex: 1;
+    width: 100%;
+    background-color: #EFECE1; /* Tông màu ngà kem cổ điển đồng bộ figma */
+    border-radius: 12px;
+    border: 1px solid #D6D1C4;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.previewImage {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.placeholderSelfie {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Khối hình tròn gradient giả lập gương mặt */
+.fakeFace {
+    width: 100px;
+    height: 100px;
+    background: linear-gradient(to bottom, #CD973D, #59897D);
+    border-radius: 50%;
+}
+
+/* Hiệu ứng mượt mà khi đổi bước */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- ĐÁP ỨNG ĐA MÀN HÌNH (RESPONSIVE) --- */
+@media (max-width: 900px) {
+    .contentGrid {
+        grid-template-columns: 1fr; /* Co về 1 cột dọc trên màn hình di động */
+    }
+    .cameraSection {
+        flex-direction: column;
+    }
+    .previewBox {
+        min-height: 360px;
+        margin-top: 16px;
+    }
+}

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-
+import CustomerRegistration from './pages/CustomerRegistration/CustomerRegistration';
 // 1. Import các trang và component
 import Login from './pages/Login/Login';
 import Dashboard from './pages/Dashboard/Dashboard';
@@ -35,6 +35,15 @@ function App() {
                 element={
                     <MainLayout>
                         <Dashboard />
+                    </MainLayout>
+                }
+            />
+
+            <Route
+                path="/registration"
+                element={
+                    <MainLayout>
+                        <CustomerRegistration />
                     </MainLayout>
                 }
             />

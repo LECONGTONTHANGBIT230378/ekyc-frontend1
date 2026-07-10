@@ -1,0 +1,271 @@
+.container {
+    animation: fadeIn 0.4s ease-out;
+}
+
+.header {
+    margin-bottom: 24px;
+}
+
+.header h2 {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-color);
+    margin: 0 0 6px 0;
+}
+
+.header p {
+    font-size: 13.5px;
+    color: var(--gray-color);
+    margin: 0;
+}
+
+/* Chia 2 cột đều nhau */
+.contentGrid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+}
+
+.card {
+    background-color: transparent;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+}
+
+.cardTitle {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-color);
+    margin: 0 0 24px 0;
+}
+
+/* CỘT TRÁI: Layout các dòng thông tin */
+.infoList {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.infoRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.label {
+    font-size: 13.5px;
+    color: var(--gray-color);
+}
+
+.value {
+    font-size: 13.5px;
+    font-weight: 700;
+    color: var(--text-color);
+    text-transform: uppercase;
+}
+
+/* CỘT PHẢI: Layout kết quả và nút bấm */
+.resultList {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex-grow: 1; /* Ép cụm nút bấm đẩy xuống dưới */
+    margin-bottom: 24px;
+}
+
+.resultItem {
+    font-size: 13.5px;
+    color: var(--gray-color);
+}
+
+/* Nút bấm bo tròn dạng viên thuốc (Pill shape) */
+.actionGroup {
+    display: flex;
+    gap: 12px;
+    margin-top: auto;
+}
+
+.saveBtn {
+    padding: 8px 24px;
+    background-color: var(--primary-color);
+    color: #fff;
+    border: none;
+    border-radius: 100px; /* Bo góc hoàn toàn giống ảnh */
+    font-weight: 600;
+    font-size: 12px;
+    cursor: pointer;
+    transition: var(--transition-base);
+}
+
+.saveBtn:hover {
+    background-color: var(--primary-hover);
+}
+
+.backBtn {
+    padding: 8px 24px;
+    background-color: transparent;
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+    border-radius: 100px;
+    font-weight: 600;
+    font-size: 12px;
+    cursor: pointer;
+    transition: var(--transition-base);
+}
+
+.backBtn:hover {
+    background-color: var(--bg-color);
+}
+
+/* Responsive khi xem trên điện thoại */
+@media (max-width: 768px) {
+    .contentGrid { grid-template-columns: 1fr; }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.modalOverlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.6); /* Nền đen mờ */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    animation: fadeIn 0.2s ease-out;
+}
+
+.modalContainer {
+    width: 420px;
+    max-width: 90%;
+    background: #ffffff;
+    border-radius: 12px;
+    overflow: hidden; /* Cắt góc tròn cho Header */
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    animation: slideDown 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    display: flex;
+    flex-direction: column;
+}
+
+/* 1. Header có màu nền */
+.modalHeader {
+    background-color: #137333; /* Màu xanh lá báo thành công. Bạn có thể đổi thành var(--primary-color) */
+    color: #ffffff;
+    padding: 16px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modalHeaderTitle {
+    font-weight: 600;
+    font-size: 15px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.closeBtn {
+    background: transparent;
+    border: none;
+    color: #ffffff;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    opacity: 0.8;
+    transition: 0.2s;
+}
+
+.closeBtn:hover {
+    opacity: 1;
+    transform: scale(1.1);
+}
+
+/* 2. Nội dung Body */
+.modalBody {
+    padding: 32px 24px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.successIconBox {
+    width: 72px;
+    height: 72px;
+    background-color: #E6F4EA;
+    color: #137333;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    font-weight: bold;
+    margin-bottom: 20px;
+}
+
+.modalTitle {
+    margin: 0 0 8px 0;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-color);
+}
+
+.modalDesc {
+    margin: 0;
+    font-size: 14px;
+    color: var(--gray-color);
+    line-height: 1.5;
+}
+
+/* 3. Footer chứa các nút bấm */
+.modalFooter {
+    padding: 16px 24px;
+    border-top: 1px solid #EEEEEE;
+    display: flex;
+    justify-content: center; /* Để nút ra giữa, hoặc đổi thành flex-end để dạt sang phải */
+    gap: 12px;
+    background-color: #FAFAFA;
+}
+
+.btnSecondary {
+    padding: 10px 24px;
+    background-color: #FFFFFF;
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+.btnSecondary:hover { background-color: #F5F5F5; }
+
+.btnPrimary {
+    padding: 10px 24px;
+    background-color: #137333;
+    color: #FFFFFF;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+.btnPrimary:hover { background-color: #0d5224; }
+
+/* Hiệu ứng chuyển động */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideDown {
+    0% { transform: translateY(-30px); opacity: 0; }
+    100% { transform: translateY(0); opacity: 1; }
+}

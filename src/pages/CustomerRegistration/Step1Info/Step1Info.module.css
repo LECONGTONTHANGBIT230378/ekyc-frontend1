@@ -1,0 +1,25 @@
+.container { animation: fadeIn 0.4s ease-out; }
+.header { margin-bottom: 24px; }
+.header h2 { font-size: 16px; font-weight: 700; margin: 0 0 6px 0; color: var(--text-color); }
+.header p { font-size: 13px; color: var(--gray-color); margin: 0; }
+
+.formWrapper { display: flex; flex-direction: column; gap: 32px; }
+
+/* Grid chia 2 nửa bằng nhau */
+.contentGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
+
+/* Cột trái */
+.leftColumn { display: flex; flex-direction: column; gap: 24px; }
+.row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.fullWidth { width: 100%; }
+
+/* Cột phải */
+.rightColumn { display: flex; flex-direction: column; gap: 16px; }
+
+/* Nút bấm ở dưới cùng */
+.actionGroup { display: flex; justify-content: flex-end; gap: 12px; padding-top: 24px; border-top: 1px solid var(--border-color); }
+.cancelBtn { padding: 10px 24px; background: #fff; border: 1px solid var(--border-color); border-radius: var(--radius-btn); font-weight: 600; cursor: pointer; color: var(--text-color); }
+.nextBtn { padding: 10px 24px; background: var(--primary-color); border: none; border-radius: var(--radius-btn); font-weight: 600; color: #fff; cursor: pointer; }
+.nextBtn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+@media (max-width: 900px) { .contentGrid { grid-template-columns: 1fr; } }

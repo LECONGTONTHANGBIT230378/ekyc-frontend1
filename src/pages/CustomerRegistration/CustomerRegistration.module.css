@@ -1,0 +1,73 @@
+.pageContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    width: 100%;
+    /* BẢO HIỂM CHỐNG TRÀN: Ép khung tự co lại vừa đúng 100% màn hình */
+    box-sizing: border-box;
+    padding: 0 40px 40px 40px;
+    animation: fadeIn 0.4s ease-out;
+}
+
+/* --- PHẦN CSS CỦA THANH TIẾN TRÌNH (STEPPER) --- */
+.stepperWrapper {
+    background: #FFFFFF;
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 24px 32px;
+    overflow-x: auto;
+}
+
+.stepperContainer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    min-width: 700px;
+}
+
+.stepItem { display: flex; align-items: center; position: relative; flex: 1; }
+.stepItem:last-child { flex: 0; }
+
+.stepCircle {
+    width: 36px; height: 36px; border-radius: 50%;
+    background-color: var(--bg-color); border: 2px solid var(--border-color);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 600; color: var(--gray-color);
+    z-index: 2; transition: var(--transition-base);
+}
+
+.stepLabel {
+    position: absolute; top: 44px; left: 18px; transform: translateX(-50%);
+    font-size: 12px; font-weight: 500; color: var(--gray-color); white-space: nowrap;
+}
+
+.stepLine {
+    flex: 1; height: 2px; background-color: var(--border-color);
+    margin: 0 12px; transition: var(--transition-base);
+}
+
+/* Hiệu ứng Active / Completed cho Stepper */
+.stepItem.active .stepCircle { border-color: var(--primary-color); color: var(--primary-color); background-color: #FFFFFF; box-shadow: 0 0 0 4px rgba(15, 91, 76, 0.1); }
+.stepItem.active .stepLabel { color: var(--primary-color); font-weight: 600; }
+
+.stepItem.completed .stepCircle { background-color: var(--primary-color); border-color: var(--primary-color); color: #FFFFFF; }
+.stepItem.completed .stepLabel { color: var(--text-color); }
+.stepItem.completed .stepLine { background-color: var(--primary-color); }
+
+/* --- PHẦN KHUNG NỘI DUNG BÊN DƯỚI --- */
+.stepContent {
+    background: #FFFFFF;
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    min-height: 400px;
+    padding: 40px;
+    width: 100%;
+    /* BẢO HIỂM CHỐNG TRÀN: Khung nội dung trắng cũng không bị lố ra ngoài */
+    box-sizing: border-box;
+}
+
+.comingSoon { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 300px; gap: 16px; color: var(--gray-color); }
+.backBtn { padding: 8px 16px; border: 1px solid var(--border-color); border-radius: 8px; background: #fff; cursor: pointer; }
+
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }

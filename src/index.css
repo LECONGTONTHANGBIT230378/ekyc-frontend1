@@ -1,5 +1,12 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap');
 
+/* THÊM ĐOẠN NÀY ĐỂ ÉP KHUNG KHÔNG BỊ TRÀN VIỀN */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
 :root {
     /* Bảng màu chuẩn từ Figma */
     --primary-color: #0F5B4C;
@@ -21,6 +28,7 @@
 }
 
 body {
+    /* Đã reset margin/padding ở thẻ * phía trên nên ở đây có thể bỏ qua hoặc giữ lại đều được */
     margin: 0;
     padding: 0;
     font-family: var(--font-sans);

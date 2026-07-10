@@ -1,0 +1,49 @@
+.container { animation: fadeIn 0.4s ease-out; }
+.header { margin-bottom: 32px; border-bottom: 1px solid var(--border-color); padding-bottom: 24px; }
+.header h2 { font-size: 20px; font-weight: 700; margin: 0 0 8px 0; color: var(--text-color); }
+.header p { font-size: 14px; color: var(--gray-color); margin: 0; }
+
+.contentGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; margin-bottom: 40px; }
+
+/* Cột Trái */
+.leftColumn { display: flex; flex-direction: column; gap: 32px; }
+.progressBox { background: #F8FAFC; border: 1px solid var(--border-color); padding: 24px; border-radius: 16px; }
+.progressHeader { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.progressHeader h3 { margin: 0; font-size: 16px; color: var(--text-color); }
+.percent { font-size: 18px; font-weight: 700; color: var(--primary-color); }
+
+.progressBarBg { width: 100%; height: 8px; background: #E2E8F0; border-radius: 10px; overflow: hidden; margin-bottom: 16px; }
+.progressBarFill { height: 100%; background: var(--primary-color); border-radius: 10px; transition: width 0.1s linear; }
+
+.statusText { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--primary-color); font-weight: 500; }
+.spinning { animation: spin 1.5s linear infinite; }
+
+.checklist { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 16px; }
+.checklist li { display: flex; align-items: center; font-size: 14px; color: var(--gray-color); position: relative; padding-left: 28px; transition: var(--transition-base); }
+.checklist li::before { content: ""; position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; border: 2px solid var(--border-color); border-radius: 50%; background: transparent; transition: var(--transition-base); }
+.checklist li.checkDone { color: var(--text-color); font-weight: 500; }
+.checklist li.checkDone::before { background-color: var(--primary-color); border-color: var(--primary-color); box-shadow: inset 0 0 0 3px #fff; }
+
+/* Cột Phải - Hiệu ứng Scanner */
+.rightColumn { display: flex; align-items: center; justify-content: center; }
+.scannerWrapper { position: relative; width: 100%; max-width: 400px; height: 260px; background: #000; border-radius: 16px; overflow: hidden; box-shadow: var(--shadow-light); }
+.scanningImg { width: 100%; height: 100%; object-fit: contain; opacity: 0.7; }
+.noImg { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 14px; }
+
+.laserBeam { position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: rgba(15, 91, 76, 0.8); box-shadow: 0 0 15px 5px rgba(15, 91, 76, 0.5); animation: scan 2s linear infinite; z-index: 10; }
+
+.corner { position: absolute; width: 30px; height: 30px; border-color: var(--primary-color); border-style: solid; z-index: 5; }
+.topLeft { top: 20px; left: 20px; border-width: 3px 0 0 3px; }
+.topRight { top: 20px; right: 20px; border-width: 3px 3px 0 0; }
+.bottomLeft { bottom: 20px; left: 20px; border-width: 0 0 3px 3px; }
+.bottomRight { bottom: 20px; right: 20px; border-width: 0 3px 3px 0; }
+
+/* Các nút điều hướng */
+.actionGroup { display: flex; justify-content: space-between; align-items: center; padding-top: 24px; border-top: 1px solid var(--border-color); }
+.backBtn { padding: 12px 24px; background: #fff; border: 1px solid var(--border-color); border-radius: var(--radius-btn); font-weight: 600; cursor: pointer; color: var(--text-color); }
+.nextBtn { padding: 12px 24px; background: var(--primary-color); border: none; border-radius: var(--radius-btn); font-weight: 600; color: #fff; cursor: pointer; }
+.backBtn:disabled, .nextBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+@keyframes spin { 100% { transform: rotate(360deg); } }
+@keyframes scan { 0%, 100% { top: 0%; } 50% { top: 98%; } }
+@media (max-width: 900px) { .contentGrid { grid-template-columns: 1fr; } }

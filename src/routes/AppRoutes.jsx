@@ -5,6 +5,7 @@ import Login from '../pages/Login/Login';
 import Dashboard from '../pages/Dashboard/Dashboard'; // Nhớ import trang Dashboard
 import Sidebar from '../components/Common/Sidebar';
 import Navbar from '../components/Common/Navbar';
+import AuthenticationHistory from './pages/AuthenticationHistory/AuthenticationHistory';
 
 // Khung Layout cho các trang bên trong
 const MainLayout = ({ children }) => {
@@ -27,6 +28,15 @@ const AppRoutes = () => {
 
             {/* Route bọc Layout cho Dashboard */}
             <Route path="/dashboard" element={<MainLayout><Dashboard /></MainLayout>} />
+            {/* 4. Lịch sử xác thực */}
+            <Route
+                path="/history"
+                element={
+                    <MainLayout>
+                        <AuthenticationHistory />
+                    </MainLayout>
+                }
+            />
         </Routes>
     );
 };

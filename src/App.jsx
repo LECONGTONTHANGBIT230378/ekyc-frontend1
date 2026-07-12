@@ -1,9 +1,13 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
+
+// 1. Import các trang
 import CustomerRegistration from './pages/CustomerRegistration/CustomerRegistration';
-// 1. Import các trang và component
+import CustomerManagement from './pages/CustomerManagement/CustomerManagement';
 import Login from './pages/Login/Login';
 import Dashboard from './pages/Dashboard/Dashboard';
+
+// Import Layout
 import Sidebar from './components/Common/Sidebar';
 import Navbar from './components/Common/Navbar';
 
@@ -20,6 +24,14 @@ const MainLayout = ({ children }) => {
     );
 };
 
+// 3. Component tạm thời cho các trang chưa phát triển
+const PlaceholderPage = ({ title }) => (
+    <div style={{ padding: '40px', fontSize: '20px', color: '#666' }}>
+        <h2>{title}</h2>
+        <p>Giao diện đang trong quá trình phát triển...</p>
+    </div>
+);
+
 function App() {
     return (
         <Routes>
@@ -29,24 +41,26 @@ function App() {
             {/* Trang đăng nhập độc lập */}
             <Route path="/login" element={<Login />} />
 
-            {/* BỎ CODE TẠM: Hiển thị Dashboard thật bọc trong MainLayout */}
-            <Route
-                path="/dashboard"
-                element={
-                    <MainLayout>
-                        <Dashboard />
-                    </MainLayout>
-                }
-            />
+            {/* CÁC TRANG CÓ SIDEBAR KHỚP 100% VỚI MENU */}
 
-            <Route
-                path="/registration"
-                element={
-                    <MainLayout>
-                        <CustomerRegistration />
-                    </MainLayout>
-                }
-            />
+            {/* 1. Tổng quan */}
+            <Route path="/dashboard" element={<MainLayout><Dashboard /></MainLayout>} />
+
+            {/* 2. Đăng ký khách hàng */}
+            <Route path="/registration" element={<MainLayout><CustomerRegistration /></MainLayout>} />
+
+            {/* 3. Quản lý khách hàng (Đã đổi thành /customers cho đúng Sidebar) */}
+            <Route path="/customers" element={<MainLayout><CustomerManagement /></MainLayout>} />
+
+            {/* 4. Lịch sử xác thực */}
+            <Route path="/history" element={<MainLayout><PlaceholderPage title="Lịch sử xác thực" /></MainLayout>} />
+
+            {/* 5. Báo cáo */}
+            <Route path="/reports" element={<MainLayout><PlaceholderPage title="Báo cáo" /></MainLayout>} />
+
+            {/* 6. Tài khoản */}
+            <Route path="/settings" element={<MainLayout><PlaceholderPage title="Cài đặt tài khoản" /></MainLayout>} />
+
         </Routes>
     );
 }

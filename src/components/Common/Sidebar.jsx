@@ -1,6 +1,7 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { FiPieChart, FiUserPlus, FiUsers, FiClock, FiFileText, FiSettings } from 'react-icons/fi';
+// Đã import thêm icon FiShield cho Quản lý tài khoản nội bộ
+import { FiPieChart, FiUserPlus, FiUsers, FiClock, FiFileText, FiSettings, FiShield } from 'react-icons/fi';
 import styles from './Sidebar.module.css';
 
 const menuItems = [
@@ -9,7 +10,11 @@ const menuItems = [
     { path: '/customers', name: 'Quản lý khách hàng', icon: <FiUsers /> },
     { path: '/history', name: 'Lịch sử xác thực', icon: <FiClock /> },
     { path: '/reports', name: 'Báo cáo', icon: <FiFileText /> },
-    { path: '/settings', name: 'Tài khoản', icon: <FiSettings /> },
+
+    // BỔ SUNG THÊM MENU QUẢN LÝ TÀI KHOẢN VÀO ĐÂY
+    { path: '/accounts', name: 'Quản lý tài khoản', icon: <FiShield /> },
+
+    { path: '/settings', name: 'Cài đặt cá nhân', icon: <FiSettings /> },
 ];
 
 const Sidebar = () => {

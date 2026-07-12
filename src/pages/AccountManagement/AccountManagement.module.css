@@ -1,0 +1,242 @@
+/* ========================================= */
+/* BỐ CỤC TỔNG THỂ CỦA TRANG                 */
+/* ========================================= */
+.pageContainer { padding: 32px 40px; animation: fadeIn 0.4s ease-out; }
+
+.mainCard {
+    background: #FFFFFF;
+    border-radius: 12px;
+    border: 1px solid #EAE5D9;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+    overflow: hidden;
+}
+
+.header {
+    padding: 24px 32px;
+    border-bottom: 1px solid #EAE5D9;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.title { font-size: 20px; font-weight: 700; color: #1A1A1A; margin: 0 0 6px 0; }
+.subtitle { font-size: 14px; color: #666666; margin: 0; }
+
+/* Nút Thêm Mới Tài Khoản */
+.btnAdd {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background-color: #1A1A1A;
+    color: #FFFFFF;
+    border: none;
+    padding: 0 20px;
+    height: 42px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+}
+.btnAdd:hover { background-color: #333333; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+
+/* ========================================= */
+/* TOOLBAR VÀ BẢNG DỮ LIỆU                   */
+/* ========================================= */
+.toolbar {
+    padding: 20px 32px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #FAF9F5;
+    border-bottom: 1px solid #EAE5D9;
+}
+
+.searchBox {
+    display: flex;
+    align-items: center;
+    background: #FFFFFF;
+    border: 1px solid #EAE5D9;
+    border-radius: 8px;
+    padding: 0 16px;
+    width: 320px;
+    height: 40px;
+}
+.searchIcon { color: #888888; margin-right: 10px; }
+.searchInput { border: none; outline: none; width: 100%; font-size: 14px; color: #1A1A1A; }
+
+.filterWrapper { position: relative; }
+.filterBtn {
+    display: flex;
+    align-items: center;
+    background: #FFFFFF;
+    border: 1px solid #EAE5D9;
+    padding: 0 16px;
+    height: 40px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #333333;
+    cursor: pointer;
+}
+.filterDropdown {
+    position: absolute; top: 110%; right: 0; width: 180px;
+    background: #FFFFFF; border: 1px solid #EAE5D9; border-radius: 8px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.05); padding: 8px 0; z-index: 10;
+}
+.filterOption { padding: 10px 16px; font-size: 14px; color: #444; cursor: pointer; }
+.filterOption:hover { background: #FAF9F5; color: #1A1A1A; }
+.activeFilter { font-weight: 700; color: #1A1A1A; background: #F5F5F5; }
+
+.tableWrapper { overflow-x: auto; }
+.dataTable { width: 100%; border-collapse: collapse; text-align: left; }
+.dataTable th { background: #FFFFFF; color: #666666; font-size: 13px; font-weight: 600; padding: 16px 32px; border-bottom: 1px solid #EAE5D9; }
+.dataTable td { padding: 16px 32px; border-bottom: 1px solid #F5F5F5; font-size: 14px; color: #1A1A1A; vertical-align: middle; }
+.dataTable tbody tr:hover { background: #FAF9F5; }
+
+/* BADGES PHÂN QUYỀN VÀ TRẠNG THÁI */
+.roleBadge { padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; }
+.roleAdmin { background: #F3E8FF; color: #7E22CE; border: 1px solid #E9D5FF; }
+.roleStaff { background: #F1F5F9; color: #475569; border: 1px solid #E2E8F0; }
+
+.statusBadge { padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; }
+.statusActive { background: #ECFDF5; color: #059669; border: 1px solid #D1FAE5; }
+.statusInactive { background: #FEF2F2; color: #DC2626; border: 1px solid #FEE2E2; }
+
+/* ACTIONS */
+.actionGroup { display: flex; gap: 8px; }
+.iconBtn { background: #FAF9F5; border: 1px solid #EAE5D9; border-radius: 6px; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; color: #666; cursor: pointer; transition: 0.2s; }
+.iconBtn:hover { background: #1A1A1A; color: #FFF; border-color: #1A1A1A; }
+.iconBtnTrash { background: #FEF2F2; border: 1px solid #FEE2E2; border-radius: 6px; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; color: #DC2626; cursor: pointer; transition: 0.2s; }
+.iconBtnTrash:hover { background: #DC2626; color: #FFF; }
+
+/* PHÂN TRANG */
+.pagination { display: flex; justify-content: center; align-items: center; padding: 20px; gap: 8px; border-top: 1px solid #EAE5D9; }
+.pageBtn { width: 36px; height: 36px; border-radius: 8px; border: 1px solid #EAE5D9; background: #FFF; color: #333; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+.pageBtn:hover:not(.disabledBtn) { background: #FAF9F5; }
+.activePage { background: #1A1A1A; color: #FFF; border-color: #1A1A1A; }
+.disabledBtn { opacity: 0.5; cursor: not-allowed; }
+
+/* ========================================= */
+/* MODAL FORM THÊM / SỬA                     */
+/* ========================================= */
+.modalOverlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 1000; animation: fadeIn 0.2s; }
+.modalContent { background: #FFF; width: 500px; max-width: 90%; border-radius: 12px; box-shadow: 0 20px 40px rgba(0,0,0,0.2); animation: slideUp 0.3s; overflow: hidden; }
+.modalHeader { padding: 20px 24px; border-bottom: 1px solid #EAE5D9; display: flex; justify-content: space-between; align-items: center; }
+.modalHeader h3 { margin: 0; font-size: 18px; color: #1A1A1A; font-weight: 700; }
+.closeBtn { background: transparent; border: none; font-size: 22px; color: #888; cursor: pointer; }
+.closeBtn:hover { color: #1A1A1A; }
+.modalBody { padding: 24px; display: flex; flex-direction: column; gap: 16px; }
+
+.formGroup { display: flex; flex-direction: column; gap: 8px; }
+.formRow { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.formGroup label { font-size: 13.5px; font-weight: 600; color: #444; }
+.inputField, .selectField { padding: 10px 14px; border: 1px solid #DDD; border-radius: 8px; font-size: 14px; font-family: inherit; transition: 0.2s; }
+.inputField:focus, .selectField:focus { border-color: #1A1A1A; outline: none; }
+.inputField:disabled { background: #F5F5F5; color: #888; cursor: not-allowed; }
+
+.modalFooter { padding: 16px 24px; background: #FAF9F5; border-top: 1px solid #EAE5D9; display: flex; justify-content: flex-end; gap: 12px; }
+.btnCancel { padding: 10px 20px; background: #FFF; border: 1px solid #DDD; border-radius: 8px; font-weight: 600; cursor: pointer; }
+.btnPrimary { padding: 10px 20px; background: #1A1A1A; color: #FFF; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
+.btnPrimary:hover { background: #333; }
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ========================================= */
+/* MODAL THÔNG BÁO THÀNH CÔNG TÙY CHỈNH      */
+/* ========================================= */
+.successModalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(4px); /* Làm mờ phần nền */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000; /* Nằm trên tất cả các layer khác */
+    animation: fadeInOverlay 0.2s ease-out;
+}
+
+.successModalContent {
+    background: #FFFFFF;
+    width: 380px;
+    max-width: 90%;
+    border-radius: 16px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+    padding: 32px 24px;
+    text-align: center; /* Căn giữa nội dung */
+    animation: scaleUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.successModalIconBox {
+    width: 64px;
+    height: 64px;
+    background-color: #E9F9EE;
+    color: #10B981; /* Màu xanh lá nổi bật */
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px auto;
+}
+
+.successModalTitle {
+    margin: 0 0 12px 0;
+    font-size: 18px;
+    font-weight: 700;
+    color: #1A1A1A;
+}
+
+.successModalText {
+    margin: 0 0 28px 0;
+    font-size: 14.5px;
+    color: #666666;
+    line-height: 1.6;
+}
+
+.btnPrimaryFull {
+    background: #1A1A1A;
+    border: none;
+    padding: 12px 20px;
+    width: 100%;
+    border-radius: 8px;
+    font-size: 14.5px;
+    color: #FFFFFF;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.btnPrimaryFull:hover {
+    background: #333333;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+@keyframes fadeInOverlay {
+    from { opacity: 0; backdrop-filter: blur(0); }
+    to { opacity: 1; backdrop-filter: blur(4px); }
+}
+
+@keyframes scaleUp {
+    from { opacity: 0; transform: scale(0.95) translateY(10px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* PHÂN TRANG (Đã đổi justify-content thành flex-end) */
+.pagination {
+    display: flex;
+    justify-content: flex-end; /* Đẩy sang phải */
+    align-items: center;
+    padding: 20px 32px; /* Thêm padding 32px để căn lề đều với bảng */
+    gap: 8px;
+    border-top: 1px solid #EAE5D9;
+}
+.pageBtn { width: 36px; height: 36px; border-radius: 8px; border: 1px solid #EAE5D9; background: #FFF; color: #333; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+.pageBtn:hover:not(.disabledBtn) { background: #FAF9F5; }
+.activePage { background: #1A1A1A; color: #FFF; border-color: #1A1A1A; }
+.disabledBtn { opacity: 0.5; cursor: not-allowed; }

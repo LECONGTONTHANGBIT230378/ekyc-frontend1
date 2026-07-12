@@ -9,6 +9,7 @@ import Dashboard from './pages/Dashboard/Dashboard';
 import AuthenticationHistory from './pages/AuthenticationHistory/AuthenticationHistory';
 import Reports from './pages/Reports/Reports';
 import AccountSettings from './pages/AccountSettings/AccountSettings';
+import AccountManagement from './pages/AccountManagement/AccountManagement';
 
 // Import Layout
 import Sidebar from './components/Common/Sidebar';
@@ -61,7 +62,10 @@ function App() {
             {/* 5. Báo cáo */}
             <Route path="/reports" element={<MainLayout><Reports title="Báo cáo" /></MainLayout>} />
 
-            {/* 6. Tài khoản */}
+            {/* 6.QL Tài khoản */}
+            <Route path="/accounts" element={<MainLayout><AccountManagement title="Quản lý tài khoản" /></MainLayout>} />
+
+            {/* 7. Tài khoản */}
             <Route path="/settings" element={<MainLayout><AccountSettings title="Cài đặt tài khoản" /></MainLayout>} />
 
         </Routes>

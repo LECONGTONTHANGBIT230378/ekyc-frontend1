@@ -8,6 +8,7 @@ import Login from './pages/Login/Login';
 import Dashboard from './pages/Dashboard/Dashboard';
 import AuthenticationHistory from './pages/AuthenticationHistory/AuthenticationHistory';
 import Reports from './pages/Reports/Reports';
+import AccountSettings from './pages/AccountSettings/AccountSettings';
 
 // Import Layout
 import Sidebar from './components/Common/Sidebar';
@@ -61,7 +62,7 @@ function App() {
             <Route path="/reports" element={<MainLayout><Reports title="Báo cáo" /></MainLayout>} />
 
             {/* 6. Tài khoản */}
-            <Route path="/settings" element={<MainLayout><PlaceholderPage title="Cài đặt tài khoản" /></MainLayout>} />
+            <Route path="/settings" element={<MainLayout><AccountSettings title="Cài đặt tài khoản" /></MainLayout>} />
 
         </Routes>
     );

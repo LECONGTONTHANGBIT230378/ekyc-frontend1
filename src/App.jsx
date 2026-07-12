@@ -6,6 +6,7 @@ import CustomerRegistration from './pages/CustomerRegistration/CustomerRegistrat
 import CustomerManagement from './pages/CustomerManagement/CustomerManagement';
 import Login from './pages/Login/Login';
 import Dashboard from './pages/Dashboard/Dashboard';
+import AuthenticationHistory from './pages/AuthenticationHistory/AuthenticationHistory';
 
 // Import Layout
 import Sidebar from './components/Common/Sidebar';
@@ -49,11 +50,11 @@ function App() {
             {/* 2. Đăng ký khách hàng */}
             <Route path="/registration" element={<MainLayout><CustomerRegistration /></MainLayout>} />
 
-            {/* 3. Quản lý khách hàng (Đã đổi thành /customers cho đúng Sidebar) */}
+            {/* 3. Quản lý khách hàng */}
             <Route path="/customers" element={<MainLayout><CustomerManagement /></MainLayout>} />
 
-            {/* 4. Lịch sử xác thực */}
-            <Route path="/history" element={<MainLayout><PlaceholderPage title="Lịch sử xác thực" /></MainLayout>} />
+            {/* 4. Lịch sử xác thực (ĐÃ SỬA LỖI Ở ĐÂY) */}
+            <Route path="/history" element={<MainLayout><AuthenticationHistory /></MainLayout>} />
 
             {/* 5. Báo cáo */}
             <Route path="/reports" element={<MainLayout><PlaceholderPage title="Báo cáo" /></MainLayout>} />

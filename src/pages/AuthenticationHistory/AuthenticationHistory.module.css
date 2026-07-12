@@ -1,0 +1,575 @@
+/* ========================================= */
+/* 1. GIAO DIỆN TRANG QUẢN LÝ (BẢNG & TÌM KIẾM) */
+/* ========================================= */
+
+.pageContainer {
+    padding: 32px 40px;
+    animation: fadeIn 0.4s ease-out;
+}
+
+.mainCard {
+    background-color: #FAF9F5; /* Màu be ngà */
+    border: 1px solid #EBE7DF;
+    border-radius: 12px;
+    padding: 28px 32px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+}
+
+.header {
+    margin-bottom: 24px;
+}
+
+.title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #1A1A1A;
+    margin: 0 0 6px 0;
+}
+
+.subtitle {
+    font-size: 14px;
+    color: #666666;
+    margin: 0;
+}
+
+/* TOOLBAR & SEARCH */
+.toolbar {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.searchBox {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    background: #FFFFFF;
+    border: 1px solid #EAE5D9;
+    border-radius: 8px;
+    padding: 10px 16px;
+    transition: 0.2s;
+}
+
+.searchBox:focus-within {
+    border-color: #C2B8A3;
+}
+
+.searchIcon {
+    color: #888888;
+    margin-right: 12px;
+    font-size: 18px;
+}
+
+.searchInput {
+    border: none;
+    outline: none;
+    width: 100%;
+    font-size: 14px;
+    background: transparent;
+    color: #333333;
+}
+
+.searchInput::placeholder {
+    color: #999999;
+}
+
+.filterBtn {
+    background: #FAF9F5;
+    border: 1px solid #EAE5D9;
+    padding: 0 24px;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #333333;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.filterBtn:hover {
+    background: #EAE5D9;
+}
+
+/* TABLE DỮ LIỆU */
+.tableWrapper {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.dataTable {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+.dataTable th {
+    padding: 16px 12px;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: #333333;
+    border-bottom: 1px solid #EBE7DF;
+}
+
+.dataTable td {
+    padding: 16px 12px;
+    font-size: 14px;
+    color: #555555;
+    border-bottom: 1px solid #EBE7DF;
+}
+
+.dataTable tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.actionHeader {
+    text-align: right;
+    padding-right: 24px !important;
+}
+
+.actionGroup {
+    display: flex;
+    justify-content: flex-end;
+    gap: 16px;
+    padding-right: 12px;
+}
+
+/* BADGE TRẠNG THÁI */
+.badge {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12.5px;
+    font-weight: 600;
+    display: inline-block;
+}
+
+.badgeVerified {
+    background-color: #FFFFFF;
+    border: 1px solid #DDDDDD;
+    color: #333333;
+}
+
+.badgePending {
+    background-color: #F0F0F0;
+    border: 1px solid transparent;
+    color: #555555;
+}
+
+.badgeFailed {
+    background-color: #A63232;
+    border: 1px solid transparent;
+    color: #FFFFFF;
+}
+
+/* ICON NÚT BẤM */
+.iconBtn {
+    background: transparent;
+    border: none;
+    color: #555555;
+    font-size: 18px;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: 0.2s;
+}
+
+.iconBtn:hover {
+    color: #1A1A1A;
+    background-color: #EBE7DF;
+}
+
+.emptyState {
+    text-align: center;
+    padding: 40px !important;
+    color: #888888;
+    font-style: italic;
+}
+
+
+/* ========================================= */
+/* 2. KHUNG MODAL CHUNG (DÙNG CHO CẢ XEM VÀ XÓA) */
+/* ========================================= */
+
+.modalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    animation: fadeInOverlay 0.2s ease-out;
+}
+
+.modalContent {
+    background: #FFFFFF;
+    width: 450px;
+    max-width: 90%;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    overflow: hidden;
+}
+
+.modalHeader {
+    padding: 20px 24px;
+    border-bottom: 1px solid #EBE7DF;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modalHeader h3 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 700;
+    color: #1A1A1A;
+}
+
+.closeBtn {
+    background: transparent;
+    border: none;
+    font-size: 20px;
+    color: #888888;
+    cursor: pointer;
+    transition: 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.closeBtn:hover {
+    color: #1A1A1A;
+}
+
+.modalBody {
+    padding: 24px;
+}
+
+.modalFooter {
+    padding: 16px 24px;
+    background: #FAF9F5;
+    border-top: 1px solid #EBE7DF;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+/* Các nút bấm dưới Footer */
+.btnCancel {
+    background: #FFFFFF;
+    border: 1px solid #DDDDDD;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 14px;
+    color: #333333;
+    font-weight: 500;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.btnCancel:hover {
+    background: #F0F0F0;
+}
+
+.btnDelete {
+    background: #A63232;
+    border: 1px solid #A63232;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 14px;
+    color: #FFFFFF;
+    font-weight: 500;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.btnDelete:hover {
+    background: #8B2A2A;
+}
+
+.btnPrimary {
+    background: #1A1A1A;
+    border: none;
+    padding: 10px 24px;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #FFFFFF;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.btnPrimary:hover {
+    background: #333333;
+}
+
+
+/* ========================================= */
+/* 3. THIẾT KẾ RIÊNG CHO MODAL XEM CHI TIẾT (PROFILE) */
+/* ========================================= */
+
+.profileSection {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 24px;
+    padding: 0 8px;
+}
+
+.avatarPlaceholder {
+    width: 64px;
+    height: 64px;
+    background-color: #F0F0F0;
+    color: #999999;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    border: 2px solid #FFFFFF;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+}
+
+.profileTitle {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.customerName {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 700;
+    color: #1A1A1A;
+}
+
+.statusWrapper {
+    display: flex;
+}
+
+.infoBox {
+    background-color: #FAF9F5;
+    border: 1px solid #EBE7DF;
+    border-radius: 12px;
+    padding: 20px;
+}
+
+.infoGrid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px 24px;
+}
+
+.infoItem {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.infoItemFull {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.infoLabel {
+    font-size: 13px;
+    color: #666666;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.infoValue {
+    font-size: 15px;
+    color: #1A1A1A;
+    font-weight: 600;
+}
+
+
+/* ========================================= */
+/* 4. HIỆU ỨNG ANIMATION CHUNG */
+/* ========================================= */
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInOverlay {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* ========================================= */
+/* 5. GIAO DIỆN BỘ LỌC (FILTER DROPDOWN)     */
+/* ========================================= */
+
+.filterWrapper {
+    position: relative; /* Để menu con bám theo nút này */
+}
+
+.filterBtn {
+    display: flex;
+    align-items: center;
+    background: #FAF9F5;
+    border: 1px solid #EAE5D9;
+    padding: 0 20px;
+    height: 100%; /* Cân bằng chiều cao với ô tìm kiếm */
+    min-height: 40px;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #333333;
+    font-weight: 500;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.filterBtn:hover {
+    background: #EAE5D9;
+}
+
+/* Khung menu trổ xuống */
+.filterDropdown {
+    position: absolute;
+    top: calc(100% + 8px); /* Cách nút bấm 8px xuống dưới */
+    right: 0;
+    background: #FFFFFF;
+    border: 1px solid #EAE5D9;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    width: 200px;
+    z-index: 100;
+    overflow: hidden;
+    animation: slideUp 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Từng dòng chọn trạng thái */
+.filterOption {
+    padding: 12px 16px;
+    font-size: 14px;
+    color: #555555;
+    cursor: pointer;
+    transition: 0.2s;
+    border-bottom: 1px solid #F9F9F9;
+}
+
+.filterOption:last-child {
+    border-bottom: none;
+}
+
+.filterOption:hover {
+    background: #FAF9F5;
+    color: #1A1A1A;
+}
+
+/* Đánh dấu mục đang được chọn (Thêm viền trái màu đen) */
+.activeFilter {
+    background: #FAF9F5;
+    font-weight: 600;
+    color: #1A1A1A;
+    border-left: 3px solid #1A1A1A;
+}
+
+/* ========================================= */
+/* 6. GIAO DIỆN PHÂN TRANG (PAGINATION)      */
+/* ========================================= */
+
+.pagination {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 8px;
+    margin-top: 24px;
+    padding-right: 12px;
+}
+
+.pageBtn {
+    background: #FFFFFF;
+    border: 1px solid #EAE5D9;
+    color: #555555;
+    padding: 6px 12px;
+    min-width: 32px;
+    border-radius: 6px;
+    font-size: 13.5px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.pageBtn:hover:not(.disabledBtn):not(.activePage) {
+    background: #FAF9F5;
+    color: #1A1A1A;
+    border-color: #C2B8A3;
+}
+
+/* Trang hiện tại được bôi đen */
+.activePage {
+    background: #1A1A1A;
+    color: #FFFFFF;
+    border-color: #1A1A1A;
+}
+
+/* Nút bị vô hiệu hóa (Ví dụ đang ở trang 1 thì mờ nút "Trước") */
+.disabledBtn {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: #F9F9F9;
+}
+/* Thêm class này để căn chỉnh dấu 3 chấm */
+.dots {
+    color: #999999;
+    padding: 0 4px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    user-select: none;
+    letter-spacing: 2px;
+    font-weight: 700;
+}
+.badgeSuccess {
+    background-color: #FFFFFF;
+    border: 1px solid #DDDDDD;
+    color: #1A1A1A;
+}
+/* Bao bọc cả ô Date và Nút lọc trạng thái */
+.filterGroup {
+    display: flex;
+    gap: 12px;
+}
+
+/* Ô nhập ngày tháng */
+.dateInput {
+    background: #FAF9F5;
+    border: 1px solid #EAE5D9;
+    padding: 0 16px;
+    height: 100%;
+    min-height: 40px;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #333333;
+    font-family: inherit;
+    outline: none;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.dateInput:hover {
+    background: #EAE5D9;
+}
+
+.dateInput:focus {
+    border-color: #C2B8A3;
+}

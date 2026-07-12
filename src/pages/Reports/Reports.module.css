@@ -1,0 +1,408 @@
+/* ========================================= */
+/* BỐ CỤC TỔNG THỂ CỦA TRANG                 */
+/* ========================================= */
+.pageContainer {
+    padding: 32px 40px;
+    animation: fadeIn 0.4s ease-out;
+}
+
+.headerSection {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 32px;
+}
+
+.title {
+    font-size: 20px;
+    font-weight: 700;
+    color: #1A1A1A;
+    margin: 0 0 6px 0;
+}
+
+.subtitle {
+    font-size: 14px;
+    color: #666666;
+    margin: 0;
+}
+
+/* ========================================= */
+/* BỘ LỌC VÀ CÁC NÚT XUẤT FILE               */
+/* ========================================= */
+.headerTools {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.dateFilter {
+    display: flex;
+    align-items: center;
+    background: #FFFFFF;
+    border: 1px solid #EAE5D9;
+    border-radius: 8px;
+    padding: 0 16px;
+    height: 40px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+}
+
+.calendarIcon {
+    color: #888888;
+    margin-right: 10px;
+}
+
+.dateSelect {
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 14px;
+    color: #1A1A1A;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+/* Nút Xuất Excel - Màu xanh lá đặc trưng */
+.exportExcelBtn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background-color: #10B981;
+    color: #FFFFFF;
+    border: none;
+    padding: 0 16px;
+    height: 40px;
+    border-radius: 8px;
+    font-size: 13.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2);
+}
+
+.exportExcelBtn:hover {
+    background-color: #059669;
+    transform: translateY(-1px);
+}
+
+/* Nút Xuất CSV - Dạng viền trắng thanh lịch */
+.exportCsvBtn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background-color: #FFFFFF;
+    color: #333333;
+    border: 1px solid #EAE5D9;
+    padding: 0 16px;
+    height: 40px;
+    border-radius: 8px;
+    font-size: 13.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+}
+
+.exportCsvBtn:hover {
+    background-color: #FAF9F5;
+    border-color: #C2B8A3;
+}
+
+
+/* ========================================= */
+/* 1. KHU VỰC THẺ CHỈ SỐ (STATS GRID)        */
+/* ========================================= */
+.statsGrid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
+    margin-bottom: 32px;
+}
+
+.statCard {
+    background-color: #FFFFFF;
+    border: 1px solid #EAE5D9;
+    border-radius: 12px;
+    padding: 24px;
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+    transition: 0.2s;
+}
+
+.statCard:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+}
+
+.statIconWrapper {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.statInfo {
+    display: flex;
+    flex-direction: column;
+}
+
+.statLabel {
+    font-size: 13px;
+    color: #666666;
+    margin-bottom: 4px;
+    font-weight: 500;
+}
+
+.statValue {
+    font-size: 24px;
+    font-weight: 700;
+    color: #1A1A1A;
+    margin-bottom: 8px;
+}
+
+.statTrend {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.trendUp { color: #10B981; }
+.trendDown { color: #EF4444; }
+.trendTextUp { color: #10B981; }
+.trendTextDown { color: #EF4444; }
+.trendTextNeutral { color: #888888; }
+
+
+/* ========================================= */
+/* 2. KHU VỰC BIỂU ĐỒ (CHARTS GRID)          */
+/* ========================================= */
+.chartsGrid {
+    display: grid;
+    grid-template-columns: 3fr 2fr; /* Chia tỷ lệ 60% - 40% */
+    gap: 24px;
+}
+
+.chartCard {
+    background-color: #FFFFFF;
+    border: 1px solid #EAE5D9;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+}
+
+.chartTitle {
+    margin: 0 0 24px 0;
+    font-size: 16px;
+    font-weight: 700;
+    color: #1A1A1A;
+}
+
+/* ========================================= */
+/* BIỂU ĐỒ CỘT BẰNG CSS THUẦN (BAR CHART)    */
+/* ========================================= */
+.barChartContainer {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    height: 220px; /* Chiều cao cố định của biểu đồ */
+    padding-top: 20px;
+}
+
+.barColumn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 40px;
+    height: 100%;
+    justify-content: flex-end;
+    position: relative;
+}
+
+/* Tooltip hiện số lượng khi trỏ chuột vào cột */
+.barValueTooltip {
+    position: absolute;
+    top: -25px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #1A1A1A;
+    opacity: 0;
+    transition: 0.2s;
+}
+
+.barColumn:hover .barValueTooltip {
+    opacity: 1;
+    transform: translateY(-5px);
+}
+
+.barTrack {
+    width: 100%;
+    height: 100%;
+    background-color: #F9F9F9;
+    border-radius: 6px 6px 0 0;
+    display: flex;
+    align-items: flex-end;
+}
+
+.barFill {
+    width: 100%;
+    background-color: #1A1A1A; /* Cột màu đen sang trọng */
+    border-radius: 6px 6px 0 0;
+    transition: 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.barColumn:hover .barFill {
+    background-color: #0066FF; /* Đổi màu xanh khi hover */
+}
+
+.barLabel {
+    margin-top: 12px;
+    font-size: 13px;
+    color: #666666;
+    font-weight: 500;
+}
+
+/* ========================================= */
+/* BẢNG PHÂN TÍCH LỖI (PROGRESS BARS)        */
+/* ========================================= */
+.errorList {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding-top: 10px;
+}
+
+.errorItem {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.errorHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13.5px;
+}
+
+.errorReason {
+    color: #1A1A1A;
+    font-weight: 600;
+}
+
+.errorCount {
+    color: #666666;
+    font-weight: 500;
+}
+
+.progressBarTrack {
+    width: 100%;
+    height: 8px;
+    background-color: #F0F0F0;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.progressBarFill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 1s ease-out;
+}
+
+/* Hiệu ứng mượt mà khi load trang */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* ========================================= */
+/* MODAL THÔNG BÁO XUẤT FILE (BẢN NÂNG CẤP)  */
+/* ========================================= */
+.modalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(4px); /* Thêm hiệu ứng làm mờ nền phía sau cực xịn */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    animation: fadeInOverlay 0.2s ease-out;
+}
+
+.modalContent {
+    background: #FFFFFF;
+    width: 380px;
+    max-width: 90%;
+    border-radius: 16px; /* Bo góc tròn trịa hơn */
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15); /* Đổ bóng sâu, tạo cảm giác nổi 3D */
+    padding: 32px 24px;
+    text-align: center; /* Căn giữa toàn bộ nội dung */
+    animation: scaleUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Vòng tròn chứa Icon màu xanh lá */
+.modalIconBox {
+    width: 64px;
+    height: 64px;
+    background-color: #E9F9EE;
+    color: #10B981;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px auto; /* Tự động căn giữa */
+}
+
+.modalTitle {
+    margin: 0 0 12px 0;
+    font-size: 18px;
+    font-weight: 700;
+    color: #1A1A1A;
+}
+
+.modalText {
+    margin: 0 0 28px 0;
+    font-size: 14.5px;
+    color: #666666;
+    line-height: 1.6;
+}
+
+/* Nút bấm full chiều ngang */
+.btnPrimaryFull {
+    background: #1A1A1A;
+    border: none;
+    padding: 12px 20px;
+    width: 100%;
+    border-radius: 8px;
+    font-size: 14.5px;
+    color: #FFFFFF;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.btnPrimaryFull:hover {
+    background: #333333;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+/* Hiệu ứng nảy (bounce) nhẹ khi bật lên */
+@keyframes fadeInOverlay {
+    from { opacity: 0; backdrop-filter: blur(0); }
+    to { opacity: 1; backdrop-filter: blur(4px); }
+}
+
+@keyframes scaleUp {
+    from { opacity: 0; transform: scale(0.95) translateY(10px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+}

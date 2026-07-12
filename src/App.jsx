@@ -7,6 +7,7 @@ import CustomerManagement from './pages/CustomerManagement/CustomerManagement';
 import Login from './pages/Login/Login';
 import Dashboard from './pages/Dashboard/Dashboard';
 import AuthenticationHistory from './pages/AuthenticationHistory/AuthenticationHistory';
+import Reports from './pages/Reports/Reports';
 
 // Import Layout
 import Sidebar from './components/Common/Sidebar';
@@ -57,7 +58,7 @@ function App() {
             <Route path="/history" element={<MainLayout><AuthenticationHistory /></MainLayout>} />
 
             {/* 5. Báo cáo */}
-            <Route path="/reports" element={<MainLayout><PlaceholderPage title="Báo cáo" /></MainLayout>} />
+            <Route path="/reports" element={<MainLayout><Reports title="Báo cáo" /></MainLayout>} />
 
             {/* 6. Tài khoản */}
             <Route path="/settings" element={<MainLayout><PlaceholderPage title="Cài đặt tài khoản" /></MainLayout>} />

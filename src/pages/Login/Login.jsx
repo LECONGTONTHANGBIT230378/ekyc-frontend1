@@ -4,24 +4,48 @@ import { FcGoogle } from 'react-icons/fc';
 import { BsMicrosoft, BsCheckLg } from 'react-icons/bs';
 import InputField from '../../components/Form/InputField';
 import styles from './Login.module.css';
+import { authService } from '../../services/authService';
 
 const Login = () => {
     const navigate = useNavigate();
-    const [formData, setFormData] = useState({ email: '', password: '' });
+
+    // 1. ĐỔI 'email' THÀNH 'username' CHO KHỚP VỚI BACKEND
+    const [formData, setFormData] = useState({ username: '', password: '' });
+
+    const [error, setError] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        // Chuyển hướng sang trang Dashboard
-        navigate('/dashboard');
+        setError('');
+        setIsLoading(true);
+
+        try {
+            // 2. TRUYỀN USERNAME VÀ PASSWORD VÀO API
+            const res = await authService.login(formData.username, formData.password);
+
+            const token = res.token || res.data?.token || res.accessToken;
+
+            if (token) {
+                localStorage.setItem('accessToken', token);
+                navigate('/dashboard');
+            } else {
+                setError('Lỗi: Không nhận được thông tin xác thực từ Server.');
+            }
+        } catch (err) {
+            // Hiển thị trực tiếp lỗi từ Backend trả về (Ví dụ: "Tên đăng nhập không được để trống")
+            setError(err.message || 'Đăng nhập thất bại. Vui lòng kiểm tra lại!');
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
         <div className={styles.container}>
-            {/* CỘT BÊN TRÁI: TEXT & TÍNH NĂNG */}
             <div className={styles.leftSide}>
                 <div className={styles.logoWrapper}>
                     <div className={styles.logoIcon}>V</div>
@@ -50,7 +74,6 @@ const Login = () => {
                 </div>
             </div>
 
-            {/* CỘT BÊN PHẢI: FORM ĐĂNG NHẬP */}
             <div className={styles.rightSide}>
                 <div className={styles.loginBox}>
                     <div className={styles.boxHeader}>
@@ -58,13 +81,20 @@ const Login = () => {
                         <p>Đăng nhập để truy cập bảng điều khiển xác thực.</p>
                     </div>
 
+                    {error && (
+                        <div style={{ color: '#DC2626', backgroundColor: '#FEF2F2', padding: '10px', borderRadius: '8px', fontSize: '14px', marginBottom: '16px', textAlign: 'center', border: '1px solid #FEE2E2' }}>
+                            {error}
+                        </div>
+                    )}
+
                     <form onSubmit={handleSubmit} className={styles.form}>
+                        {/* 3. SỬA INPUT THÀNH TYPE="TEXT" VÀ ĐỔI NAME="username" */}
                         <InputField
-                            label="Email"
-                            name="email"
-                            type="email"
-                            placeholder="nhanvien@veritas.vn"
-                            value={formData.email}
+                            label="Tên đăng nhập"
+                            name="username"
+                            type="text"
+                            placeholder="Nhập tên đăng nhập"
+                            value={formData.username}
                             onChange={handleChange}
                             required
                         />
@@ -84,8 +114,8 @@ const Login = () => {
                             />
                         </div>
 
-                        <button type="submit" className={styles.submitBtn}>
-                            Đăng nhập
+                        <button type="submit" className={styles.submitBtn} disabled={isLoading}>
+                            {isLoading ? 'Đang xác thực...' : 'Đăng nhập'}
                         </button>
                     </form>
 

@@ -4,16 +4,17 @@ import TextAreaField from '../../../components/Form/TextAreaField';
 import ImageUpload from '../../../components/Form/ImageUpload';
 import styles from './Step1Info.module.css';
 
-// 1. HÀM TẠO MÃ KHÁCH HÀNG TỰ ĐỘNG & DUY NHẤT
+// 1. IMPORT SERVICE GỌI API (Đảm bảo bạn đã tạo file customerService.js)
+import { customerService } from '../../../services/customerService';
+
 const generateCustomerId = () => {
-    const timestamp = Date.now().toString().slice(-6); // Lấy 6 số cuối của thời gian hiện tại
-    const randomStr = Math.random().toString(36).substring(2, 5).toUpperCase(); // Lấy 3 ký tự ngẫu nhiên
-    return `CUS-${timestamp}${randomStr}`; // Ví dụ kết quả: CUS-123456ABC
+    const timestamp = Date.now().toString().slice(-6);
+    const randomStr = Math.random().toString(36).substring(2, 5).toUpperCase();
+    return `CUS-${timestamp}${randomStr}`;
 };
 
 const Step1Info = ({ onNext, initialData }) => {
     const [formData, setFormData] = useState({
-        // Nếu đã có mã (do quay lại từ bước 2) thì giữ nguyên, nếu chưa có (lần đầu vào) thì tự tạo mới
         customerId: initialData?.customerId || generateCustomerId(),
         fullName: initialData?.fullName || '',
         phone: initialData?.phone || '',
@@ -21,7 +22,13 @@ const Step1Info = ({ onNext, initialData }) => {
         notes: initialData?.notes || '',
         frontImage: initialData?.frontImage || null,
         backImage: initialData?.backImage || null,
+        // Thêm biến này để lưu ID thật do Database cấp sau khi đăng ký thành công
+        dbId: initialData?.dbId || null,
     });
+
+    // 2. THÊM STATE QUẢN LÝ LỖI VÀ TRẠNG THÁI CHỜ
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState('');
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -31,9 +38,37 @@ const Step1Info = ({ onNext, initialData }) => {
         setFormData({ ...formData, [field]: url });
     };
 
-    const handleSubmit = (e) => {
+    // 3. LOGIC XỬ LÝ KHI ẤN "TIẾP TỤC" ĐỂ GỌI API
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        onNext({ combinedData: formData });
+        setError('');
+        setIsLoading(true);
+
+        try {
+            let currentDbId = formData.dbId;
+
+            // Nếu đã có dbId (quay lại từ bước 2 để sửa thông tin) -> Gọi API Cập nhật
+            if (currentDbId) {
+                await customerService.updateCustomer(currentDbId, formData);
+            }
+            // Nếu chưa có dbId (Lần đầu đăng ký) -> Gọi API Tạo mới
+            else {
+                const res = await customerService.registerCustomer(formData);
+                // Lấy ID thật từ Backend (Tùy cấu trúc của bạn, có thể là res.data.id hoặc res.id)
+                currentDbId = res.data?.id || res.data?.customer?.id || res.id;
+            }
+
+            // Gắn dbId thật vào formData để mang sang các bước tiếp theo
+            const updatedData = { ...formData, dbId: currentDbId };
+
+            // Chuyển sang Bước 2
+            onNext({ combinedData: updatedData });
+
+        } catch (err) {
+            setError(err.message || 'Lỗi kết nối máy chủ. Không thể lưu hồ sơ!');
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -43,13 +78,17 @@ const Step1Info = ({ onNext, initialData }) => {
                 <p>Bắt đầu tạo hồ sơ với thông tin cơ bản. (Có thể bỏ trống phần hình ảnh để tải lên ở bước sau)</p>
             </div>
 
+            {/* HIỂN THỊ THÔNG BÁO LỖI NẾU API THẤT BẠI */}
+            {error && (
+                <div style={{ color: '#DC2626', backgroundColor: '#FEF2F2', padding: '12px', borderRadius: '8px', marginBottom: '20px', border: '1px solid #FEE2E2', fontSize: '14px' }}>
+                    {error}
+                </div>
+            )}
+
             <form onSubmit={handleSubmit} className={styles.formWrapper}>
                 <div className={styles.contentGrid}>
-
-                    {/* CỘT TRÁI: THÔNG TIN TEXT */}
                     <div className={styles.leftColumn}>
                         <div className={styles.row}>
-                            {/* 2. THÊM THUỘC TÍNH disabled ĐỂ KHÓA Ô MÃ KHÁCH HÀNG */}
                             <InputField
                                 label="Mã khách hàng (Tự động)"
                                 name="customerId"
@@ -69,7 +108,6 @@ const Step1Info = ({ onNext, initialData }) => {
                         </div>
                     </div>
 
-                    {/* CỘT PHẢI: UPLOAD ẢNH MẶT TRƯỚC VÀ MẶT SAU */}
                     <div className={styles.rightColumn}>
                         <ImageUpload
                             label="Mặt trước CCCD (Tùy chọn)"
@@ -89,13 +127,14 @@ const Step1Info = ({ onNext, initialData }) => {
                 </div>
 
                 <div className={styles.actionGroup}>
-                    <button type="button" className={styles.cancelBtn}>Hủy</button>
+                    <button type="button" className={styles.cancelBtn} disabled={isLoading}>Hủy</button>
                     <button
                         type="submit"
                         className={styles.nextBtn}
-                        disabled={!formData.fullName || !formData.phone}
+                        // Khóa nút nếu chưa điền Tên/SĐT hoặc đang chờ API gọi về
+                        disabled={!formData.fullName || !formData.phone || isLoading}
                     >
-                        Tiếp tục ›
+                        {isLoading ? 'Đang lưu hồ sơ...' : 'Tiếp tục ›'}
                     </button>
                 </div>
             </form>

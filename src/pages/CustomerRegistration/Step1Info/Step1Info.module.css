@@ -1,25 +1,127 @@
-.container { animation: fadeIn 0.4s ease-out; }
-.header { margin-bottom: 24px; }
-.header h2 { font-size: 16px; font-weight: 700; margin: 0 0 6px 0; color: var(--text-color); }
-.header p { font-size: 13px; color: var(--gray-color); margin: 0; }
+.container {
+    animation: fadeIn 0.4s ease-out;
+}
 
-.formWrapper { display: flex; flex-direction: column; gap: 32px; }
+.header {
+    margin-bottom: 32px; /* Tăng khoảng cách xuống form để thoáng hơn */
+}
 
-/* Grid chia 2 nửa bằng nhau */
-.contentGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
+.header h2 {
+    font-size: 20px; /* Tăng kích thước tiêu đề */
+    font-weight: 700;
+    margin: 0 0 8px 0;
+    color: var(--text-main, #1E293B);
+}
 
-/* Cột trái */
-.leftColumn { display: flex; flex-direction: column; gap: 24px; }
-.row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.header p {
+    font-size: 14px;
+    color: var(--text-muted, #64748B);
+    margin: 0;
+    line-height: 1.5;
+}
+
+.formWrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+}
+
+/* Grid chia 2 nửa */
+.contentGrid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 48px; /* Tăng khoảng cách giữa 2 cột */
+}
+
+/* --- CỘT TRÁI: FORM NHẬP LIỆU --- */
+.leftColumn {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
 .fullWidth { width: 100%; }
 
-/* Cột phải */
-.rightColumn { display: flex; flex-direction: column; gap: 16px; }
+/* --- CỘT PHẢI: KHU VỰC TẢI ẢNH --- */
+.rightColumn {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    /* Thêm đường viền nét đứt phân cách 2 cột rất hiện đại */
+    padding-left: 32px;
+    border-left: 1px dashed #CBD5E1;
+}
 
-/* Nút bấm ở dưới cùng */
-.actionGroup { display: flex; justify-content: flex-end; gap: 12px; padding-top: 24px; border-top: 1px solid var(--border-color); }
-.cancelBtn { padding: 10px 24px; background: #fff; border: 1px solid var(--border-color); border-radius: var(--radius-btn); font-weight: 600; cursor: pointer; color: var(--text-color); }
-.nextBtn { padding: 10px 24px; background: var(--primary-color); border: none; border-radius: var(--radius-btn); font-weight: 600; color: #fff; cursor: pointer; }
-.nextBtn:disabled { opacity: 0.6; cursor: not-allowed; }
+/* --- KHU VỰC NÚT BẤM (ACTION GROUP) --- */
+.actionGroup {
+    display: flex;
+    justify-content: flex-end;
+    gap: 16px;
+    padding-top: 24px;
+    border-top: 1px solid #E2E8F0;
+}
 
-@media (max-width: 900px) { .contentGrid { grid-template-columns: 1fr; } }
+.cancelBtn {
+    padding: 12px 28px;
+    background: #FFFFFF;
+    border: 1px solid #CBD5E1;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--text-main, #1E293B);
+    transition: all 0.2s ease;
+}
+
+.cancelBtn:hover {
+    background: #F8FAFC;
+    border-color: #94A3B8;
+}
+
+.nextBtn {
+    padding: 12px 28px;
+    background: var(--primary-dark, #115E59); /* Màu xanh rêu chủ đạo */
+    border: 1px solid var(--primary-dark, #115E59);
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #FFFFFF;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+/* Hiệu ứng nổi lên khi hover (chỉ khi nút không bị khóa) */
+.nextBtn:hover:not(:disabled) {
+    filter: brightness(1.1);
+    box-shadow: 0 4px 12px rgba(17, 94, 89, 0.25);
+    transform: translateY(-1px);
+}
+
+/* Trạng thái bị khóa khi chưa điền đủ form */
+.nextBtn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: #94A3B8; /* Đổi sang màu xám */
+    border-color: #94A3B8;
+}
+
+/* Responsive cho màn hình nhỏ (iPad, Mobile) */
+@media (max-width: 992px) {
+    .contentGrid {
+        grid-template-columns: 1fr;
+        gap: 32px;
+    }
+    .rightColumn {
+        /* Chuyển đường kẻ đứt từ dọc sang ngang khi cột phải bị rớt xuống dưới */
+        padding-left: 0;
+        border-left: none;
+        padding-top: 32px;
+        border-top: 1px dashed #CBD5E1;
+    }
+}

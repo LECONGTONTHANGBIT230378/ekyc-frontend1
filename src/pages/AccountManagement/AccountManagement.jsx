@@ -155,7 +155,6 @@ const AccountManagement = () => {
                                                 <FiEdit />
                                             </button>
 
-                                            {/* GẮN SỰ KIỆN XÓA VÀO NÚT NÀY */}
                                             <button className={styles.iconBtnTrash} title="Xóa tài khoản" onClick={() => handleDeleteClick(acc)}>
                                                 <FiTrash2 />
                                             </button>
@@ -244,20 +243,30 @@ const AccountManagement = () => {
                 </div>
             )}
 
-            {/* MODAL CẢNH BÁO XÓA TÀI KHOẢN */}
+            {/* MODAL CẢNH BÁO XÓA TÀI KHOẢN (ĐÃ TĂNG KÍCH THƯỚC) */}
             {deleteModal.isOpen && (
-                <div className={styles.modalOverlay} onClick={closeDeleteModal}>
-                    <div className={styles.deleteModalContent} onClick={(e) => e.stopPropagation()}>
-                        <div className={styles.deleteModalIconBox}>
-                            <FiTrash2 size={32} />
+                <div style={inlineStyles.overlay} onClick={closeDeleteModal}>
+                    <div style={inlineStyles.modalContent} onClick={(e) => e.stopPropagation()}>
+                        <button onClick={closeDeleteModal} style={inlineStyles.closeIconBtn}>
+                            <FiX size={24} />
+                        </button>
+
+                        <div style={inlineStyles.iconWrapper}>
+                            <FiTrash2 size={32} color="#dc2626" />
                         </div>
-                        <h3 className={styles.successModalTitle}>Xác nhận xóa</h3>
-                        <p className={styles.successModalText}>
+
+                        <h3 style={inlineStyles.title}>Xác nhận xóa</h3>
+                        <p style={inlineStyles.message}>
                             Bạn có chắc chắn muốn xóa tài khoản <strong>{deleteModal.account?.name}</strong> không? Hành động này không thể hoàn tác.
                         </p>
-                        <div className={styles.deleteActionGroup}>
-                            <button className={styles.btnCancelFull} onClick={closeDeleteModal}>Hủy bỏ</button>
-                            <button className={styles.btnDangerFull} onClick={confirmDelete}>Xóa tài khoản</button>
+
+                        <div style={inlineStyles.buttonGroup}>
+                            <button onClick={closeDeleteModal} style={inlineStyles.cancelBtn}>
+                                Hủy bỏ
+                            </button>
+                            <button onClick={confirmDelete} style={inlineStyles.deleteBtn}>
+                                Xóa tài khoản
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -281,6 +290,65 @@ const AccountManagement = () => {
 
         </div>
     );
+};
+
+// === INLINE STYLES CHO MODAL XÓA (ĐÃ TĂNG KÍCH THƯỚC) ===
+const inlineStyles = {
+    overlay: {
+        position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+        backgroundColor: 'rgba(15, 23, 42, 0.5)', backdropFilter: 'blur(3px)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999
+    },
+    modalContent: {
+        backgroundColor: '#ffffff',
+        borderRadius: '16px',
+        padding: '40px 32px',
+        width: '90%',
+        maxWidth: '520px',
+        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+        display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center',
+        position: 'relative'
+    },
+    closeIconBtn: {
+        position: 'absolute', top: '20px', right: '20px',
+        background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af',
+        display: 'flex', alignItems: 'center', justifyContent: 'center'
+    },
+    iconWrapper: {
+        width: '68px', height: '68px',
+        borderRadius: '50%',
+        backgroundColor: '#fee2e2', display: 'flex', alignItems: 'center', justifyContent: 'center',
+        marginBottom: '24px'
+    },
+    title: {
+        margin: '0 0 12px 0',
+        fontSize: '22px',
+        color: '#111827',
+        fontWeight: 600
+    },
+    message: {
+        margin: '0 0 32px 0',
+        fontSize: '15px',
+        color: '#4b5563',
+        lineHeight: '1.6'
+    },
+    buttonGroup: {
+        display: 'flex',
+        gap: '16px',
+        width: '100%'
+    },
+    cancelBtn: {
+        flex: 1,
+        padding: '12px 0',
+        backgroundColor: '#ffffff', color: '#374151',
+        border: '1px solid #d1d5db', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, fontSize: '15px'
+    },
+    deleteBtn: {
+        flex: 1,
+        padding: '12px 0',
+        backgroundColor: '#dc2626', color: '#ffffff',
+        border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, fontSize: '15px'
+    }
 };
 
 export default AccountManagement;

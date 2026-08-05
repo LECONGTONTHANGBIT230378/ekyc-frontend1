@@ -2,13 +2,16 @@ import React, { useState } from 'react';
 import { FiSearch, FiEye, FiFilter, FiChevronLeft, FiChevronRight, FiClock } from 'react-icons/fi';
 import styles from './AuthenticationHistory.module.css';
 
-// Dữ liệu mẫu (Đã chỉnh sửa để có nhiều ngày khác nhau từ 10/07 đến 15/07)
+// Import Modal từ component vừa tạo
+import AuthenticationDetailModal from './AuthenticationDetailModal';
+
+// Dữ liệu mẫu
 const getHistoryData = () => {
     const methods = ['Khuôn mặt & CCCD', 'Mật khẩu OTP', 'Vân tay'];
     const data = [];
     for (let i = 1; i <= 45; i++) {
         const isSuccess = Math.random() > 0.3;
-        const randomDay = Math.floor(10 + Math.random() * 6); // Sinh ngày ngẫu nhiên từ 10 đến 15
+        const randomDay = Math.floor(10 + Math.random() * 6);
 
         data.push({
             txnId: `TXN-${Math.floor(100000 + Math.random() * 900000)}`,
@@ -27,7 +30,6 @@ const removeVietnameseTones = (str) => {
     return str.toString().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D').toLowerCase().trim();
 };
 
-// Hàm chuyển đổi định dạng từ thẻ <input type="date"> (YYYY-MM-DD) sang định dạng dữ liệu (DD/MM/YYYY)
 const formatToDDMMYYYY = (dateStr) => {
     if (!dateStr) return '';
     const [y, m, d] = dateStr.split('-');
@@ -38,27 +40,36 @@ const AuthenticationHistory = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [filterStatus, setFilterStatus] = useState('all');
     const [isFilterOpen, setIsFilterOpen] = useState(false);
-
-    // THÊM STATE LƯU TRỮ NGÀY ĐƯỢC CHỌN LỌC
     const [filterDate, setFilterDate] = useState('');
 
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
     const [histories] = useState(getHistoryData());
 
-    // LOGIC LỌC TỔNG HỢP (TÌM KIẾM + TRẠNG THÁI + NGÀY THÁNG)
+    // State quản lý Modal
+    const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+    const [selectedRecord, setSelectedRecord] = useState(null);
+
+    // Hàm mở/đóng Modal
+    const handleViewDetails = (record) => {
+        setSelectedRecord(record);
+        setIsViewModalOpen(true);
+    };
+
+    const handleCloseModal = () => {
+        setIsViewModalOpen(false);
+        setSelectedRecord(null);
+    };
+
+    // Lọc dữ liệu
     const filteredHistories = histories.filter(record => {
         const keyword = removeVietnameseTones(searchTerm);
         const name = removeVietnameseTones(record.customerName);
         const txnId = removeVietnameseTones(record.txnId);
 
-        // 1. Kiểm tra từ khóa
         const matchesSearch = name.includes(keyword) || txnId.includes(keyword);
-
-        // 2. Kiểm tra trạng thái
         const matchesStatus = filterStatus === 'all' || record.status === filterStatus;
 
-        // 3. Kiểm tra ngày tháng
         const targetDate = formatToDDMMYYYY(filterDate);
         const matchesDate = filterDate === '' || record.time.startsWith(targetDate);
 
@@ -103,7 +114,6 @@ const AuthenticationHistory = () => {
                     <p className={styles.subtitle}>Theo dõi và kiểm tra các phiên xác thực danh tính (eKYC) của khách hàng trên hệ thống.</p>
                 </div>
 
-                {/* THANH CÔNG CỤ (TOOLBAR) */}
                 <div className={styles.toolbar}>
                     <div className={styles.searchBox}>
                         <FiSearch className={styles.searchIcon} />
@@ -116,7 +126,6 @@ const AuthenticationHistory = () => {
                         />
                     </div>
 
-                    {/* KHU VỰC LỌC NGÀY VÀ LỌC TRẠNG THÁI */}
                     <div className={styles.filterGroup}>
                         <input
                             type="date"
@@ -177,7 +186,11 @@ const AuthenticationHistory = () => {
                                     </td>
                                     <td>
                                         <div className={styles.actionGroup}>
-                                            <button className={styles.iconBtn} title="Xem chi tiết log">
+                                            <button
+                                                className={styles.iconBtn}
+                                                title="Xem chi tiết log"
+                                                onClick={() => handleViewDetails(record)}
+                                            >
                                                 <FiEye />
                                             </button>
                                         </div>
@@ -227,6 +240,13 @@ const AuthenticationHistory = () => {
                     </div>
                 )}
             </div>
+
+            {/* Render Component Modal vừa tách */}
+            <AuthenticationDetailModal
+                isOpen={isViewModalOpen}
+                onClose={handleCloseModal}
+                record={selectedRecord}
+            />
         </div>
     );
 };

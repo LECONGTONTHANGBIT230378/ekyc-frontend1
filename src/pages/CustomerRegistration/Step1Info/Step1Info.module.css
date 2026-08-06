@@ -1,13 +1,16 @@
+/* ========================================= */
+/* LAYOUT CHUNG & HEADER                     */
+/* ========================================= */
 .container {
     animation: fadeIn 0.4s ease-out;
 }
 
 .header {
-    margin-bottom: 32px; /* Tăng khoảng cách xuống form để thoáng hơn */
+    margin-bottom: 32px;
 }
 
 .header h2 {
-    font-size: 20px; /* Tăng kích thước tiêu đề */
+    font-size: 20px;
     font-weight: 700;
     margin: 0 0 8px 0;
     color: var(--text-main, #1E293B);
@@ -30,10 +33,12 @@
 .contentGrid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 48px; /* Tăng khoảng cách giữa 2 cột */
+    gap: 48px;
 }
 
-/* --- CỘT TRÁI: FORM NHẬP LIỆU --- */
+/* ========================================= */
+/* CỘT TRÁI: FORM NHẬP LIỆU                  */
+/* ========================================= */
 .leftColumn {
     display: flex;
     flex-direction: column;
@@ -46,19 +51,85 @@
     gap: 20px;
 }
 
-.fullWidth { width: 100%; }
+.fullWidth {
+    width: 100%;
+}
 
-/* --- CỘT PHẢI: KHU VỰC TẢI ẢNH --- */
+/* ========================================= */
+/* CỘT PHẢI: KHU VỰC TẢI ẢNH NỔI BẬT         */
+/* ========================================= */
 .rightColumn {
     display: flex;
     flex-direction: column;
     gap: 24px;
-    /* Thêm đường viền nét đứt phân cách 2 cột rất hiện đại */
     padding-left: 32px;
     border-left: 1px dashed #CBD5E1;
 }
 
-/* --- KHU VỰC NÚT BẤM (ACTION GROUP) --- */
+.uploadBox {
+    background-color: #F8FAFC;
+    border: 2px dashed #CBD5E1;
+    border-radius: 12px;
+    padding: 32px 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    flex: 1;
+}
+
+.uploadBox:hover, .uploadBoxActive {
+    background-color: #EFF6FF;
+    border-color: #2563EB;
+}
+
+.uploadIcon {
+    font-size: 32px;
+    color: #2563EB;
+    margin-bottom: 12px;
+    transition: transform 0.2s;
+}
+
+.uploadBox:hover .uploadIcon {
+    transform: translateY(-4px);
+}
+
+.uploadTitle {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1E293B;
+    margin: 0 0 4px 0;
+}
+
+.uploadSubtitle {
+    font-size: 12px;
+    color: #64748B;
+    margin: 0 0 16px 0;
+}
+
+.uploadBtn {
+    background-color: #FFFFFF;
+    border: 1px solid #2563EB;
+    color: #2563EB;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.uploadBox:hover .uploadBtn, .uploadBtn:hover {
+    background-color: #2563EB;
+    color: #FFFFFF;
+}
+
+/* ========================================= */
+/* KHU VỰC NÚT BẤM DƯỚI CÙNG (ACTION GROUP)  */
+/* ========================================= */
 .actionGroup {
     display: flex;
     justify-content: flex-end;
@@ -67,27 +138,30 @@
     border-top: 1px solid #E2E8F0;
 }
 
+/* Nút Hủy - Viền đỏ, chữ đỏ (Outlined Red) */
 .cancelBtn {
     padding: 12px 28px;
     background: #FFFFFF;
-    border: 1px solid #CBD5E1;
+    border: 1px solid #EF4444;
     border-radius: 8px;
     font-size: 14px;
     font-weight: 600;
     cursor: pointer;
-    color: var(--text-main, #1E293B);
+    color: #EF4444;
     transition: all 0.2s ease;
 }
 
 .cancelBtn:hover {
-    background: #F8FAFC;
-    border-color: #94A3B8;
+    background: #FEF2F2;
+    border-color: #DC2626;
+    color: #DC2626;
 }
 
+/* Nút Tiếp Tục - Chuẩn màu Primary Blue (#2563EB) */
 .nextBtn {
     padding: 12px 28px;
-    background: var(--primary-dark, #115E59); /* Màu xanh rêu chủ đạo */
-    border: 1px solid var(--primary-dark, #115E59);
+    background: #2563EB;
+    border: 1px solid #2563EB;
     border-radius: 8px;
     font-size: 14px;
     font-weight: 600;
@@ -96,32 +170,39 @@
     transition: all 0.2s ease;
 }
 
-/* Hiệu ứng nổi lên khi hover (chỉ khi nút không bị khóa) */
 .nextBtn:hover:not(:disabled) {
-    filter: brightness(1.1);
-    box-shadow: 0 4px 12px rgba(17, 94, 89, 0.25);
+    background: #1D4ED8;
+    border-color: #1D4ED8;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
     transform: translateY(-1px);
 }
 
-/* Trạng thái bị khóa khi chưa điền đủ form */
 .nextBtn:disabled {
     opacity: 0.5;
     cursor: not-allowed;
-    background: #94A3B8; /* Đổi sang màu xám */
+    background: #94A3B8;
     border-color: #94A3B8;
+    box-shadow: none;
+    transform: none;
 }
 
-/* Responsive cho màn hình nhỏ (iPad, Mobile) */
+/* ========================================= */
+/* RESPONSIVE CHO MÀN HÌNH NHỎ               */
+/* ========================================= */
 @media (max-width: 992px) {
     .contentGrid {
         grid-template-columns: 1fr;
         gap: 32px;
     }
     .rightColumn {
-        /* Chuyển đường kẻ đứt từ dọc sang ngang khi cột phải bị rớt xuống dưới */
         padding-left: 0;
         border-left: none;
         padding-top: 32px;
         border-top: 1px dashed #CBD5E1;
     }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
 }

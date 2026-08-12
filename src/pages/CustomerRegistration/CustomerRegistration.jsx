@@ -12,7 +12,7 @@ import Step6FaceMatch from './Step6FaceMatch/Step6FaceMatch';
 import Step7Success from './Step7Success/Step7Success';
 
 const STEPS = [
-    'Thông tin', 'Tài CCCD', 'Nhận diện', 'Kết quả OCR',
+    'Thông tin', 'Tải CCCD', 'Nhận diện', 'Kết quả OCR',
     'Tải Selfie', 'So khớp', 'Hoàn tất'
 ];
 
@@ -36,10 +36,13 @@ const CustomerRegistration = () => {
             case 2:
                 const step1Data = formData?.combinedData || {};
                 const step2Data = formData?.cccdImages || {};
+
+                // Đã loại bỏ mặt sau, chỉ giữ lại mặt trước (front preview) và file gốc (frontFile)
                 const combinedImages = {
                     front: step2Data.front || step1Data.frontImage || null,
-                    back: step2Data.back || step1Data.backImage || null
+                    frontFile: step2Data.frontFile || step1Data.frontFile || null
                 };
+
                 return (
                     <Step2Upload
                         onNext={handleNextStep}

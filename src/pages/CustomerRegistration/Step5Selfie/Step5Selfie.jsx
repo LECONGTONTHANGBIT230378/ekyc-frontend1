@@ -4,8 +4,11 @@ import ImageUpload from '../../../components/Form/ImageUpload.jsx';
 import styles from './Step5Selfie.module.css';
 
 const Step5Selfie = ({ onNext, onPrev, initialData }) => {
-    // Trạng thái lưu ảnh (Tải lên hoặc Chụp đều lưu chung vào đây)
-    const [selfie, setSelfie] = useState(initialData?.selfieImage || null);
+    // 💡 SỬA ĐỔI: Tách State để lưu cả URL (dùng hiển thị) và File gốc (dùng gửi API Bước 6)
+    const [selfieData, setSelfieData] = useState({
+        selfiePreview: initialData?.selfieImages?.selfiePreview || null,
+        selfieFile: initialData?.selfieImages?.selfieFile || null,
+    });
 
     // Trạng thái điều khiển Camera
     const [isCameraOpen, setIsCameraOpen] = useState(false);
@@ -13,6 +16,29 @@ const Step5Selfie = ({ onNext, onPrev, initialData }) => {
 
     const videoRef = useRef(null);
     const canvasRef = useRef(null);
+
+    // Đồng bộ lại UI nếu người dùng lùi/tiến bước
+    useEffect(() => {
+        if (initialData?.selfieImages) {
+            setSelfieData({
+                selfiePreview: initialData.selfieImages.selfiePreview || null,
+                selfieFile: initialData.selfieImages.selfieFile || null,
+            });
+        }
+    }, [initialData]);
+
+    // 💡 HÀM MỚI: Chuyển đổi chuỗi Base64 (từ canvas chụp ảnh) thành đối tượng File vật lý
+    const dataURLtoFile = (dataurl, filename) => {
+        let arr = dataurl.split(','),
+            mime = arr[0].match(/:(.*?);/)[1],
+            bstr = atob(arr[1]),
+            n = bstr.length,
+            u8arr = new Uint8Array(n);
+        while (n--) {
+            u8arr[n] = bstr.charCodeAt(n);
+        }
+        return new File([u8arr], filename, { type: mime });
+    };
 
     // Hàm bật Camera
     const startCamera = async () => {
@@ -52,7 +78,7 @@ const Step5Selfie = ({ onNext, onPrev, initialData }) => {
 
             const ctx = canvas.getContext('2d');
 
-            // BỔ SUNG: Lật ngược ảnh trước khi vẽ lên canvas để không bị ngược chiều
+            // Lật ngược ảnh trước khi vẽ lên canvas để không bị ngược chiều
             ctx.translate(canvas.width, 0);
             ctx.scale(-1, 1);
 
@@ -60,9 +86,32 @@ const Step5Selfie = ({ onNext, onPrev, initialData }) => {
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
             const imageUrl = canvas.toDataURL('image/jpeg');
 
-            setSelfie(imageUrl); // Lưu ảnh vào State
-            stopCamera();        // Chụp xong thì tắt Camera
+            // 💡 CẬP NHẬT: Tạo ra File vật lý từ chuỗi Base64
+            const capturedFile = dataURLtoFile(imageUrl, 'selfie_captured.jpg');
+
+            // Lưu cả preview và file gốc vào State
+            setSelfieData({
+                selfiePreview: imageUrl,
+                selfieFile: capturedFile
+            });
+
+            stopCamera(); // Chụp xong thì tắt Camera
         }
+    };
+
+    // Hàm xử lý nếu tải ảnh lên từ máy tính (qua component ImageUpload)
+    const handleUpload = (url, file) => {
+        setSelfieData({
+            selfiePreview: url,
+            selfieFile: file
+        });
+    };
+
+    const handleRemove = () => {
+        setSelfieData({
+            selfiePreview: null,
+            selfieFile: null
+        });
     };
 
     // Tắt camera nếu người dùng rời khỏi trang
@@ -76,7 +125,8 @@ const Step5Selfie = ({ onNext, onPrev, initialData }) => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        onNext({ selfieImage: selfie });
+        // Đóng gói data chuyển sang Bước 6
+        onNext({ selfieImages: selfieData });
     };
 
     return (
@@ -91,11 +141,11 @@ const Step5Selfie = ({ onNext, onPrev, initialData }) => {
                         {/* Vùng tải ảnh (Cách 1) */}
                         <div className={styles.uploadSection}>
                             <ImageUpload
-                                label="Camera / Tải ảnh"
+                                label="Tải ảnh lên"
                                 hint="Kéo thả hoặc chọn ảnh PNG/JPG tối đa 10MB"
-                                image={selfie}
-                                onUpload={(url) => setSelfie(url)}
-                                onRemove={() => setSelfie(null)}
+                                image={selfieData.selfiePreview}
+                                onUpload={(url, file) => handleUpload(url, file)}
+                                onRemove={handleRemove}
                             />
                         </div>
 
@@ -134,7 +184,7 @@ const Step5Selfie = ({ onNext, onPrev, initialData }) => {
                             </div>
                         </div>
 
-                        {/* Nút điều hướng đã được cập nhật */}
+                        {/* Nút điều hướng */}
                         <div className={styles.bottomAction}>
                             <button type="button" className={styles.backBtn} onClick={onPrev}>
                                 Quay lại
@@ -143,7 +193,7 @@ const Step5Selfie = ({ onNext, onPrev, initialData }) => {
                             <button
                                 type="submit"
                                 className={styles.nextBtn}
-                                disabled={!selfie}
+                                disabled={!selfieData.selfieFile} // Khóa nếu chưa có file vật lý
                             >
                                 So sánh khuôn mặt
                             </button>
@@ -154,8 +204,8 @@ const Step5Selfie = ({ onNext, onPrev, initialData }) => {
                     <div className={styles.card}>
                         <h3 className={styles.cardTitle}>Xem trước selfie</h3>
                         <div className={styles.previewBox}>
-                            {selfie ? (
-                                <img src={selfie} alt="Selfie Preview" className={styles.previewImage} />
+                            {selfieData.selfiePreview ? (
+                                <img src={selfieData.selfiePreview} alt="Selfie Preview" className={styles.previewImage} />
                             ) : (
                                 <div className={styles.placeholderSelfie}>
                                     <div className={styles.fakeFace}></div>

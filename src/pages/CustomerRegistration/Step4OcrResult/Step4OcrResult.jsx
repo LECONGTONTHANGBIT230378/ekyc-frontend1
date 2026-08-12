@@ -1,23 +1,42 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import InputField from '../../../components/Form/InputField.jsx';
 import styles from './Step4OcrResult.module.css';
 
 const Step4OcrResult = ({ onNext, onPrev, initialData }) => {
-    // Trạng thái lưu trữ dữ liệu OCR.
-    // Dữ liệu này giả lập AI đã đọc được từ Bước 3.
+    // Lấy ảnh gốc mặt trước từ Bước 2
+    const frontImage = initialData?.cccdImages?.front;
+
+    // Lấy dữ liệu OCR từ API Bước 3 trả về
+    const apiData = initialData?.ocrData || {};
+
+    // 💡 ĐÃ SỬA Ở ĐÂY: Bao phủ tất cả các biến thể tên biến (keys) có thể có từ Spring Boot
     const [ocrData, setOcrData] = useState({
-        idNumber: initialData?.ocrData?.idNumber || '079099123456',
-        fullName: initialData?.ocrData?.fullName || 'NGUYỄN VĂN A',
-        dob: initialData?.ocrData?.dob || '01/01/1999',
-        gender: initialData?.ocrData?.gender || 'Nam',
-        nationality: initialData?.ocrData?.nationality || 'Việt Nam',
-        homeTown: initialData?.ocrData?.homeTown || 'Ba Đình, Hà Nội',
-        address: initialData?.ocrData?.address || 'Quận Ba Đình, TP Hà Nội'
+        idNumber: apiData.cccdNumber || apiData.cccd_number || apiData.idNumber || '',
+        fullName: apiData.fullName || apiData.full_name || '',
+        dob: apiData.birthday || apiData.dateOfBirth || apiData.dob || '',
+        gender: apiData.gender || '',
+        nationality: apiData.nationality || 'Việt Nam',
+        homeTown: apiData.placeOfOrigin || apiData.hometown || apiData.homeTown || '',
+        address: apiData.placeOfResidence || apiData.residence || apiData.address || ''
     });
 
-    // Lấy ảnh gốc từ Bước 2 truyền sang để hiển thị đối chiếu
-    const frontImage = initialData?.cccdImages?.front;
-    const backImage = initialData?.cccdImages?.back;
+    // Đồng bộ lại form khi dữ liệu API load xong
+    useEffect(() => {
+        if (initialData?.ocrData) {
+            setOcrData({
+                idNumber: apiData.cccdNumber || apiData.cccd_number || apiData.idNumber || '',
+                fullName: apiData.fullName || apiData.full_name || '',
+                dob: apiData.birthday || apiData.dateOfBirth || apiData.dob || '',
+                gender: apiData.gender || '',
+                nationality: apiData.nationality || 'Việt Nam',
+                homeTown: apiData.placeOfOrigin || apiData.hometown || apiData.homeTown || '',
+                address: apiData.placeOfResidence || apiData.residence || apiData.address || ''
+            });
+
+            // Dòng này giúp bạn debug: Bật F12 -> Console để xem chính xác Backend trả về chữ gì
+            console.log("Dữ liệu OCR từ Backend trả về:", apiData);
+        }
+    }, [initialData]);
 
     const handleChange = (e) => {
         setOcrData({ ...ocrData, [e.target.name]: e.target.value });
@@ -25,7 +44,7 @@ const Step4OcrResult = ({ onNext, onPrev, initialData }) => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        onNext({ finalOcrData: ocrData }); // Chuyển data OCR đã chỉnh sửa sang bước tiếp theo
+        onNext({ finalOcrData: ocrData });
     };
 
     return (
@@ -61,7 +80,7 @@ const Step4OcrResult = ({ onNext, onPrev, initialData }) => {
                     </div>
 
                     {/* CỘT PHẢI: ẢNH GIẤY TỜ GỐC */}
-                    <div className={styles.rightColumn}>
+                    <div className={styles.rightColumn} style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                         <h3 className={styles.sectionTitle}>Ảnh đối chiếu</h3>
                         <div className={styles.imageCard}>
                             <span className={styles.imageLabel}>Mặt trước</span>
@@ -69,15 +88,6 @@ const Step4OcrResult = ({ onNext, onPrev, initialData }) => {
                                 <img src={frontImage} alt="Mặt trước CCCD" className={styles.previewImg} />
                             ) : (
                                 <div className={styles.noImage}>Chưa có ảnh mặt trước</div>
-                            )}
-                        </div>
-
-                        <div className={styles.imageCard}>
-                            <span className={styles.imageLabel}>Mặt sau</span>
-                            {backImage ? (
-                                <img src={backImage} alt="Mặt sau CCCD" className={styles.previewImg} />
-                            ) : (
-                                <div className={styles.noImage}>Chưa có ảnh mặt sau</div>
                             )}
                         </div>
                     </div>

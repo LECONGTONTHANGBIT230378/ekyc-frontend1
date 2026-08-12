@@ -1,112 +1,99 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom'; /* 1. Bổ sung thư viện điều hướng */
+import React from 'react';
 import styles from './Step7Success.module.css';
 
-const Step7Success = ({ onPrev, initialData }) => {
-    const [showSuccessModal, setShowSuccessModal] = useState(false);
-    const navigate = useNavigate(); /* 2. Khởi tạo biến điều hướng */
+const Step7Success = ({ initialData, onPrev }) => {
+    // 1. Lấy dữ liệu từ Bước 6 (Kết quả AI)
+    const resultData = initialData?.verificationResult || {};
+    const score = initialData?.faceMatchResult || 0;
 
+    // Xác định kết quả Khớp hay Không khớp
+    let isMatched = false;
+    if (resultData.result !== undefined) {
+        isMatched = resultData.result;
+    } else if (resultData.isMatch !== undefined) {
+        isMatched = resultData.isMatch;
+    } else {
+        isMatched = score >= 80;
+    }
+
+    // 2. Lấy dữ liệu OCR để hiển thị bên cột trái
     const ocrData = initialData?.finalOcrData || {};
+    const fullName = ocrData.fullName || 'N/A';
+    const dob = ocrData.dateOfBirth || ocrData.dob || 'N/A';
+    const gender = ocrData.gender || 'N/A';
 
-    const handleSave = () => {
-        setShowSuccessModal(true);
-    };
-
-    const handleCloseModal = () => {
-        setShowSuccessModal(false);
-    };
-
-    const handleGoHome = () => {
-        /* 3. Chuyển hướng thẳng về Dashboard */
-        navigate('/dashboard');
-
-        /* (Lưu ý: Nếu link trang chủ của bạn là đường dẫn gốc, bạn chỉ cần sửa thành navigate('/') là được nhé) */
+    // 3. Xử lý nút bấm
+    const handleSaveAndFinish = () => {
+        // Vì dữ liệu thực tế đã được lưu ở Bước 6 qua API /verify
+        // Nút này sẽ đưa người dùng về trang Quản lý khách hàng hoặc Trang chủ
+        window.location.href = '/customers';
     };
 
     return (
-        <>
-            <div className={styles.container}>
-                <div className={styles.header}>
-                    <h2>Xác nhận đăng ký khách hàng</h2>
-                    <p>Rà soát toàn bộ thông tin trước khi lưu.</p>
+        <div className={styles.container}>
+            <div className={styles.header}>
+                <h2>Xác nhận đăng ký khách hàng</h2>
+                <p>Rà soát toàn bộ thông tin trước khi hoàn tất.</p>
+            </div>
+
+            <div className={styles.contentGrid}>
+                {/* CỘT TRÁI: THÔNG TIN CCCD */}
+                <div className={styles.card}>
+                    <h3 className={styles.cardTitle}>Thông tin CCCD</h3>
+
+                    <div className={styles.infoList}>
+                        <div className={styles.infoRow}>
+                            <span className={styles.label}>Họ và tên</span>
+                            <span className={styles.value}>{fullName}</span>
+                        </div>
+                        <div className={styles.infoRow}>
+                            <span className={styles.label}>Ngày sinh</span>
+                            <span className={styles.value}>{dob}</span>
+                        </div>
+                        <div className={styles.infoRow}>
+                            <span className={styles.label}>Giới tính</span>
+                            <span className={styles.value}>{gender}</span>
+                        </div>
+                    </div>
                 </div>
 
-                <div className={styles.contentGrid}>
-                    {/* THẺ TRÁI: Thông tin CCCD */}
-                    <div className={styles.card}>
-                        <h3 className={styles.cardTitle}>Thông tin CCCD</h3>
-                        <div className={styles.infoList}>
-                            <div className={styles.infoRow}>
-                                <span className={styles.label}>Họ và tên</span>
-                                <strong className={styles.value}>{ocrData.fullName || 'NGUYỄN VĂN A'}</strong>
-                            </div>
-                            <div className={styles.infoRow}>
-                                <span className={styles.label}>Ngày sinh</span>
-                                <strong className={styles.value}>{ocrData.dob || '10/08/1994'}</strong>
-                            </div>
-                            <div className={styles.infoRow}>
-                                <span className={styles.label}>Giới tính</span>
-                                <strong className={styles.value}>{ocrData.gender || 'Nam'}</strong>
-                            </div>
+                {/* CỘT PHẢI: KẾT QUẢ XÁC THỰC VÀ NÚT BẤM */}
+                <div className={styles.card}>
+                    <h3 className={styles.cardTitle}>Kết quả xác thực</h3>
+
+                    <div className={styles.resultList}>
+                        <div className={styles.resultItem}>
+                            OCR: <span style={{color: '#137333'}}>✓ Thành công</span>
+                        </div>
+                        <div className={styles.resultItem}>
+                            Xác thực khuôn mặt: <span style={{color: isMatched ? '#137333' : '#DC2626'}}>
+                                {isMatched ? '✓ Khớp' : '✕ Không khớp'}
+                            </span>
+                        </div>
+                        <div className={styles.resultItem}>
+                            Độ tương đồng: <strong>{score}%</strong>
                         </div>
                     </div>
 
-                    {/* THẺ PHẢI: Kết quả xác thực */}
-                    <div className={styles.card}>
-                        <h3 className={styles.cardTitle}>Kết quả xác thực</h3>
-                        <div className={styles.resultList}>
-                            <div className={styles.resultItem}>OCR: ✓ Thành công</div>
-                            <div className={styles.resultItem}>Xác thực khuôn mặt: ✓ Khớp</div>
-                        </div>
-
-                        <div className={styles.actionGroup}>
-                            <button type="button" className={styles.saveBtn} onClick={handleSave}>
-                                Lưu hồ sơ
-                            </button>
-                            <button type="button" className={styles.backBtn} onClick={onPrev}>
-                                Quay lại
-                            </button>
-                        </div>
+                    <div className={styles.actionGroup}>
+                        <button
+                            type="button"
+                            className={styles.saveBtn}
+                            onClick={handleSaveAndFinish}
+                        >
+                            Hoàn tất & Về danh sách
+                        </button>
+                        <button
+                            type="button"
+                            className={styles.backBtn}
+                            onClick={onPrev}
+                        >
+                            Quay lại
+                        </button>
                     </div>
                 </div>
             </div>
-
-            {/* MODAL GIAO DIỆN CHUẨN NHƯ ẢNH MẪU */}
-            {showSuccessModal && (
-                <div className={styles.modalOverlay}>
-                    <div className={styles.modalContainer}>
-
-                        {/* 1. THANH HEADER */}
-                        <div className={styles.modalHeader}>
-                            <div className={styles.modalHeaderTitle}>
-                                <span className={styles.headerIcon}>✓</span> Thông báo hệ thống
-                            </div>
-                            <button className={styles.closeBtn} onClick={handleCloseModal}>✕</button>
-                        </div>
-
-                        {/* 2. PHẦN NỘI DUNG CHÍNH (BODY) */}
-                        <div className={styles.modalBody}>
-                            <div className={styles.successIconBox}>✓</div>
-                            <h3 className={styles.modalTitle}>Lưu hồ sơ thành công</h3>
-                            <p className={styles.modalDesc}>
-                                Dữ liệu eKYC của khách hàng <strong>{ocrData.fullName || 'NGUYỄN VĂN A'}</strong> đã được lưu trữ an toàn vào hệ thống.
-                            </p>
-                        </div>
-
-                        {/* 3. KHU VỰC NÚT BẤM (FOOTER) */}
-                        <div className={styles.modalFooter}>
-                            <button className={styles.btnSecondary} onClick={handleCloseModal}>
-                                Đóng
-                            </button>
-                            <button className={styles.btnPrimary} onClick={handleGoHome}>
-                                Về trang chủ
-                            </button>
-                        </div>
-
-                    </div>
-                </div>
-            )}
-        </>
+        </div>
     );
 };
 

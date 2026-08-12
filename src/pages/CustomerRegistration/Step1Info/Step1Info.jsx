@@ -20,15 +20,20 @@ const Step1Info = ({ onNext, initialData }) => {
         email: initialData?.email || '',
         notes: initialData?.notes || '',
         frontImage: initialData?.frontImage || null,
-        backImage: initialData?.backImage || null,
+        frontFile: initialData?.frontFile || null, // Thêm State lưu file gốc để truyền sang các bước sau
     });
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
-    const handleUpload = (field, url) => {
-        setFormData({ ...formData, [field]: url });
+    // Cập nhật để nhận cả url preview và file vật lý
+    const handleUpload = (field, url, file) => {
+        setFormData({
+            ...formData,
+            [field]: url,
+            [`${field.replace('Image', 'File')}`]: file // Đổi tên key từ frontImage -> frontFile
+        });
     };
 
     const handleSubmit = (e) => {
@@ -49,7 +54,6 @@ const Step1Info = ({ onNext, initialData }) => {
                     {/* CỘT TRÁI: THÔNG TIN TEXT */}
                     <div className={styles.leftColumn}>
                         <div className={styles.row}>
-                            {/* 2. THÊM THUỘC TÍNH disabled ĐỂ KHÓA Ô MÃ KHÁCH HÀNG */}
                             <InputField
                                 label="Mã khách hàng (Tự động)"
                                 name="customerId"
@@ -69,21 +73,14 @@ const Step1Info = ({ onNext, initialData }) => {
                         </div>
                     </div>
 
-                    {/* CỘT PHẢI: UPLOAD ẢNH MẶT TRƯỚC VÀ MẶT SAU */}
+                    {/* CỘT PHẢI: CHỈ CÒN UPLOAD ẢNH MẶT TRƯỚC */}
                     <div className={styles.rightColumn}>
                         <ImageUpload
                             label="Mặt trước CCCD (Tùy chọn)"
                             hint="Kéo thả hoặc chọn ảnh PNG/JPG tối đa 10MB"
                             image={formData.frontImage}
-                            onUpload={(url) => handleUpload('frontImage', url)}
-                            onRemove={() => handleUpload('frontImage', null)}
-                        />
-                        <ImageUpload
-                            label="Mặt sau CCCD (Tùy chọn)"
-                            hint="Kéo thả hoặc chọn ảnh PNG/JPG tối đa 10MB"
-                            image={formData.backImage}
-                            onUpload={(url) => handleUpload('backImage', url)}
-                            onRemove={() => handleUpload('backImage', null)}
+                            onUpload={(url, file) => handleUpload('frontImage', url, file)}
+                            onRemove={() => handleUpload('frontImage', null, null)}
                         />
                     </div>
                 </div>

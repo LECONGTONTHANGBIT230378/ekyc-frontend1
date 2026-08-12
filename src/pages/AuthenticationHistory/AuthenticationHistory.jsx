@@ -1,109 +1,111 @@
-import React, { useState } from 'react';
-import { FiSearch, FiEye, FiFilter, FiChevronLeft, FiChevronRight, FiClock } from 'react-icons/fi';
-import styles from './AuthenticationHistory.module.css';
-
-// Import Modal từ component vừa tạo
+import React, { useState, useEffect } from 'react';
+import { FiEye, FiSearch, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
+import { historyService } from '../../services/historyService';
 import AuthenticationDetailModal from './AuthenticationDetailModal';
-
-// Dữ liệu mẫu
-const getHistoryData = () => {
-    const methods = ['Khuôn mặt & CCCD', 'Mật khẩu OTP', 'Vân tay'];
-    const data = [];
-    for (let i = 1; i <= 45; i++) {
-        const isSuccess = Math.random() > 0.3;
-        const randomDay = Math.floor(10 + Math.random() * 6);
-
-        data.push({
-            txnId: `TXN-${Math.floor(100000 + Math.random() * 900000)}`,
-            customerName: `Khách hàng ${i}`,
-            time: `${randomDay}/07/2026 ${Math.floor(10 + Math.random() * 10)}:${Math.floor(10 + Math.random() * 49)}`,
-            method: methods[i % 3],
-            status: isSuccess ? 'success' : 'failed',
-            ipAddress: `192.168.1.${Math.floor(1 + Math.random() * 254)}`
-        });
-    }
-    return data;
-};
-
-const removeVietnameseTones = (str) => {
-    if (!str) return "";
-    return str.toString().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D').toLowerCase().trim();
-};
-
-const formatToDDMMYYYY = (dateStr) => {
-    if (!dateStr) return '';
-    const [y, m, d] = dateStr.split('-');
-    return `${d}/${m}/${y}`;
-};
+import styles from '../CustomerManagement/CustomerManagement.module.css';
 
 const AuthenticationHistory = () => {
-    const [searchTerm, setSearchTerm] = useState('');
-    const [filterStatus, setFilterStatus] = useState('all');
-    const [isFilterOpen, setIsFilterOpen] = useState(false);
-    const [filterDate, setFilterDate] = useState('');
+    const [historyList, setHistoryList] = useState([]);
+    const [loading, setLoading] = useState(false);
 
-    const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 10;
-    const [histories] = useState(getHistoryData());
+    const [currentPage, setCurrentPage] = useState(0);
+    const [totalPages, setTotalPages] = useState(1);
+    const [searchKeyword, setSearchKeyword] = useState('');
+    const [statusFilter, setStatusFilter] = useState('ALL');
 
-    // State quản lý Modal
-    const [isViewModalOpen, setIsViewModalOpen] = useState(false);
-    const [selectedRecord, setSelectedRecord] = useState(null);
+    const [viewModalOpen, setViewModalOpen] = useState(false);
+    const [selectedHistory, setSelectedHistory] = useState(null);
 
-    // Hàm mở/đóng Modal
-    const handleViewDetails = (record) => {
-        setSelectedRecord(record);
-        setIsViewModalOpen(true);
+    const fetchHistory = async () => {
+        setLoading(true);
+        try {
+            const params = {
+                page: currentPage,
+                size: 10,
+                keyword: searchKeyword
+            };
+            if (statusFilter !== 'ALL') {
+                params.status = statusFilter;
+            }
+
+            const response = await historyService.getAllHistory(params);
+
+            setHistoryList(response.content || response.data || []);
+            setTotalPages(response.totalPages > 0 ? response.totalPages : 1);
+        } catch (error) {
+            console.error('Lỗi khi tải lịch sử xác thực:', error);
+        } finally {
+            setLoading(false);
+        }
     };
 
-    const handleCloseModal = () => {
-        setIsViewModalOpen(false);
-        setSelectedRecord(null);
+    useEffect(() => {
+        fetchHistory();
+    }, [currentPage, searchKeyword, statusFilter]);
+
+    const getStatusBadgeClass = (status) => {
+        const s = status?.toUpperCase() || '';
+        if (s === 'VERIFIED' || s === 'SUCCESS' || s === 'MATCHED') return styles.badgeVerified;
+        if (s === 'PENDING') return styles.badgePending;
+        if (s === 'FAILED' || s === 'REJECTED' || s === 'NOT_MATCHED') return styles.badgeFailed;
+        return styles.badgePending;
     };
 
-    // Lọc dữ liệu
-    const filteredHistories = histories.filter(record => {
-        const keyword = removeVietnameseTones(searchTerm);
-        const name = removeVietnameseTones(record.customerName);
-        const txnId = removeVietnameseTones(record.txnId);
+    // Sửa lỗi Parse ngày tháng của chuỗi "yyyy-MM-dd HH:mm:ss" từ @JsonFormat
+    const formatDateTime = (dateVal) => {
+        if (!dateVal) return 'N/A';
 
-        const matchesSearch = name.includes(keyword) || txnId.includes(keyword);
-        const matchesStatus = filterStatus === 'all' || record.status === filterStatus;
+        // Thay khoảng trắng thành chữ 'T' để Javascript Date hiểu được (VD: "2026-08-12T14:30:00")
+        let dateStr = typeof dateVal === 'string' ? dateVal.replace(' ', 'T') : dateVal;
+        const date = new Date(dateStr);
 
-        const targetDate = formatToDDMMYYYY(filterDate);
-        const matchesDate = filterDate === '' || record.time.startsWith(targetDate);
+        if (isNaN(date.getTime())) return 'N/A';
 
-        return matchesSearch && matchesStatus && matchesDate;
-    });
-
-    const totalPages = Math.ceil(filteredHistories.length / itemsPerPage);
-    const indexOfLastItem = currentPage * itemsPerPage;
-    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-    const currentHistories = filteredHistories.slice(indexOfFirstItem, indexOfLastItem);
-
-    const handleSearchChange = (e) => {
-        setSearchTerm(e.target.value);
-        setCurrentPage(1);
+        return date.toLocaleString('vi-VN', {
+            hour: '2-digit', minute: '2-digit',
+            day: '2-digit', month: '2-digit', year: 'numeric'
+        });
     };
 
-    const handleSelectFilter = (status) => {
-        setFilterStatus(status);
-        setIsFilterOpen(false);
-        setCurrentPage(1);
-    };
+    const renderPagination = () => {
+        const pages = [];
+        const maxVisible = 5;
+        let startPage = Math.max(0, currentPage - Math.floor(maxVisible / 2));
+        let endPage = Math.min(totalPages - 1, startPage + maxVisible - 1);
 
-    const handleDateChange = (e) => {
-        setFilterDate(e.target.value);
-        setCurrentPage(1);
-    };
+        if (endPage - startPage + 1 < maxVisible) {
+            startPage = Math.max(0, endPage - maxVisible + 1);
+        }
 
-    const getPaginationNumbers = () => {
-        const total = totalPages;
-        const current = currentPage;
-        if (total <= 5) return Array.from({ length: total }, (_, i) => i + 1);
-        if (current <= 3) return [1, 2, 3, 4, '...', total];
-        if (current >= total - 2) return [1, '...', total - 3, total - 2, total - 1, total];
-        return [1, '...', current - 1, current, current + 1, '...', total];
+        if (startPage > 0) {
+            pages.push(<button key="first" className={styles.pageBtn} onClick={() => setCurrentPage(0)}>1</button>);
+            if (startPage > 1) pages.push(<span key="dots-start" className={styles.dots}>...</span>);
+        }
+
+        for (let i = startPage; i <= endPage; i++) {
+            pages.push(
+                <button key={i} className={`${styles.pageBtn} ${currentPage === i ? styles.activePage : ''}`} onClick={() => setCurrentPage(i)}>
+                    {i + 1}
+                </button>
+            );
+        }
+
+        if (endPage < totalPages - 1) {
+            if (endPage < totalPages - 2) pages.push(<span key="dots-end" className={styles.dots}>...</span>);
+            pages.push(<button key="last" className={styles.pageBtn} onClick={() => setCurrentPage(totalPages - 1)}>{totalPages}</button>);
+        }
+
+        return (
+            <div className={styles.pagination}>
+                <button className={`${styles.pageBtn} ${currentPage === 0 ? styles.disabledBtn : ''}`} onClick={() => setCurrentPage(prev => Math.max(0, prev - 1))} disabled={currentPage === 0}>
+                    <FiChevronLeft />
+                </button>
+                {pages}
+                <button className={`${styles.pageBtn} ${currentPage === totalPages - 1 || totalPages === 0 ? styles.disabledBtn : ''}`} onClick={() => setCurrentPage(prev => Math.min(totalPages - 1, prev + 1))} disabled={currentPage === totalPages - 1 || totalPages === 0}>
+                    <FiChevronRight />
+                </button>
+            </div>
+        );
     };
 
     return (
@@ -111,7 +113,7 @@ const AuthenticationHistory = () => {
             <div className={styles.mainCard}>
                 <div className={styles.header}>
                     <h2 className={styles.title}>Lịch sử xác thực</h2>
-                    <p className={styles.subtitle}>Theo dõi và kiểm tra các phiên xác thực danh tính (eKYC) của khách hàng trên hệ thống.</p>
+                    <p className={styles.subtitle}>Theo dõi các giao dịch eKYC, nhận diện OCR và đối chiếu khuôn mặt.</p>
                 </div>
 
                 <div className={styles.toolbar}>
@@ -119,134 +121,105 @@ const AuthenticationHistory = () => {
                         <FiSearch className={styles.searchIcon} />
                         <input
                             type="text"
-                            placeholder="Tìm kiếm theo mã giao dịch hoặc tên khách hàng..."
-                            value={searchTerm}
-                            onChange={handleSearchChange}
                             className={styles.searchInput}
+                            placeholder="Tìm kiếm mã giao dịch, CCCD..."
+                            value={searchKeyword}
+                            onChange={(e) => setSearchKeyword(e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && setCurrentPage(0)}
                         />
                     </div>
-
-                    <div className={styles.filterGroup}>
-                        <input
-                            type="date"
-                            className={styles.dateInput}
-                            value={filterDate}
-                            onChange={handleDateChange}
-                        />
-
-                        <div className={styles.filterWrapper}>
-                            <button className={styles.filterBtn} onClick={() => setIsFilterOpen(!isFilterOpen)}>
-                                <FiFilter style={{ marginRight: '8px' }} />
-                                {filterStatus === 'all' ? 'Tất cả trạng thái' : filterStatus === 'success' ? 'Thành công' : 'Thất bại'}
-                            </button>
-
-                            {isFilterOpen && (
-                                <div className={styles.filterDropdown}>
-                                    <div className={`${styles.filterOption} ${filterStatus === 'all' ? styles.activeFilter : ''}`} onClick={() => handleSelectFilter('all')}>Tất cả</div>
-                                    <div className={`${styles.filterOption} ${filterStatus === 'success' ? styles.activeFilter : ''}`} onClick={() => handleSelectFilter('success')}>Thành công</div>
-                                    <div className={`${styles.filterOption} ${filterStatus === 'failed' ? styles.activeFilter : ''}`} onClick={() => handleSelectFilter('failed')}>Thất bại</div>
-                                </div>
-                            )}
-                        </div>
-                    </div>
+                    <select
+                        className={styles.filterBtn}
+                        value={statusFilter}
+                        onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(0); }}
+                        style={{ outline: 'none' }}
+                    >
+                        <option value="ALL">Tất cả trạng thái</option>
+                        <option value="MATCHED">Khớp (Matched)</option>
+                        <option value="NOT_MATCHED">Không khớp (Not Matched)</option>
+                    </select>
                 </div>
 
                 <div className={styles.tableWrapper}>
                     <table className={styles.dataTable}>
                         <thead>
                         <tr>
-                            <th>Mã GD</th>
+                            <th>Mã GD (ID)</th>
+                            <th>Số CCCD</th>
                             <th>Thời gian</th>
-                            <th>Khách hàng</th>
-                            <th>Phương thức</th>
-                            <th>IP Truy cập</th>
+                            <th>Điểm Face Match</th>
                             <th>Trạng thái</th>
                             <th className={styles.actionHeader}>Chi tiết</th>
                         </tr>
                         </thead>
                         <tbody>
-                        {currentHistories.length > 0 ? (
-                            currentHistories.map((record, index) => (
-                                <tr key={index}>
-                                    <td style={{ fontWeight: 600, color: '#1A1A1A' }}>{record.txnId}</td>
-                                    <td>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                            <FiClock color="#888" /> {record.time}
-                                        </div>
-                                    </td>
-                                    <td>{record.customerName}</td>
-                                    <td>{record.method}</td>
-                                    <td>{record.ipAddress}</td>
-                                    <td>
-                                        {record.status === 'success' ? (
-                                            <span className={`${styles.badge} ${styles.badgeSuccess}`}>Thành công</span>
-                                        ) : (
-                                            <span className={`${styles.badge} ${styles.badgeFailed}`}>Thất bại</span>
-                                        )}
-                                    </td>
-                                    <td>
-                                        <div className={styles.actionGroup}>
-                                            <button
-                                                className={styles.iconBtn}
-                                                title="Xem chi tiết log"
-                                                onClick={() => handleViewDetails(record)}
-                                            >
-                                                <FiEye />
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))
+                        {loading ? (
+                            <tr><td colSpan="6" className={styles.emptyState}>Đang tải dữ liệu...</td></tr>
+                        ) : historyList.length === 0 ? (
+                            <tr><td colSpan="6" className={styles.emptyState}>Không có lịch sử xác thực nào.</td></tr>
                         ) : (
-                            <tr>
-                                <td colSpan="7" className={styles.emptyState}>Không tìm thấy lịch sử giao dịch nào.</td>
-                            </tr>
+                            historyList.map((item) => {
+                                // MAPPING DỮ LIỆU CHÍNH XÁC THEO EkycHistory.java
+
+                                // Số CCCD lấy từ quan hệ ManyToOne với Customer
+                                const cccd = item.customer?.cccdNumber || item.customer?.cccdInformation?.cccdNumber || 'N/A';
+
+                                // Thời gian lấy từ biến verifyTime
+                                const time = item.verifyTime;
+
+                                // Điểm lấy từ biến similarityScore
+                                let score = item.similarityScore;
+                                // Nếu điểm lưu dạng 0.85 thì nhân 100 để hiển thị 85%
+                                let displayScore = (score !== undefined && score !== null) ? (score <= 1 ? score * 100 : score) : null;
+
+                                // Trạng thái lấy từ biến result
+                                const status = item.result || 'N/A';
+
+                                return (
+                                    <tr key={item.id}>
+                                        <td style={{ fontWeight: 600 }}>#{item.id}</td>
+                                        <td>{cccd}</td>
+                                        <td>{formatDateTime(time)}</td>
+                                        <td>
+                                            {displayScore !== null ? (
+                                                <span style={{ color: displayScore >= 80 ? '#16A34A' : '#DC2626', fontWeight: 600 }}>
+                                                    {Number(displayScore).toFixed(2)}%
+                                                </span>
+                                            ) : 'N/A'}
+                                        </td>
+                                        <td>
+                                            <span className={`${styles.badge} ${getStatusBadgeClass(status)}`}>
+                                                {status === 'MATCHED' ? 'Khớp' : status === 'NOT_MATCHED' ? 'Không khớp' : status}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div className={styles.actionGroup}>
+                                                <button
+                                                    className={styles.iconBtn}
+                                                    title="Xem chi tiết"
+                                                    onClick={() => { setSelectedHistory(item); setViewModalOpen(true); }}
+                                                >
+                                                    <FiEye />
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                );
+                            })
                         )}
                         </tbody>
                     </table>
                 </div>
 
-                {totalPages > 1 && (
-                    <div className={styles.pagination}>
-                        <button
-                            className={`${styles.pageBtn} ${currentPage === 1 ? styles.disabledBtn : ''}`}
-                            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                            disabled={currentPage === 1}
-                        >
-                            <FiChevronLeft size={18} />
-                        </button>
-
-                        {getPaginationNumbers().map((item, index) => (
-                            item === '...' ? (
-                                <span key={`dots-${index}`} className={styles.dots}>...</span>
-                            ) : (
-                                <button
-                                    key={item}
-                                    className={`${styles.pageBtn} ${currentPage === item ? styles.activePage : ''}`}
-                                    onClick={() => setCurrentPage(item)}
-                                >
-                                    {item}
-                                </button>
-                            )
-                        ))}
-
-                        <button
-                            className={`${styles.pageBtn} ${currentPage === totalPages ? styles.disabledBtn : ''}`}
-                            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                            disabled={currentPage === totalPages}
-                        >
-                            <FiChevronRight size={18} />
-                        </button>
-                    </div>
-                )}
+                {renderPagination()}
             </div>
 
-            {/* Render Component Modal vừa tách */}
-            <AuthenticationDetailModal
-                isOpen={isViewModalOpen}
-                onClose={handleCloseModal}
-                record={selectedRecord}
-            />
+            {viewModalOpen && (
+                <AuthenticationDetailModal
+                    historyData={selectedHistory}
+                    onClose={() => setViewModalOpen(false)}
+                />
+            )}
         </div>
     );
 };

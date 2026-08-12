@@ -1,156 +1,143 @@
-import React, { useState, useMemo, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
+import { FiEye, FiTrash2, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
+import { customerService } from '../../services/customerService';
+import CustomerToolbar from './CustomerToolbar';
+import CustomerViewModal from './CustomerViewModal';
+import CustomerDeleteModal from './CustomerDeleteModal';
 import styles from './CustomerManagement.module.css';
-import {
-    FiSearch, FiFilter, FiEye, FiTrash2,
-    FiChevronLeft, FiChevronRight, FiX
-} from 'react-icons/fi';
-
-// 1. DỮ LIỆU MẪU (Mở rộng thêm email, sđt, ngày tạo để hiển thị trong Modal)
-const mockData = [
-    { id: '001', name: 'Nguyễn Văn A', cccd: '079123456842', role: 'Khách hàng', status: 'Đã xác thực', phone: '0901234567', email: 'nguyenvana@gmail.com', createdAt: '10/08/2026' },
-    { id: '002', name: 'Trần Minh', cccd: '036987654112', role: 'Đại lý', status: 'Đang chờ', phone: '0912345678', email: 'tranminh@gmail.com', createdAt: '11/08/2026' },
-    { id: '003', name: 'Lê Thu', cccd: '045456789903', role: 'Khách hàng', status: 'Thất bại', phone: '0987654321', email: 'lethu@gmail.com', createdAt: '09/08/2026' },
-    { id: '004', name: 'Phạm Văn Dũng', cccd: '012321654333', role: 'Khách hàng', status: 'Đã xác thực', phone: '0933334444', email: 'phamvandung@gmail.com', createdAt: '08/08/2026' },
-    { id: '005', name: 'Hoàng Thị Yến', cccd: '034789123555', role: 'Quản trị viên', status: 'Đã xác thực', phone: '0977778888', email: 'hoangyen@gmail.com', createdAt: '07/08/2026' },
-];
-
-const FILTER_OPTIONS = ['Tất cả', 'Đã xác thực', 'Đang chờ', 'Thất bại'];
 
 const CustomerManagement = () => {
-    // STATE: Quản lý Tìm kiếm & Lọc
-    const [searchTerm, setSearchTerm] = useState('');
-    const [statusFilter, setStatusFilter] = useState('Tất cả');
-    const [isFilterOpen, setIsFilterOpen] = useState(false);
+    const [customers, setCustomers] = useState([]);
+    const [loading, setLoading] = useState(false);
 
-    // STATE: Quản lý Modals
-    const [viewModal, setViewModal] = useState({ isOpen: false, data: null });
-    const [deleteModal, setDeleteModal] = useState({ isOpen: false, data: null });
+    const [currentPage, setCurrentPage] = useState(0);
+    const [totalPages, setTotalPages] = useState(1);
+    const [searchKeyword, setSearchKeyword] = useState('');
 
-    // Xử lý click ra ngoài để đóng Filter Dropdown
-    const filterRef = useRef(null);
-    useEffect(() => {
-        const handleClickOutside = (event) => {
-            if (filterRef.current && !filterRef.current.contains(event.target)) {
-                setIsFilterOpen(false);
-            }
-        };
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, []);
+    const [viewModalOpen, setViewModalOpen] = useState(false);
+    const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+    const [selectedCustomer, setSelectedCustomer] = useState(null);
 
-    // Logic Lọc & Tìm kiếm dữ liệu
-    const filteredData = useMemo(() => {
-        return mockData.filter(item => {
-            const matchSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                item.cccd.includes(searchTerm) ||
-                item.id.includes(searchTerm);
-            const matchFilter = statusFilter === 'Tất cả' || item.status === statusFilter;
-            return matchSearch && matchFilter;
-        });
-    }, [searchTerm, statusFilter]);
+    const fetchCustomers = async () => {
+        setLoading(true);
+        try {
+            const params = {
+                page: currentPage,
+                size: 10,
+                keyword: searchKeyword
+            };
 
-    // Helpers UI
-    const getStatusBadge = (status) => {
-        let badgeClass = '';
-        if (status === 'Đã xác thực') badgeClass = styles.badgeVerified;
-        else if (status === 'Đang chờ') badgeClass = styles.badgePending;
-        else if (status === 'Thất bại') badgeClass = styles.badgeFailed;
-        return <span className={`${styles.badge} ${badgeClass}`}>{status}</span>;
+            const response = await customerService.getAllCustomers(params);
+
+            setCustomers(response.content || response.data || []);
+            setTotalPages(response.totalPages > 0 ? response.totalPages : 1);
+        } catch (error) {
+            console.error('Lỗi khi tải danh sách khách hàng:', error);
+        } finally {
+            setLoading(false);
+        }
     };
 
-    const getInitials = (name) => {
-        const parts = name.trim().split(' ');
-        if (parts.length >= 2) return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
-        return name.charAt(0).toUpperCase();
+    useEffect(() => {
+        fetchCustomers();
+    }, [currentPage, searchKeyword]);
+
+    const renderPagination = () => {
+        const pages = [];
+        const maxVisible = 5;
+        let startPage = Math.max(0, currentPage - Math.floor(maxVisible / 2));
+        let endPage = Math.min(totalPages - 1, startPage + maxVisible - 1);
+
+        if (endPage - startPage + 1 < maxVisible) {
+            startPage = Math.max(0, endPage - maxVisible + 1);
+        }
+
+        if (startPage > 0) {
+            pages.push(<button key="first" className={styles.pageBtn} onClick={() => setCurrentPage(0)}>1</button>);
+            if (startPage > 1) pages.push(<span key="dots-start" className={styles.dots}>...</span>);
+        }
+
+        for (let i = startPage; i <= endPage; i++) {
+            pages.push(
+                <button key={i} className={`${styles.pageBtn} ${currentPage === i ? styles.activePage : ''}`} onClick={() => setCurrentPage(i)}>
+                    {i + 1}
+                </button>
+            );
+        }
+
+        if (endPage < totalPages - 1) {
+            if (endPage < totalPages - 2) pages.push(<span key="dots-end" className={styles.dots}>...</span>);
+            pages.push(<button key="last" className={styles.pageBtn} onClick={() => setCurrentPage(totalPages - 1)}>{totalPages}</button>);
+        }
+
+        return (
+            <div className={styles.pagination}>
+                <button className={`${styles.pageBtn} ${currentPage === 0 ? styles.disabledBtn : ''}`} onClick={() => setCurrentPage(prev => Math.max(0, prev - 1))} disabled={currentPage === 0}>
+                    <FiChevronLeft />
+                </button>
+                {pages}
+                <button className={`${styles.pageBtn} ${currentPage === totalPages - 1 || totalPages === 0 ? styles.disabledBtn : ''}`} onClick={() => setCurrentPage(prev => Math.min(totalPages - 1, prev + 1))} disabled={currentPage === totalPages - 1 || totalPages === 0}>
+                    <FiChevronRight />
+                </button>
+            </div>
+        );
     };
 
     return (
         <div className={styles.pageContainer}>
             <div className={styles.mainCard}>
-
-                {/* 1. HEADER */}
                 <div className={styles.header}>
                     <h2 className={styles.title}>Quản lý khách hàng</h2>
-                    <p className={styles.subtitle}>Tìm kiếm, lọc, xem chi tiết, chỉnh sửa, xóa, thêm tài khoản và phân quyền.</p>
+                    <p className={styles.subtitle}>Xem và quản lý thông tin liên hệ, hồ sơ của khách hàng.</p>
                 </div>
 
-                {/* 2. TOOLBAR (Tìm kiếm & Lọc) */}
-                <div className={styles.toolbar}>
-                    <div className={styles.searchBox}>
-                        <FiSearch className={styles.searchIcon} />
-                        <input
-                            type="text"
-                            className={styles.searchInput}
-                            placeholder="Tìm kiếm theo mã, tên, CCCD..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                        />
-                    </div>
+                <CustomerToolbar
+                    onSearch={(keyword) => { setSearchKeyword(keyword); setCurrentPage(0); }}
+                />
 
-                    <div className={styles.filterWrapper} ref={filterRef}>
-                        <button
-                            className={styles.filterBtn}
-                            onClick={() => setIsFilterOpen(!isFilterOpen)}
-                        >
-                            <FiFilter style={{ marginRight: '8px' }} />
-                            {statusFilter === 'Tất cả' ? 'Lọc trạng thái' : statusFilter}
-                        </button>
-
-                        {isFilterOpen && (
-                            <div className={styles.filterDropdown}>
-                                {FILTER_OPTIONS.map(option => (
-                                    <div
-                                        key={option}
-                                        className={`${styles.filterOption} ${statusFilter === option ? styles.activeFilter : ''}`}
-                                        onClick={() => {
-                                            setStatusFilter(option);
-                                            setIsFilterOpen(false);
-                                        }}
-                                    >
-                                        {option}
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-                </div>
-
-                {/* 3. BẢNG DỮ LIỆU */}
                 <div className={styles.tableWrapper}>
                     <table className={styles.dataTable}>
                         <thead>
                         <tr>
-                            <th>Mã</th>
+                            <th>ID</th>
                             <th>Họ và tên</th>
                             <th>Số CCCD</th>
-                            <th>Vai trò</th>
-                            <th>Trạng thái</th>
+                            <th>Số điện thoại</th>
+                            <th>Email</th>
                             <th className={styles.actionHeader}>Thao tác</th>
                         </tr>
                         </thead>
                         <tbody>
-                        {filteredData.length > 0 ? (
-                            filteredData.map((row) => (
-                                <tr key={row.id}>
-                                    <td>{row.id}</td>
-                                    <td><strong>{row.name}</strong></td>
-                                    <td>{row.cccd}</td>
-                                    <td>{row.role}</td>
-                                    <td>{getStatusBadge(row.status)}</td>
+                        {loading ? (
+                            <tr>
+                                <td colSpan="6" className={styles.emptyState}>Đang tải dữ liệu...</td>
+                            </tr>
+                        ) : customers.length === 0 ? (
+                            <tr>
+                                <td colSpan="6" className={styles.emptyState}>Không tìm thấy khách hàng nào.</td>
+                            </tr>
+                        ) : (
+                            customers.map((customer) => (
+                                <tr key={customer.id}>
+                                    <td style={{ fontWeight: 600 }}>#{customer.id}</td>
+                                    <td style={{ fontWeight: 500 }}>{customer.fullName || 'Chưa cập nhật'}</td>
+                                    <td>{customer.cccdNumber || 'N/A'}</td>
+                                    <td>{customer.phone || 'Chưa cập nhật'}</td>
+                                    <td>{customer.email || 'Chưa cập nhật'}</td>
                                     <td>
                                         <div className={styles.actionGroup}>
                                             <button
                                                 className={styles.iconBtn}
-                                                title="Xem hồ sơ"
-                                                onClick={() => setViewModal({ isOpen: true, data: row })}
+                                                title="Xem chi tiết"
+                                                onClick={() => { setSelectedCustomer(customer); setViewModalOpen(true); }}
                                             >
                                                 <FiEye />
                                             </button>
                                             <button
                                                 className={styles.iconBtn}
-                                                style={{ color: '#EF4444' }} // Ghi đè màu đỏ cho nút xóa
-                                                title="Xóa"
-                                                onClick={() => setDeleteModal({ isOpen: true, data: row })}
+                                                title="Xóa hồ sơ"
+                                                style={{ color: '#EF4444' }}
+                                                onClick={() => { setSelectedCustomer(customer); setDeleteModalOpen(true); }}
                                             >
                                                 <FiTrash2 />
                                             </button>
@@ -158,114 +145,32 @@ const CustomerManagement = () => {
                                     </td>
                                 </tr>
                             ))
-                        ) : (
-                            <tr>
-                                <td colSpan="6" className={styles.emptyState}>Không tìm thấy dữ liệu phù hợp.</td>
-                            </tr>
                         )}
                         </tbody>
                     </table>
                 </div>
 
-                {/* 4. PHÂN TRANG */}
-                <div className={styles.pagination}>
-                    <button className={`${styles.pageBtn} ${styles.disabledBtn}`} disabled><FiChevronLeft /></button>
-                    <button className={`${styles.pageBtn} ${styles.activePage}`}>1</button>
-                    <button className={styles.pageBtn}>2</button>
-                    <button className={styles.pageBtn}>3</button>
-                    <span className={styles.dots}>...</span>
-                    <button className={styles.pageBtn}>12</button>
-                    <button className={styles.pageBtn}><FiChevronRight /></button>
-                </div>
+                {renderPagination()}
             </div>
 
-            {/* ================= MODAL XEM CHI TIẾT ================= */}
-            {viewModal.isOpen && viewModal.data && (
-                <div className={styles.modalOverlay}>
-                    <div className={styles.modalContent}>
-                        <div className={styles.modalHeader}>
-                            <h3>Hồ sơ định danh</h3>
-                            <button className={styles.closeBtn} onClick={() => setViewModal({ isOpen: false, data: null })}>
-                                <FiX />
-                            </button>
-                        </div>
-                        <div className={styles.modalBody}>
-                            <div className={styles.profileSection}>
-                                <div className={styles.avatarPlaceholder}>
-                                    {getInitials(viewModal.data.name)}
-                                </div>
-                                <div className={styles.profileTitle}>
-                                    <h2 className={styles.customerName}>{viewModal.data.name}</h2>
-                                    <div className={styles.statusWrapper}>
-                                        {getStatusBadge(viewModal.data.status)}
-                                    </div>
-                                </div>
-                            </div>
-                            <div className={styles.infoBox}>
-                                <div className={styles.infoGrid}>
-                                    <div className={styles.infoItem}>
-                                        <span className={styles.infoLabel}>Số CCCD</span>
-                                        <span className={styles.infoValue}>{viewModal.data.cccd}</span>
-                                    </div>
-                                    <div className={styles.infoItem}>
-                                        <span className={styles.infoLabel}>Vai trò</span>
-                                        <span className={styles.infoValue}>{viewModal.data.role}</span>
-                                    </div>
-                                    <div className={styles.infoItem}>
-                                        <span className={styles.infoLabel}>Số điện thoại</span>
-                                        <span className={styles.infoValue}>{viewModal.data.phone}</span>
-                                    </div>
-                                    <div className={styles.infoItem}>
-                                        <span className={styles.infoLabel}>Email</span>
-                                        <span className={styles.infoValue}>{viewModal.data.email}</span>
-                                    </div>
-                                    <div className={styles.infoItemFull}>
-                                        <span className={styles.infoLabel}>Ngày tạo hồ sơ</span>
-                                        <span className={styles.infoValue}>{viewModal.data.createdAt}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div className={styles.modalFooter}>
-                            <button className={styles.btnPrimary} onClick={() => setViewModal({ isOpen: false, data: null })}>
-                                Đóng
-                            </button>
-                        </div>
-                    </div>
-                </div>
+            {viewModalOpen && (
+                <CustomerViewModal
+                    customer={selectedCustomer}
+                    onClose={() => setViewModalOpen(false)}
+                />
             )}
-
-            {/* ================= MODAL XÓA ================= */}
-            {deleteModal.isOpen && deleteModal.data && (
-                <div className={styles.modalOverlay}>
-                    <div className={styles.modalContent} style={{ width: '400px' }}>
-                        <div className={styles.modalHeader}>
-                            <h3>Xác nhận xóa</h3>
-                            <button className={styles.closeBtn} onClick={() => setDeleteModal({ isOpen: false, data: null })}>
-                                <FiX />
-                            </button>
-                        </div>
-                        <div className={styles.modalBody}>
-                            <p style={{ margin: 0, fontSize: '15px', color: '#475569', lineHeight: '1.5' }}>
-                                Bạn có chắc chắn muốn xóa hồ sơ của khách hàng <strong>{deleteModal.data.name}</strong> không? Hành động này không thể hoàn tác.
-                            </p>
-                        </div>
-                        <div className={styles.modalFooter}>
-                            <button className={styles.btnCancel} onClick={() => setDeleteModal({ isOpen: false, data: null })}>
-                                Hủy bỏ
-                            </button>
-                            <button className={styles.btnDelete} onClick={() => {
-                                // Thực hiện logic xóa API ở đây
-                                alert(`Đã xóa khách hàng: ${deleteModal.data.name}`);
-                                setDeleteModal({ isOpen: false, data: null });
-                            }}>
-                                Xác nhận xóa
-                            </button>
-                        </div>
-                    </div>
-                </div>
+            {deleteModalOpen && (
+                <CustomerDeleteModal
+                    customerId={selectedCustomer?.id}
+                    customerName={selectedCustomer?.fullName}
+                    onConfirm={async () => {
+                        await customerService.deleteCustomer(selectedCustomer.id);
+                        setDeleteModalOpen(false);
+                        fetchCustomers();
+                    }}
+                    onClose={() => setDeleteModalOpen(false)}
+                />
             )}
-
         </div>
     );
 };

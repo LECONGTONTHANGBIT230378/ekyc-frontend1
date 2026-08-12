@@ -1,242 +1,494 @@
-/* ========================================= */
-/* BỐ CỤC TỔNG THỂ CỦA TRANG                 */
-/* ========================================= */
-.pageContainer { padding: 32px 40px; animation: fadeIn 0.4s ease-out; }
+/* =========================================================
+   TRANG BÁO CÁO & THỐNG KÊ (REPORTS) / QUẢN LÝ TÀI KHOẢN
+========================================================= */
+
+.pageContainer {
+    padding: 24px;
+    background-color: #FAFAFA;
+    min-height: 100vh;
+    font-family: 'Inter', system-ui, sans-serif;
+}
 
 .mainCard {
-    background: #FFFFFF;
+    background: #ffffff;
     border-radius: 12px;
-    border: 1px solid #EAE5D9;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+    border: 1px solid #E5E7EB;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
     overflow: hidden;
 }
 
+/* --- HEADER --- */
 .header {
-    padding: 24px 32px;
-    border-bottom: 1px solid #EAE5D9;
     display: flex;
-    justify-content: space-between;
+    justify-content: space-between; /* Đẩy nút Thêm tài khoản sang góc phải */
     align-items: center;
+    padding: 20px 24px;
+    border-bottom: 1px solid #E5E7EB;
 }
 
-.title { font-size: 20px; font-weight: 700; color: #1A1A1A; margin: 0 0 6px 0; }
-.subtitle { font-size: 14px; color: #666666; margin: 0; }
+.title {
+    font-size: 20px;
+    font-weight: 700;
+    color: #111827;
+    margin: 0 0 6px 0;
+}
 
-/* Nút Thêm Mới Tài Khoản */
+.subtitle {
+    font-size: 14px;
+    color: #6B7280;
+    margin: 0;
+}
+
+/* Nút Thêm tài khoản hiện đại */
 .btnAdd {
     display: flex;
     align-items: center;
     gap: 8px;
-    background-color: #1A1A1A;
-    color: #FFFFFF;
-    border: none;
-    padding: 0 20px;
-    height: 42px;
+    background-color: #111827;
+    color: #ffffff;
+    padding: 10px 18px;
     border-radius: 8px;
+    border: none;
     font-size: 14px;
     font-weight: 600;
     cursor: pointer;
-    transition: 0.2s;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
-.btnAdd:hover { background-color: #333333; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
 
-/* ========================================= */
-/* TOOLBAR VÀ BẢNG DỮ LIỆU                   */
-/* ========================================= */
+.btnAdd:hover {
+    background-color: #374151;
+    transform: translateY(-1px);
+}
+
+/* --- TOOLBAR (Tìm kiếm & Lọc) --- */
 .toolbar {
-    padding: 20px 32px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: #FAF9F5;
-    border-bottom: 1px solid #EAE5D9;
+    padding: 16px 24px;
+    background-color: #FCFBFA;
+    border-bottom: 1px solid #E5E7EB;
 }
 
 .searchBox {
-    display: flex;
-    align-items: center;
-    background: #FFFFFF;
-    border: 1px solid #EAE5D9;
-    border-radius: 8px;
-    padding: 0 16px;
+    position: relative;
     width: 320px;
-    height: 40px;
-}
-.searchIcon { color: #888888; margin-right: 10px; }
-.searchInput { border: none; outline: none; width: 100%; font-size: 14px; color: #1A1A1A; }
-
-.filterWrapper { position: relative; }
-.filterBtn {
-    display: flex;
-    align-items: center;
-    background: #FFFFFF;
-    border: 1px solid #EAE5D9;
-    padding: 0 16px;
-    height: 40px;
-    border-radius: 8px;
-    font-size: 14px;
-    font-weight: 600;
-    color: #333333;
-    cursor: pointer;
-}
-.filterDropdown {
-    position: absolute; top: 110%; right: 0; width: 180px;
-    background: #FFFFFF; border: 1px solid #EAE5D9; border-radius: 8px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.05); padding: 8px 0; z-index: 10;
-}
-.filterOption { padding: 10px 16px; font-size: 14px; color: #444; cursor: pointer; }
-.filterOption:hover { background: #FAF9F5; color: #1A1A1A; }
-.activeFilter { font-weight: 700; color: #1A1A1A; background: #F5F5F5; }
-
-.tableWrapper { overflow-x: auto; }
-.dataTable { width: 100%; border-collapse: collapse; text-align: left; }
-.dataTable th { background: #FFFFFF; color: #666666; font-size: 13px; font-weight: 600; padding: 16px 32px; border-bottom: 1px solid #EAE5D9; }
-.dataTable td { padding: 16px 32px; border-bottom: 1px solid #F5F5F5; font-size: 14px; color: #1A1A1A; vertical-align: middle; }
-.dataTable tbody tr:hover { background: #FAF9F5; }
-
-/* BADGES PHÂN QUYỀN VÀ TRẠNG THÁI */
-.roleBadge { padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; }
-.roleAdmin { background: #F3E8FF; color: #7E22CE; border: 1px solid #E9D5FF; }
-.roleStaff { background: #F1F5F9; color: #475569; border: 1px solid #E2E8F0; }
-
-.statusBadge { padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; }
-.statusActive { background: #ECFDF5; color: #059669; border: 1px solid #D1FAE5; }
-.statusInactive { background: #FEF2F2; color: #DC2626; border: 1px solid #FEE2E2; }
-
-/* ACTIONS */
-.actionGroup { display: flex; gap: 8px; }
-.iconBtn { background: #FAF9F5; border: 1px solid #EAE5D9; border-radius: 6px; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; color: #666; cursor: pointer; transition: 0.2s; }
-.iconBtn:hover { background: #1A1A1A; color: #FFF; border-color: #1A1A1A; }
-.iconBtnTrash { background: #FEF2F2; border: 1px solid #FEE2E2; border-radius: 6px; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; color: #DC2626; cursor: pointer; transition: 0.2s; }
-.iconBtnTrash:hover { background: #DC2626; color: #FFF; }
-
-/* PHÂN TRANG */
-.pagination { display: flex; justify-content: center; align-items: center; padding: 20px; gap: 8px; border-top: 1px solid #EAE5D9; }
-.pageBtn { width: 36px; height: 36px; border-radius: 8px; border: 1px solid #EAE5D9; background: #FFF; color: #333; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
-.pageBtn:hover:not(.disabledBtn) { background: #FAF9F5; }
-.activePage { background: #1A1A1A; color: #FFF; border-color: #1A1A1A; }
-.disabledBtn { opacity: 0.5; cursor: not-allowed; }
-
-/* ========================================= */
-/* MODAL FORM THÊM / SỬA                     */
-/* ========================================= */
-.modalOverlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 1000; animation: fadeIn 0.2s; }
-.modalContent { background: #FFF; width: 500px; max-width: 90%; border-radius: 12px; box-shadow: 0 20px 40px rgba(0,0,0,0.2); animation: slideUp 0.3s; overflow: hidden; }
-.modalHeader { padding: 20px 24px; border-bottom: 1px solid #EAE5D9; display: flex; justify-content: space-between; align-items: center; }
-.modalHeader h3 { margin: 0; font-size: 18px; color: #1A1A1A; font-weight: 700; }
-.closeBtn { background: transparent; border: none; font-size: 22px; color: #888; cursor: pointer; }
-.closeBtn:hover { color: #1A1A1A; }
-.modalBody { padding: 24px; display: flex; flex-direction: column; gap: 16px; }
-
-.formGroup { display: flex; flex-direction: column; gap: 8px; }
-.formRow { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-.formGroup label { font-size: 13.5px; font-weight: 600; color: #444; }
-.inputField, .selectField { padding: 10px 14px; border: 1px solid #DDD; border-radius: 8px; font-size: 14px; font-family: inherit; transition: 0.2s; }
-.inputField:focus, .selectField:focus { border-color: #1A1A1A; outline: none; }
-.inputField:disabled { background: #F5F5F5; color: #888; cursor: not-allowed; }
-
-.modalFooter { padding: 16px 24px; background: #FAF9F5; border-top: 1px solid #EAE5D9; display: flex; justify-content: flex-end; gap: 12px; }
-.btnCancel { padding: 10px 20px; background: #FFF; border: 1px solid #DDD; border-radius: 8px; font-weight: 600; cursor: pointer; }
-.btnPrimary { padding: 10px 20px; background: #1A1A1A; color: #FFF; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
-.btnPrimary:hover { background: #333; }
-
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-@keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-
-/* ========================================= */
-/* MODAL THÔNG BÁO THÀNH CÔNG TÙY CHỈNH      */
-/* ========================================= */
-.successModalOverlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.4);
-    backdrop-filter: blur(4px); /* Làm mờ phần nền */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 2000; /* Nằm trên tất cả các layer khác */
-    animation: fadeInOverlay 0.2s ease-out;
 }
 
-.successModalContent {
-    background: #FFFFFF;
-    width: 380px;
-    max-width: 90%;
-    border-radius: 16px;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
-    padding: 32px 24px;
-    text-align: center; /* Căn giữa nội dung */
-    animation: scaleUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+.searchIcon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #9CA3AF;
 }
 
-.successModalIconBox {
-    width: 64px;
-    height: 64px;
-    background-color: #E9F9EE;
-    color: #10B981; /* Màu xanh lá nổi bật */
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 20px auto;
-}
-
-.successModalTitle {
-    margin: 0 0 12px 0;
-    font-size: 18px;
-    font-weight: 700;
-    color: #1A1A1A;
-}
-
-.successModalText {
-    margin: 0 0 28px 0;
-    font-size: 14.5px;
-    color: #666666;
-    line-height: 1.6;
-}
-
-.btnPrimaryFull {
-    background: #1A1A1A;
-    border: none;
-    padding: 12px 20px;
+.searchInput {
     width: 100%;
-    border-radius: 8px;
-    font-size: 14.5px;
-    color: #FFFFFF;
-    font-weight: 600;
-    cursor: pointer;
+    padding: 10px 12px 10px 40px;
+    border: 1px solid #E5E7EB;
+    border-radius: 6px;
+    font-size: 14px;
+    outline: none;
+    color: #374151;
     transition: 0.2s;
 }
 
-.btnPrimaryFull:hover {
-    background: #333333;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+.searchInput::placeholder {
+    color: #9CA3AF;
 }
 
-@keyframes fadeInOverlay {
-    from { opacity: 0; backdrop-filter: blur(0); }
-    to { opacity: 1; backdrop-filter: blur(4px); }
+.searchInput:focus {
+    border-color: #6B7280;
 }
 
-@keyframes scaleUp {
-    from { opacity: 0; transform: scale(0.95) translateY(10px); }
-    to { opacity: 1; transform: scale(1) translateY(0); }
+.filterWrapper {
+    position: relative;
 }
 
-/* PHÂN TRANG (Đã đổi justify-content thành flex-end) */
+.filterBtn {
+    display: flex;
+    align-items: center;
+    padding: 10px 16px;
+    background: #ffffff;
+    border: 1px solid #E5E7EB;
+    border-radius: 6px;
+    font-size: 14px;
+    color: #374151;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.filterDropdown {
+    position: absolute;
+    top: 110%;
+    right: 0;
+    background: #ffffff;
+    border: 1px solid #E5E7EB;
+    border-radius: 6px;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    width: 160px;
+    z-index: 10;
+    overflow: hidden;
+}
+
+.filterOption {
+    padding: 10px 16px;
+    font-size: 14px;
+    color: #374151;
+    cursor: pointer;
+}
+
+.filterOption:hover {
+    background: #F3F4F6;
+}
+
+.activeFilter {
+    font-weight: 600;
+    background: #F9FAFB;
+    color: #111827;
+}
+
+/* --- TABLE (TIÊU ĐỀ XANH BO GÓC) --- */
+.tableWrapper {
+    overflow-x: auto;
+    padding: 16px 24px;
+}
+
+.dataTable {
+    width: 100%;
+    border-collapse: separate; /* Bắt buộc để bo góc */
+    border-spacing: 0;
+    text-align: left;
+}
+
+.dataTable th {
+    padding: 16px 24px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #ffffff; /* Chữ trắng */
+    background-color: #213c77; /* Nền xanh đậm */
+}
+
+/* Bo góc cho tiêu đề trái/phải */
+.dataTable th:first-child {
+    border-top-left-radius: 8px;
+    border-bottom-left-radius: 8px;
+}
+
+.dataTable th:last-child {
+    border-top-right-radius: 8px;
+    border-bottom-right-radius: 8px;
+}
+
+.dataTable td {
+    padding: 16px 24px;
+    font-size: 14px;
+    color: #111827;
+    border-bottom: 1px solid #E5E7EB;
+    vertical-align: middle;
+}
+
+.emptyState {
+    text-align: center;
+    color: #6B7280;
+    padding: 32px !important;
+}
+
+/* --- BADGES --- */
+.roleBadge {
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.roleAdmin {
+    background-color: #F3E8FF;
+    color: #7E22CE;
+}
+
+.roleStaff {
+    background-color: #F3F4F6;
+    color: #4B5563;
+}
+
+.statusBadge {
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    border: 1px solid transparent;
+}
+
+.statusActive {
+    background-color: #ECFDF5;
+    color: #10B981;
+    border-color: #A7F3D0;
+}
+
+.statusInactive {
+    background-color: #FEF2F2;
+    color: #EF4444;
+    border-color: #FECACA;
+}
+
+/* --- ACTION BUTTONS (NÚT THAO TÁC SỬA/XÓA) --- */
+.actionHeader {
+    width: 120px;
+}
+
+.actionGroup {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.iconBtn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    border: none;
+    background-color: #F3F4F6;
+    color: #4B5563;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.iconBtn:hover {
+    background-color: #E5E7EB;
+    color: #111827;
+}
+
+.iconBtnTrash {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    border: none;
+    background-color: #FEF2F2;
+    color: #EF4444;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.iconBtnTrash:hover {
+    background-color: #FEE2E2;
+    color: #DC2626;
+}
+
+/* --- PAGINATION (PHÂN TRANG MÀU XANH DƯƠNG) --- */
 .pagination {
     display: flex;
-    justify-content: flex-end; /* Đẩy sang phải */
+    justify-content: flex-end;
     align-items: center;
-    padding: 20px 32px; /* Thêm padding 32px để căn lề đều với bảng */
+    padding: 16px 24px;
     gap: 8px;
-    border-top: 1px solid #EAE5D9;
+    background-color: #ffffff;
+    border-top: 1px solid #E5E7EB;
 }
-.pageBtn { width: 36px; height: 36px; border-radius: 8px; border: 1px solid #EAE5D9; background: #FFF; color: #333; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
-.pageBtn:hover:not(.disabledBtn) { background: #FAF9F5; }
-.activePage { background: #1A1A1A; color: #FFF; border-color: #1A1A1A; }
-.disabledBtn { opacity: 0.5; cursor: not-allowed; }
+
+.pageBtn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    border: 1px solid #E5E7EB;
+    background: #ffffff;
+    color: #9CA3AF;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.pageBtn:hover:not(.disabledBtn):not(.activePage) {
+    background: #F9FAFB;
+    color: #4B5563;
+    border-color: #D1D5DB;
+}
+
+.activePage {
+    background-color: #2563EB; /* Nút Active màu xanh dương */
+    color: #ffffff;
+    border: 1px solid #2563EB;
+    box-shadow: 0 1px 2px rgba(37, 99, 235, 0.2);
+}
+
+.disabledBtn {
+    opacity: 0.4;
+    cursor: not-allowed;
+    background: #ffffff;
+    color: #D1D5DB;
+}
+
+/* --- MODAL FORM --- */
+.modalOverlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(17, 24, 39, 0.6);
+    backdrop-filter: blur(2px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modalContent {
+    background: #ffffff;
+    border-radius: 12px;
+    width: 100%;
+    max-width: 480px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.modalHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    border-bottom: 1px solid #E5E7EB;
+}
+
+.modalHeader h3 {
+    margin: 0;
+    font-size: 18px;
+    color: #111827;
+}
+
+.closeBtn {
+    background: transparent;
+    border: none;
+    color: #9CA3AF;
+    cursor: pointer;
+    font-size: 20px;
+}
+
+.modalBody {
+    padding: 24px;
+}
+
+.formGroup {
+    margin-bottom: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.formGroup label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #374151;
+}
+
+.inputField, .selectField {
+    padding: 10px 12px;
+    border: 1px solid #D1D5DB;
+    border-radius: 6px;
+    font-size: 14px;
+    outline: none;
+}
+
+.inputField:focus, .selectField:focus {
+    border-color: #6B7280;
+}
+
+.inputField:disabled {
+    background-color: #F3F4F6;
+    color: #9CA3AF;
+}
+
+.formRow {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.modalFooter {
+    padding: 16px 24px;
+    border-top: 1px solid #E5E7EB;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    background-color: #F9FAFB;
+}
+
+.btnCancel {
+    padding: 10px 16px;
+    background: #ffffff;
+    border: 1px solid #D1D5DB;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #374151;
+    cursor: pointer;
+}
+
+.btnPrimary {
+    padding: 10px 16px;
+    background: #111827;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #ffffff;
+    cursor: pointer;
+}
+
+/* --- SUCCESS MODAL --- */
+.successModalOverlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(17, 24, 39, 0.6);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 1100;
+}
+
+.successModalContent {
+    background: #ffffff;
+    padding: 32px;
+    border-radius: 12px;
+    text-align: center;
+    width: 320px;
+}
+
+.successModalIconBox {
+    color: #10B981;
+    margin-bottom: 16px;
+    display: flex;
+    justify-content: center;
+}
+
+.successModalTitle {
+    margin: 0 0 8px 0;
+    font-size: 18px;
+    color: #111827;
+    font-weight: 700;
+}
+
+.successModalText {
+    margin: 0 0 24px 0;
+    font-size: 14px;
+    color: #6B7280;
+    line-height: 1.5;
+}
+
+.btnPrimaryFull {
+    width: 100%;
+    padding: 10px;
+    background: #111827;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+}

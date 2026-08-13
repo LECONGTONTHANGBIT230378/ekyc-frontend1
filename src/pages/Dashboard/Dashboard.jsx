@@ -1,11 +1,12 @@
-import React from 'react';
+// Tên file: Dashboard.jsx
+import React, { useState, useEffect } from 'react';
 import styles from './Dashboard.module.css';
 import StatsCard from './StatsCard';
 import { FiServer, FiUsers, FiUserPlus, FiShield, FiXCircle } from 'react-icons/fi';
-// Import các component từ Recharts
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { dashboardService } from '../../services/dashboardService'; // Import service gọi API
 
-// Dữ liệu mẫu cho biểu đồ
+// Dữ liệu mẫu cho biểu đồ (Chờ Backend cung cấp API sau)
 const chartData = [
     { name: 'T2', register: 160, verified: 145 },
     { name: 'T3', register: 240, verified: 215 },
@@ -16,14 +17,7 @@ const chartData = [
     { name: 'CN', register: 190, verified: 175 },
 ];
 
-const statData = [
-    { title: 'Tổng khách hàng', index: '01', value: '12,480', badge: '+18.4%', Icon: FiUsers, iconClass: styles.iconPrimary },
-    { title: 'Tổng đăng ký', index: '02', value: '1,284', badge: '+7.2%', Icon: FiUserPlus, iconClass: styles.iconSecondary },
-    { title: 'Xác thực thành công', index: '03', value: '11,902', badge: '95.3%', Icon: FiShield, iconClass: styles.iconSuccess },
-    { title: 'Xác thực thất bại', index: '04', value: '578', badge: '4.7%', Icon: FiXCircle, iconClass: styles.iconDanger },
-];
-
-// Component tạo Hộp Tooltip khi Hover
+// Component tạo Hộp Tooltip khi Hover cho biểu đồ
 const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
         return (
@@ -41,10 +35,76 @@ const CustomTooltip = ({ active, payload, label }) => {
 };
 
 const Dashboard = () => {
+    // 1. Khai báo State để lưu dữ liệu từ API
+    const [stats, setStats] = useState({
+        totalCustomers: 0,
+        totalVerifications: 0,
+        successfulMatches: 0,
+        failedMatches: 0
+    });
+    const [loading, setLoading] = useState(true);
+
+    // 2. Gọi API khi component được mount
+    useEffect(() => {
+        const fetchDashboardData = async () => {
+            try {
+                setLoading(true);
+                const data = await dashboardService.getStatistics();
+                if (data) {
+                    setStats(data);
+                }
+            } catch (error) {
+                console.error("Lỗi khi tải dữ liệu Dashboard:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchDashboardData();
+    }, []);
+
+    // 3. Tính toán tỷ lệ phần trăm động
+    const successRate = stats.totalVerifications > 0
+        ? ((stats.successfulMatches / stats.totalVerifications) * 100).toFixed(1) + '%'
+        : '0%';
+
+    const failRate = stats.totalVerifications > 0
+        ? ((stats.failedMatches / stats.totalVerifications) * 100).toFixed(1) + '%'
+        : '0%';
+
+    // 4. Map dữ liệu API vào mảng hiển thị Card
+    const dynamicStatData = [
+        {
+            title: 'Tổng khách hàng', index: '01',
+            value: loading ? '...' : stats.totalCustomers.toLocaleString('vi-VN'),
+            badge: 'Trong hệ thống',
+            Icon: FiUsers, iconClass: styles.iconPrimary
+        },
+        {
+            title: 'Tổng lượt eKYC', index: '02',
+            value: loading ? '...' : stats.totalVerifications.toLocaleString('vi-VN'),
+            badge: 'Tất cả các lượt',
+            Icon: FiUserPlus, iconClass: styles.iconSecondary
+        },
+        {
+            title: 'Xác thực thành công', index: '03',
+            value: loading ? '...' : stats.successfulMatches.toLocaleString('vi-VN'),
+            badge: successRate,
+            Icon: FiShield, iconClass: styles.iconSuccess
+        },
+        {
+            title: 'Xác thực thất bại', index: '04',
+            value: loading ? '...' : stats.failedMatches.toLocaleString('vi-VN'),
+            badge: failRate,
+            Icon: FiXCircle, iconClass: styles.iconDanger
+        },
+    ];
+
     return (
         <div className={styles.container}>
+            {/* Render 4 Thẻ Thống kê bằng dữ liệu từ API */}
             <div className={styles.statsGrid}>
-                {statData.map((stat, idx) => (
+                {dynamicStatData.map((stat, idx) => (
                     <StatsCard key={idx} {...stat} />
                 ))}
             </div>
@@ -61,7 +121,6 @@ const Dashboard = () => {
                             <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                                 <defs>
                                     <linearGradient id="colorRegister" x1="0" y1="0" x2="0" y2="1">
-                                        {/* Đang dùng tone Xanh rêu/Emerald theo ảnh mẫu */}
                                         <stop offset="5%" stopColor="#115E59" stopOpacity={0.2}/>
                                         <stop offset="95%" stopColor="#115E59" stopOpacity={0}/>
                                     </linearGradient>
@@ -70,16 +129,10 @@ const Dashboard = () => {
                                         <stop offset="95%" stopColor="#34D399" stopOpacity={0}/>
                                     </linearGradient>
                                 </defs>
-                                {/* Lưới nét đứt */}
                                 <CartesianGrid strokeDasharray="3 3" vertical={true} stroke="#E2E8F0" />
-                                {/* Trục X (Ngày) và Trục Y (Số liệu) */}
                                 <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#64748B', fontSize: 12}} dy={10} />
                                 <YAxis axisLine={false} tickLine={false} tick={{fill: '#64748B', fontSize: 12}} />
-
-                                {/* Tooltip tùy chỉnh với đường gióng (cursor) nét đứt */}
                                 <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#CBD5E1', strokeWidth: 1, strokeDasharray: '3 3' }} />
-
-                                {/* 2 Đường Line */}
                                 <Area type="monotone" dataKey="register" stroke="#115E59" strokeWidth={2} fillOpacity={1} fill="url(#colorRegister)" activeDot={{ r: 4, strokeWidth: 0 }} />
                                 <Area type="monotone" dataKey="verified" stroke="#34D399" strokeWidth={2} fillOpacity={1} fill="url(#colorVerified)" activeDot={{ r: 4, strokeWidth: 0 }} />
                             </AreaChart>

@@ -1,3 +1,4 @@
+// src/services/ekycService.js
 import api from './api';
 
 export const ekycService = {
@@ -8,13 +9,10 @@ export const ekycService = {
         const formData = new FormData();
         formData.append('file', file);
 
-        // Lấy JWT Token từ localStorage (Đảm bảo key lưu token của bạn là 'token' hoặc đổi lại cho đúng)
-        const token = localStorage.getItem('token');
-
+        // KHÔNG CẦN tự lấy Token ở đây nữa, api.js đã có Interceptor tự động gắn
         const response = await api.post('/ekyc/ocr', formData, {
             headers: {
-                'Content-Type': 'multipart/form-data',
-                'Authorization': `Bearer ${token}`
+                'Content-Type': 'multipart/form-data'
             },
         });
 
@@ -24,22 +22,21 @@ export const ekycService = {
     // ---------------------------------------------------------
     // Hàm gọi API Xác thực khuôn mặt và lưu hồ sơ (Dùng cho Bước 6)
     // ---------------------------------------------------------
-    verifyFace: async (cccdFile, selfieFile, ocrDataJson) => {
+    verifyFace: async (cccdFile, selfieFile, ocrDataJson, customerId) => {
         const formData = new FormData();
 
-        // Tên các key này BẮT BUỘC phải khớp với @RequestParam trong EkycController.java của Backend
+        // 1. TRUYỀN ID KHÁCH HÀNG: Khớp với @RequestParam("customer_id") ở Backend
+        formData.append('customer_id', customerId);
+
+        // 2. DỮ LIỆU FILE VÀ OCR: Khớp với các @RequestParam ở Backend
         formData.append('cccd_image', cccdFile);
         formData.append('selfie_image', selfieFile);
-
-        // Backend yêu cầu nhận dữ liệu chữ dưới dạng JSON String
         formData.append('cccd_data_json', JSON.stringify(ocrDataJson));
 
-        const token = localStorage.getItem('token');
-
+        // KHÔNG CẦN tự lấy Token ở đây nữa
         const response = await api.post('/ekyc/verify', formData, {
             headers: {
-                'Content-Type': 'multipart/form-data',
-                'Authorization': `Bearer ${token}`
+                'Content-Type': 'multipart/form-data'
             },
         });
 

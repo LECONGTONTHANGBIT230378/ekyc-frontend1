@@ -1,43 +1,57 @@
 import api from './api';
 
 export const customerService = {
-    // Lấy danh sách khách hàng (Sửa từ /api/customers thành /customers)
+    // ---------------------------------------------------------
+    // BƯỚC 1: TẠO KHÁCH HÀNG MỚI
+    // ---------------------------------------------------------
+    createCustomer: async (formDataPayload) => {
+        // Mặc định api.js đã có interceptor tự động đính kèm Token
+        const response = await api.post('/customers', formDataPayload, {
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            }
+        });
+        // Trả về phần data thực sự từ response của Axios (ApiResponse của Spring Boot)
+        return response.data;
+    },
+
+    // ---------------------------------------------------------
+    // LẤY DANH SÁCH HOẶC TÌM KIẾM KHÁCH HÀNG
+    // ---------------------------------------------------------
     getAllCustomers: async (params) => {
-        try {
-            const response = await api.get('/customers', { params });
-            return response.data;
-        } catch (error) {
-            throw error;
+        let url = '/customers';
+
+        // Nếu người dùng có nhập keyword tìm kiếm, phải trỏ đúng vào endpoint /search của Backend
+        if (params && params.keyword && params.keyword.trim() !== '') {
+            url = `/customers/search?keyword=${encodeURIComponent(params.keyword.trim())}`;
         }
+
+        const response = await api.get(url);
+        return response.data;
     },
 
-    // Lấy chi tiết 1 khách hàng
+    // ---------------------------------------------------------
+    // LẤY CHI TIẾT 1 KHÁCH HÀNG THEO ID
+    // ---------------------------------------------------------
     getCustomerById: async (id) => {
-        try {
-            const response = await api.get(`/customers/${id}`);
-            return response.data;
-        } catch (error) {
-            throw error;
-        }
+        const response = await api.get(`/customers/${id}`);
+        return response.data;
     },
 
-    // Cập nhật thông tin khách hàng
+    // ---------------------------------------------------------
+    // CẬP NHẬT THÔNG TIN KHÁCH HÀNG
+    // ---------------------------------------------------------
     updateCustomer: async (id, data) => {
-        try {
-            const response = await api.put(`/customers/${id}`, data);
-            return response.data;
-        } catch (error) {
-            throw error;
-        }
+        // Dữ liệu update thường là JSON nên không cần set header multipart/form-data
+        const response = await api.put(`/customers/${id}`, data);
+        return response.data;
     },
 
-    // Xóa khách hàng
+    // ---------------------------------------------------------
+    // XÓA KHÁCH HÀNG
+    // ---------------------------------------------------------
     deleteCustomer: async (id) => {
-        try {
-            const response = await api.delete(`/customers/${id}`);
-            return response.data;
-        } catch (error) {
-            throw error;
-        }
+        const response = await api.delete(`/customers/${id}`);
+        return response.data;
     }
 };

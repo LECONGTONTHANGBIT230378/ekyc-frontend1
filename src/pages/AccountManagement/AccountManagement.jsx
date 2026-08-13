@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FiSearch, FiFilter, FiEdit, FiTrash2, FiPlus, FiChevronLeft, FiChevronRight, FiX, FiCheckCircle } from 'react-icons/fi';
 import { userService } from '../../services/userService';
 import AccountModal from './AccountModal';
@@ -10,7 +10,7 @@ const removeVietnameseTones = (str) => {
 };
 
 const AccountManagement = () => {
-    // KHỞI TẠO MẢNG RỖNG - KHÔNG SỬ DỤNG DỮ LIỆU MẪU (ĐÃ FIX LỖI getAccountData)
+    // State lưu danh sách tài khoản từ Backend
     const [accounts, setAccounts] = useState([]);
 
     const [searchTerm, setSearchTerm] = useState('');
@@ -26,13 +26,47 @@ const AccountManagement = () => {
     const [errorMessage, setErrorMessage] = useState('');
     const [deleteModal, setDeleteModal] = useState({ isOpen: false, account: null });
 
+    // ==========================================
+    // GỌI API LẤY DANH SÁCH TÀI KHOẢN TỪ BACKEND
+    // ==========================================
+    const fetchAccounts = async () => {
+        try {
+            const res = await userService.getAllUsers();
+
+            // Xử lý chính xác dữ liệu từ ApiResponse
+            if (res && (res.code === 200 || res.success === true)) {
+                // Backend dùng Page<UserResponse> nên danh sách nằm trong res.data.content
+                // Hoặc nếu backend trả về List phẳng thì nằm ở res.data
+                const userList = res.data?.content || res.data || [];
+
+                // Map dữ liệu Backend sang format UI cần
+                const mappedData = userList.map(user => ({
+                    id: user.id,
+                    name: user.fullName, // Map 'fullName' của BE sang 'name' của UI
+                    email: user.email,
+                    role: user.role === 'ADMIN' ? 'Admin' : 'Nhân viên',
+                    status: 'active' // Tạm thời set cứng vì BE chưa có field trạng thái khóa
+                }));
+                setAccounts(mappedData);
+            }
+        } catch (error) {
+            console.error("Lỗi khi tải danh sách tài khoản:", error);
+        }
+    };
+
+    // Chạy khi mở trang lần đầu
+    useEffect(() => {
+        fetchAccounts();
+    }, []);
+
+    // LỌC VÀ PHÂN TRANG (Xử lý ở Frontend)
     const filteredAccounts = accounts.filter(acc => {
         const keyword = removeVietnameseTones(searchTerm);
         const name = removeVietnameseTones(acc.name);
         const email = removeVietnameseTones(acc.email);
-        const id = removeVietnameseTones(acc.id);
+        const idStr = removeVietnameseTones(acc.id?.toString());
 
-        const matchesSearch = name.includes(keyword) || email.includes(keyword) || id.includes(keyword);
+        const matchesSearch = name.includes(keyword) || email.includes(keyword) || idStr.includes(keyword);
         const matchesRole = filterRole === 'all' || acc.role === filterRole;
 
         return matchesSearch && matchesRole;
@@ -47,7 +81,7 @@ const AccountManagement = () => {
     const closeModal = () => { setModal({ isOpen: false, type: 'add', data: null }); setErrorMessage(''); };
 
     // ==========================================
-    // XỬ LÝ LƯU (THÊM BẰNG API / SỬA ẢO)
+    // XỬ LÝ LƯU (THÊM / SỬA) VỚI API
     // ==========================================
     const handleSaveAccount = async (e) => {
         e.preventDefault();
@@ -55,62 +89,66 @@ const AccountManagement = () => {
 
         const formData = new FormData(e.target);
         const fullName = formData.get('fullName');
-        const email = formData.get('email');
+
+        // FIX: Lấy email từ input hoặc từ dữ liệu cũ nếu ô input bị disabled (chế độ edit)
+        const email = formData.get('email') || (modal.type === 'edit' ? modal.data.email : '');
+
         const password = formData.get('password');
         const roleUI = formData.get('role');
-        const statusUI = formData.get('status') || 'active';
 
-        if (modal.type === 'add') {
-            const payload = {
-                username: email.split('@')[0],
-                fullName: fullName,
-                email: email,
-                password: password,
-                role: roleUI === 'Admin' ? 'ADMIN' : 'STAFF'
-            };
+        // Tạo Payload đẩy lên Backend
+        const payload = {
+            username: email,
+            fullName: fullName,
+            email: email,
+            password: password,
+            role: roleUI === 'Admin' ? 'ADMIN' : 'STAFF'
+        };
 
-            try {
-                // Gọi API tạo tài khoản Backend
+        try {
+            if (modal.type === 'add') {
                 const res = await userService.createAccount(payload);
-                if (res.success) {
-                    const newAccount = {
-                        id: `NV-00${accounts.length + 1}`,
-                        name: fullName,
-                        email: email,
-                        role: roleUI,
-                        status: 'active'
-                    };
-                    setAccounts([newAccount, ...accounts]);
+                if (res.code === 200 || res.success) {
                     setSuccessMessage("Đã thêm tài khoản nhân sự mới vào hệ thống thành công!");
+                    fetchAccounts(); // Tải lại bảng dữ liệu
                     closeModal();
+                } else {
+                    setErrorMessage(res.message || "Tạo tài khoản thất bại.");
                 }
-            } catch (error) {
-                setErrorMessage(error.response?.data?.message || "Lỗi kết nối Backend. Vui lòng kiểm tra lại!");
+            } else {
+                // Sửa tài khoản
+                const res = await userService.updateUser(modal.data.id, payload);
+                if (res.code === 200 || res.success) {
+                    setSuccessMessage("Đã cập nhật thông tin tài khoản thành công!");
+                    fetchAccounts(); // Tải lại bảng dữ liệu
+                    closeModal();
+                } else {
+                    setErrorMessage(res.message || "Cập nhật tài khoản thất bại.");
+                }
             }
-        } else {
-            const updatedAccounts = accounts.map(acc => {
-                if (acc.id === modal.data.id) {
-                    return { ...acc, name: fullName, role: roleUI, status: statusUI };
-                }
-                return acc;
-            });
-            setAccounts(updatedAccounts);
-            setSuccessMessage("Đã cập nhật phân quyền và trạng thái thành công!");
-            closeModal();
+        } catch (error) {
+            setErrorMessage(error.response?.data?.message || "Lỗi kết nối Backend. Vui lòng kiểm tra lại!");
         }
     };
 
     // ==========================================
-    // XỬ LÝ XÓA TÀI KHOẢN TRÊN GIAO DIỆN
+    // XỬ LÝ XÓA TÀI KHOẢN VỚI API
     // ==========================================
     const handleDeleteClick = (account) => {
         setDeleteModal({ isOpen: true, account });
     };
 
-    const confirmDelete = () => {
-        setAccounts(accounts.filter(acc => acc.id !== deleteModal.account.id));
-        setSuccessMessage(`Đã xóa tài khoản ${deleteModal.account.name} thành công!`);
-        setDeleteModal({ isOpen: false, account: null });
+    const confirmDelete = async () => {
+        try {
+            await userService.deleteUser(deleteModal.account.id);
+            setSuccessMessage(`Đã xóa tài khoản ${deleteModal.account.name} thành công!`);
+            fetchAccounts(); // Tải lại bảng dữ liệu sau khi xóa
+        } catch (error) {
+            console.error("Lỗi xóa tài khoản", error);
+            alert(error.response?.data?.message || "Không thể xóa tài khoản. Vui lòng thử lại!");
+        } finally {
+            setDeleteModal({ isOpen: false, account: null });
+        }
     };
 
     const closeDeleteModal = () => setDeleteModal({ isOpen: false, account: null });
@@ -135,7 +173,7 @@ const AccountManagement = () => {
                         <FiSearch className={styles.searchIcon} />
                         <input
                             type="text"
-                            placeholder="Tìm theo mã NV, tên hoặc email..."
+                            placeholder="Tìm theo ID, tên hoặc email..."
                             value={searchTerm}
                             onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
                             className={styles.searchInput}
@@ -162,7 +200,7 @@ const AccountManagement = () => {
                     <table className={styles.dataTable}>
                         <thead>
                         <tr>
-                            <th>Mã NV</th>
+                            <th>ID</th>
                             <th>Họ và tên</th>
                             <th>Email đăng nhập</th>
                             <th>Phân quyền (Role)</th>
@@ -174,7 +212,7 @@ const AccountManagement = () => {
                         {currentAccounts.length > 0 ? (
                             currentAccounts.map((acc, index) => (
                                 <tr key={index}>
-                                    <td style={{ fontWeight: 600 }}>{acc.id}</td>
+                                    <td style={{ fontWeight: 600 }}>#{acc.id}</td>
                                     <td>{acc.name}</td>
                                     <td style={{ color: '#666' }}>{acc.email}</td>
                                     <td>
@@ -183,11 +221,7 @@ const AccountManagement = () => {
                                         </span>
                                     </td>
                                     <td>
-                                        {acc.status === 'active' ? (
-                                            <span className={`${styles.statusBadge} ${styles.statusActive}`}>Hoạt động</span>
-                                        ) : (
-                                            <span className={`${styles.statusBadge} ${styles.statusInactive}`}>Đã khóa</span>
-                                        )}
+                                        <span className={`${styles.statusBadge} ${styles.statusActive}`}>Hoạt động</span>
                                     </td>
                                     <td>
                                         <div className={styles.actionGroup}>
@@ -203,7 +237,7 @@ const AccountManagement = () => {
                             ))
                         ) : (
                             <tr>
-                                <td colSpan="6" className={styles.emptyState}>Không tìm thấy nhân viên nào. Hãy thêm tài khoản mới.</td>
+                                <td colSpan="6" className={styles.emptyState}>Không tìm thấy nhân viên nào.</td>
                             </tr>
                         )}
                         </tbody>
@@ -227,7 +261,7 @@ const AccountManagement = () => {
                 )}
             </div>
 
-            {/* SỬ DỤNG COMPONENT MODAL THÊM / SỬA */}
+            {/* MODAL THÊM / SỬA */}
             <AccountModal
                 isOpen={modal.isOpen}
                 type={modal.type}
@@ -235,6 +269,7 @@ const AccountManagement = () => {
                 onClose={closeModal}
                 onSave={handleSaveAccount}
                 errorMessage={errorMessage}
+                accounts={accounts}
             />
 
             {/* MODAL CẢNH BÁO XÓA TÀI KHOẢN */}

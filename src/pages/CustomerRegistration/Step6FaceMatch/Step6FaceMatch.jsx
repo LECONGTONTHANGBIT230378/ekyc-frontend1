@@ -5,7 +5,7 @@ import styles from './Step6FaceMatch.module.css';
 const Step6FaceMatch = ({ onNext, onPrev, initialData }) => {
     const [isMatching, setIsMatching] = useState(true);
     const [matchScore, setMatchScore] = useState(0);
-    // BỔ SUNG: Thêm State để lưu kết luận Khớp/Không khớp từ Backend
+    // State để lưu kết luận Khớp/Không khớp từ Backend
     const [isMatch, setIsMatch] = useState(false);
     const [error, setError] = useState(null);
     const [rawResult, setRawResult] = useState(null);
@@ -41,8 +41,17 @@ const Step6FaceMatch = ({ onNext, onPrev, initialData }) => {
                     placeOfResidence: ocrData.address || ''
                 };
 
-                // 3. Gọi API xác thực khuôn mặt
-                const response = await ekycService.verifyFace(frontFile, selfieFile, cccdDataJson);
+                // 3. LẤY ID KHÁCH HÀNG TỪ BƯỚC 1
+                const customerId = initialData?.combinedData?.dbId || initialData?.customerId;
+
+                if (!customerId) {
+                    setError("Lỗi: Không tìm thấy ID khách hàng từ Bước 1. Vui lòng làm lại từ đầu.");
+                    setIsMatching(false);
+                    return;
+                }
+
+                // 4. GỌI API XÁC THỰC KHUÔN MẶT (Truyền customerId vào tham số thứ 4)
+                const response = await ekycService.verifyFace(frontFile, selfieFile, cccdDataJson, customerId);
 
                 if (isMounted) {
                     setIsMatching(false);
@@ -58,11 +67,11 @@ const Step6FaceMatch = ({ onNext, onPrev, initialData }) => {
                     }
                     setMatchScore(score.toFixed(2));
 
-                    // 4. LẤY KẾT LUẬN TỪ BACKEND
-                    // Ưu tiên lấy biến result (Boolean) do AI quyết định. Nếu BE thiếu, mới dùng tạm logic >= 80
+                    // 5. LẤY KẾT LUẬN TỪ BACKEND
                     let finalMatchStatus = false;
                     if (resultData.result !== undefined) {
-                        finalMatchStatus = resultData.result;
+                        // Spring Boot đang trả về Enum VerificationStatus (MATCHED / NOT_MATCHED)
+                        finalMatchStatus = resultData.result === 'MATCHED' || resultData.result === true;
                     } else if (resultData.isMatch !== undefined) {
                         finalMatchStatus = resultData.isMatch;
                     } else {
@@ -75,13 +84,15 @@ const Step6FaceMatch = ({ onNext, onPrev, initialData }) => {
                 if (isMounted) {
                     console.error("Lỗi xác thực khuôn mặt:", err);
 
-                    let errorMsg = err.response?.data?.message || 'Mất kết nối đến hệ thống AI hoặc lỗi dữ liệu.';
+                    // Bắt chính xác câu thông báo lỗi từ Backend Spring Boot
+                    let errorMsg = err.response?.data?.message || err.message || 'Mất kết nối đến hệ thống AI hoặc lỗi dữ liệu.';
 
                     if (errorMsg.includes("Duplicate entry") || errorMsg.includes("cccd_information")) {
                         errorMsg = "Căn cước công dân này đã tồn tại trong hệ thống. Vui lòng quay lại Bước 4 để kiểm tra hoặc sử dụng giấy tờ khác.";
                     }
 
-                    setError(errorMsg);
+                    // Hiển thị trực tiếp lỗi ra UI
+                    setError(`Lỗi: ${errorMsg}`);
                     setIsMatching(false);
                 }
             }
@@ -92,7 +103,7 @@ const Step6FaceMatch = ({ onNext, onPrev, initialData }) => {
         return () => {
             isMounted = false;
         };
-    }, []);
+    }, [initialData]);
 
     const handleNext = () => {
         onNext({
@@ -153,7 +164,6 @@ const Step6FaceMatch = ({ onNext, onPrev, initialData }) => {
                 <div className={styles.resultBanner}>
                     <span className={styles.resultLabel}>Điểm tương đồng</span>
                     <div className={styles.resultScore}>{matchScore}%</div>
-                    {/* Sử dụng biến isMatch từ Backend để hiển thị kết quả chính xác */}
                     <div className={styles.badge} style={{ backgroundColor: isMatch ? '#10B981' : '#EF4444' }}>
                         {isMatch ? 'KHỚP' : 'KHÔNG KHỚP'}
                     </div>

@@ -1,5 +1,6 @@
+// Tên file: StatsCard.jsx
 import React from 'react';
-import styles from './Dashboard.module.css'; // Dùng chung file module hoặc đổi đường dẫn tương ứng
+import styles from './Dashboard.module.css';
 
 const StatsCard = ({ title, index, value, badge, Icon, iconClass }) => {
     return (
@@ -13,7 +14,6 @@ const StatsCard = ({ title, index, value, badge, Icon, iconClass }) => {
                 <span className={styles.cardBadge}>{badge}</span>
             </div>
 
-            {/* Hiển thị Icon và màu nền tương ứng */}
             <div className={`${styles.cardIconWrapper} ${iconClass}`}>
                 {Icon && <Icon />}
             </div>

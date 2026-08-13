@@ -29,10 +29,23 @@ const CustomerManagement = () => {
 
             const response = await customerService.getAllCustomers(params);
 
-            setCustomers(response.content || response.data || []);
-            setTotalPages(response.totalPages > 0 ? response.totalPages : 1);
+            // BÓC TÁCH DỮ LIỆU TỪ API RESPONSE CỦA SPRING BOOT
+            if (response && (response.success === true || response.code === 200)) {
+                // response.data chứa mảng List<CustomerResponse> từ Backend
+                setCustomers(response.data || []);
+                // Backend hiện trả về List (không có totalPages), tạm set cứng là 1
+                setTotalPages(1);
+            } else if (Array.isArray(response)) {
+                // Dự phòng trường hợp Axios interceptor đã tự bóc tách vỏ ApiResponse
+                setCustomers(response);
+                setTotalPages(1);
+            } else {
+                setCustomers([]);
+                setTotalPages(1);
+            }
         } catch (error) {
             console.error('Lỗi khi tải danh sách khách hàng:', error);
+            setCustomers([]);
         } finally {
             setLoading(false);
         }
@@ -164,9 +177,14 @@ const CustomerManagement = () => {
                     customerId={selectedCustomer?.id}
                     customerName={selectedCustomer?.fullName}
                     onConfirm={async () => {
-                        await customerService.deleteCustomer(selectedCustomer.id);
-                        setDeleteModalOpen(false);
-                        fetchCustomers();
+                        try {
+                            await customerService.deleteCustomer(selectedCustomer.id);
+                            setDeleteModalOpen(false);
+                            fetchCustomers();
+                        } catch (err) {
+                            console.error("Lỗi khi xóa khách hàng", err);
+                            alert("Không thể xóa khách hàng. Vui lòng thử lại.");
+                        }
                     }}
                     onClose={() => setDeleteModalOpen(false)}
                 />

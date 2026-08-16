@@ -15,7 +15,18 @@
     --text-color: #1D1D1D;
     --gray-color: #8A8A8A;
     --border-color: #E7E7E7;
+    /* Khai báo các biến màu chủ đạo của dự án */
+    --primary-dark: #115E59; /* Màu xanh rêu */
+    --text-main: #1E293B;    /* Màu chữ chính (đen/xám đậm) */
+    --text-muted: #64748B;   /* Màu chữ phụ (xám nhạt) */
+    --border-color: #CBD5E1; /* Màu viền */
+    --bg-color: #F8F7F4;     /* Màu nền */
 
+    /* Các biến cũ của bạn giữ nguyên bên dưới */
+    --primary-color: #0F5B4C;
+    --gray-color: #64748B;
+    --radius-btn: 8px;
+    --transition-base: all 0.3s ease;
     /* Hiệu ứng & Bo góc */
     --shadow-light: 0 20px 40px rgba(0, 0, 0, 0.08);
     --radius-large: 20px;

@@ -1,14 +1,51 @@
-import React, { useState } from 'react';
-// Import thêm icon FiX dùng cho nút Đóng modal
-import { FiCalendar, FiCheckCircle, FiXCircle, FiClock, FiActivity, FiTrendingUp, FiTrendingDown, FiDownload, FiX } from 'react-icons/fi';
+import React, { useState, useEffect } from 'react';
+import {
+    FiCalendar, FiCheckCircle, FiXCircle, FiClock,
+    FiActivity, FiTrendingUp, FiTrendingDown, FiDownload
+} from 'react-icons/fi';
+import { dashboardService } from '../../services/dashboardService';
 import styles from './Reports.module.css';
 
 const Reports = () => {
     const [timeRange, setTimeRange] = useState('7days');
+    const [exportModal, setExportModal] = useState({ isOpen: false, message: '', isError: false });
+    const [loading, setLoading] = useState(true);
 
-    // THÊM STATE QUẢN LÝ MODAL THÔNG BÁO
-    const [exportModal, setExportModal] = useState({ isOpen: false, message: '' });
+    // State quản lý số liệu thật từ Backend
+    const [stats, setStats] = useState({
+        totalVerifications: 0,
+        successfulMatches: 0,
+        failedMatches: 0
+    });
 
+    // Gọi API lấy dữ liệu thống kê khi trang được tải
+    useEffect(() => {
+        const fetchStatistics = async () => {
+            try {
+                setLoading(true);
+                const data = await dashboardService.getStatistics();
+                if (data) {
+                    setStats({
+                        totalVerifications: data.totalVerifications || 0,
+                        successfulMatches: data.successfulMatches || 0,
+                        failedMatches: data.failedMatches || 0
+                    });
+                }
+            } catch (error) {
+                console.error("Lỗi khi tải dữ liệu báo cáo:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchStatistics();
+    }, []);
+
+    // Tính tỷ lệ thành công dựa trên dữ liệu thật
+    const successRate = stats.totalVerifications === 0
+        ? 0
+        : ((stats.successfulMatches / stats.totalVerifications) * 100).toFixed(1);
+
+    // Dữ liệu biểu đồ (Mock data - Đợi Backend nâng cấp sau)
     const barChartData = [
         { label: 'T2', value: 120, height: '40%' },
         { label: 'T3', value: 250, height: '70%' },
@@ -19,6 +56,7 @@ const Reports = () => {
         { label: 'CN', value: 290, height: '80%' },
     ];
 
+    // Dữ liệu nguyên nhân lỗi (Mock data)
     const errorStats = [
         { reason: 'Khuôn mặt bị mờ/nhòe', percent: 45, count: 124 },
         { reason: 'CCCD bị chói sáng', percent: 30, count: 82 },
@@ -26,17 +64,60 @@ const Reports = () => {
         { reason: 'Lý do khác', percent: 10, count: 28 },
     ];
 
-    // CẬP NHẬT LẠI HÀM XỬ LÝ: Mở Modal thay vì dùng alert()
-    const handleExportExcel = () => {
-        setExportModal({ isOpen: true, message: "Hệ thống đang chuẩn bị dữ liệu và tải xuống file BaoCao_eKYC.xlsx. Quá trình này có thể mất vài giây..." });
+    // XỬ LÝ TẢI FILE EXCEL CÓ GỌI API
+    const handleExportExcel = async () => {
+        setExportModal({
+            isOpen: true,
+            message: "Hệ thống đang chuẩn bị dữ liệu và tải xuống file BaoCao_eKYC.xlsx. Quá trình này có thể mất vài giây...",
+            isError: false
+        });
+        try {
+            const blobData = await dashboardService.exportExcel();
+            const url = window.URL.createObjectURL(new Blob([blobData]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', 'danh_sach_khach_hang_ekyc.xlsx');
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            window.URL.revokeObjectURL(url);
+        } catch (error) {
+            setExportModal({
+                isOpen: true,
+                message: "Đã xảy ra lỗi trong quá trình xuất file Excel. Vui lòng thử lại sau!",
+                isError: true
+            });
+        }
     };
 
-    const handleExportCSV = () => {
-        setExportModal({ isOpen: true, message: "Hệ thống đang trích xuất dữ liệu và tải xuống file BaoCao_eKYC.csv. Vui lòng không đóng trình duyệt..." });
+    // XỬ LÝ TẢI FILE CSV CÓ GỌI API
+    const handleExportCSV = async () => {
+        setExportModal({
+            isOpen: true,
+            message: "Hệ thống đang trích xuất dữ liệu và tải xuống file BaoCao_eKYC.csv. Vui lòng không đóng trình duyệt...",
+            isError: false
+        });
+        try {
+            const blobData = await dashboardService.exportCsv();
+            const url = window.URL.createObjectURL(new Blob([blobData]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', 'danh_sach_khach_hang_ekyc.csv');
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            window.URL.revokeObjectURL(url);
+        } catch (error) {
+            setExportModal({
+                isOpen: true,
+                message: "Đã xảy ra lỗi trong quá trình xuất file CSV. Vui lòng thử lại sau!",
+                isError: true
+            });
+        }
     };
 
     const closeExportModal = () => {
-        setExportModal({ isOpen: false, message: '' });
+        setExportModal({ isOpen: false, message: '', isError: false });
     };
 
     return (
@@ -74,14 +155,18 @@ const Reports = () => {
                 </div>
             </div>
 
+            {/* KHỐI 4 THẺ THỐNG KÊ */}
             <div className={styles.statsGrid}>
+                {/* Thẻ 1: Tổng lượt xác thực */}
                 <div className={styles.statCard}>
                     <div className={styles.statIconWrapper} style={{ backgroundColor: '#E8F3FF', color: '#0066FF' }}>
                         <FiActivity size={24} />
                     </div>
                     <div className={styles.statInfo}>
                         <span className={styles.statLabel}>Tổng lượt xác thực</span>
-                        <strong className={styles.statValue}>1,770</strong>
+                        <strong className={styles.statValue}>
+                            {loading ? '...' : stats.totalVerifications.toLocaleString('vi-VN')}
+                        </strong>
                         <div className={styles.statTrend}>
                             <FiTrendingUp className={styles.trendUp} />
                             <span className={styles.trendTextUp}>+12.5% so với kỳ trước</span>
@@ -89,13 +174,16 @@ const Reports = () => {
                     </div>
                 </div>
 
+                {/* Thẻ 2: Tỷ lệ thành công */}
                 <div className={styles.statCard}>
                     <div className={styles.statIconWrapper} style={{ backgroundColor: '#E9F9EE', color: '#10B981' }}>
                         <FiCheckCircle size={24} />
                     </div>
                     <div className={styles.statInfo}>
                         <span className={styles.statLabel}>Tỷ lệ thành công</span>
-                        <strong className={styles.statValue}>84.5%</strong>
+                        <strong className={styles.statValue}>
+                            {loading ? '...' : `${successRate}%`}
+                        </strong>
                         <div className={styles.statTrend}>
                             <FiTrendingUp className={styles.trendUp} />
                             <span className={styles.trendTextUp}>+2.1% so với kỳ trước</span>
@@ -103,13 +191,16 @@ const Reports = () => {
                     </div>
                 </div>
 
+                {/* Thẻ 3: Lượt thất bại */}
                 <div className={styles.statCard}>
                     <div className={styles.statIconWrapper} style={{ backgroundColor: '#FEECEB', color: '#EF4444' }}>
                         <FiXCircle size={24} />
                     </div>
                     <div className={styles.statInfo}>
                         <span className={styles.statLabel}>Lượt thất bại</span>
-                        <strong className={styles.statValue}>275</strong>
+                        <strong className={styles.statValue}>
+                            {loading ? '...' : stats.failedMatches.toLocaleString('vi-VN')}
+                        </strong>
                         <div className={styles.statTrend}>
                             <FiTrendingDown className={styles.trendDown} />
                             <span className={styles.trendTextDown}>-5.4% so với kỳ trước</span>
@@ -117,6 +208,7 @@ const Reports = () => {
                     </div>
                 </div>
 
+                {/* Thẻ 4: Thời gian xử lý TB */}
                 <div className={styles.statCard}>
                     <div className={styles.statIconWrapper} style={{ backgroundColor: '#FFF4E5', color: '#F59E0B' }}>
                         <FiClock size={24} />
@@ -131,6 +223,7 @@ const Reports = () => {
                 </div>
             </div>
 
+            {/* KHỐI BIỂU ĐỒ */}
             <div className={styles.chartsGrid}>
                 <div className={styles.chartCard}>
                     <h3 className={styles.chartTitle}>Lưu lượng xác thực (7 ngày qua)</h3>
@@ -171,14 +264,16 @@ const Reports = () => {
                 </div>
             </div>
 
-            {/* GIAO DIỆN MODAL THÔNG BÁO MỚI (XỊN HƠN) */}
+            {/* MODAL THÔNG BÁO TẢI FILE */}
             {exportModal.isOpen && (
                 <div className={styles.modalOverlay} onClick={closeExportModal}>
                     <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
-                        <div className={styles.modalIconBox}>
-                            <FiCheckCircle size={32} />
+                        <div className={styles.modalIconBox} style={{ color: exportModal.isError ? '#EF4444' : '#10B981' }}>
+                            {exportModal.isError ? <FiXCircle size={32} /> : <FiCheckCircle size={32} />}
                         </div>
-                        <h3 className={styles.modalTitle}>Đã tiếp nhận yêu cầu</h3>
+                        <h3 className={styles.modalTitle}>
+                            {exportModal.isError ? 'Tải tệp thất bại' : 'Đã tiếp nhận yêu cầu'}
+                        </h3>
                         <p className={styles.modalText}>{exportModal.message}</p>
                         <button className={styles.btnPrimaryFull} onClick={closeExportModal}>
                             Đã hiểu
@@ -186,7 +281,6 @@ const Reports = () => {
                     </div>
                 </div>
             )}
-
         </div>
     );
 };

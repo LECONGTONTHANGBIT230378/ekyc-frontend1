@@ -3,40 +3,41 @@ import ImageUpload from '../../../components/Form/ImageUpload.jsx';
 import styles from './Step2Upload.module.css';
 
 const Step2Upload = ({ onNext, onPrev, initialData }) => {
-    // Lưu trữ ảnh mặt trước và mặt sau (Nhận dữ liệu khởi tạo từ Bước 1 hoặc Bước 2 truyền sang)
+    // Chỉ cần các trường front và frontFile để lưu ảnh mặt trước
     const [images, setImages] = useState({
         front: initialData?.front || null,
-        back: initialData?.back || null,
+        frontFile: initialData?.frontFile || null,
     });
 
-    // Hook này giúp đồng bộ dữ liệu ảnh ngay lập tức nếu người dùng lùi về Bước 1 sửa ảnh và đi tới lại Bước 2
     useEffect(() => {
         setImages({
             front: initialData?.front || null,
-            back: initialData?.back || null,
+            frontFile: initialData?.frontFile || null,
         });
     }, [initialData]);
 
-    const handleUpload = (field, url) => {
-        setImages({ ...images, [field]: url });
+    const handleUpload = (field, url, file) => {
+        setImages(prev => ({
+            ...prev,
+            [field]: url,
+            [`${field}File`]: file
+        }));
     };
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        onNext({ cccdImages: images }); // Chuyển dữ liệu ảnh sang bước 3
+        onNext({ cccdImages: images });
     };
 
     return (
         <div className={styles.container}>
             <div className={styles.header}>
                 <h2>Tải lên Căn cước công dân (CCCD)</h2>
-                <p>Vui lòng cung cấp ảnh chụp mặt trước và mặt sau của thẻ CCCD bản gốc.</p>
+                <p>Vui lòng cung cấp ảnh chụp mặt trước của thẻ CCCD bản gốc.</p>
             </div>
 
             <form onSubmit={handleSubmit} className={styles.formWrapper}>
                 <div className={styles.contentGrid}>
-
-                    {/* CỘT TRÁI: HƯỚNG DẪN / YÊU CẦU */}
                     <div className={styles.leftColumn}>
                         <h3 className={styles.sectionTitle}>Yêu cầu hình ảnh</h3>
                         <ul className={styles.guidelineList}>
@@ -50,21 +51,14 @@ const Step2Upload = ({ onNext, onPrev, initialData }) => {
                         </div>
                     </div>
 
-                    {/* CỘT PHẢI: KHU VỰC TẢI ẢNH */}
                     <div className={styles.rightColumn}>
+                        {/* Chỉ hiển thị một ImageUpload cho mặt trước */}
                         <ImageUpload
                             label="Mặt trước CCCD"
                             hint="Kéo thả hoặc chọn ảnh PNG/JPG"
                             image={images.front}
-                            onUpload={(url) => handleUpload('front', url)}
-                            onRemove={() => handleUpload('front', null)}
-                        />
-                        <ImageUpload
-                            label="Mặt sau CCCD"
-                            hint="Kéo thả hoặc chọn ảnh PNG/JPG"
-                            image={images.back}
-                            onUpload={(url) => handleUpload('back', url)}
-                            onRemove={() => handleUpload('back', null)}
+                            onUpload={(url, file) => handleUpload('front', url, file)}
+                            onRemove={() => handleUpload('front', null, null)}
                         />
                     </div>
                 </div>
@@ -74,7 +68,8 @@ const Step2Upload = ({ onNext, onPrev, initialData }) => {
                     <button
                         type="submit"
                         className={styles.nextBtn}
-                        disabled={!images.front || !images.back} /* Khóa nút nếu chưa có đủ 2 mặt */
+                        // Khóa nút nếu chưa có file vật lý của mặt trước
+                        disabled={!images.frontFile}
                     >
                         Tiếp tục ›
                     </button>

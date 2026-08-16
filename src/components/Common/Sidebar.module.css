@@ -1,12 +1,12 @@
 .sidebar {
     width: 260px;
-    background-color: var(--bg-color);
+    background-color: #1E3A8A; /* Phủ toàn bộ nền màu Xanh dương đậm */
     display: flex;
     flex-direction: column;
     height: 100vh;
     position: sticky;
     top: 0;
-    border-right: 1px solid var(--border-color);
+    border-right: none; /* Bỏ viền phải vì nền tối đã đủ tách biệt khối với Dashboard */
 }
 
 .logoWrapper {
@@ -19,8 +19,8 @@
 .logoIcon {
     width: 32px;
     height: 32px;
-    background-color: var(--primary-color);
-    color: #fff;
+    background-color: #FFFFFF; /* Nền logo trắng */
+    color: #2563EB; /* Chữ/Icon logo màu Xanh dương chính */
     border-radius: 8px;
     display: flex;
     align-items: center;
@@ -30,10 +30,26 @@
     font-weight: bold;
 }
 
-.logoText h2 { margin: 0; font-family: var(--font-serif); font-size: 18px; color: var(--text-color); }
-.logoText span { font-size: 9px; letter-spacing: 0.1em; color: var(--gray-color); text-transform: uppercase; }
+.logoText h2 {
+    margin: 0;
+    font-family: var(--font-serif);
+    font-size: 18px;
+    color: #FFFFFF; /* Chữ tên dự án (Veritas) màu trắng */
+}
 
-.navMenu { display: flex; flex-direction: column; gap: 8px; padding: 0; }
+.logoText span {
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    color: rgba(255, 255, 255, 0.7); /* Dòng chữ nhỏ (HỒ SƠ ĐỊNH DANH) màu trắng mờ */
+    text-transform: uppercase;
+}
+
+.navMenu {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 0;
+}
 
 .navLink {
     display: flex;
@@ -42,13 +58,25 @@
     padding: 12px 24px;
     margin: 0 16px;
     border-radius: 100px;
-    color: var(--text-color);
+    color: #93C5FD; /* Màu chữ xanh nhạt (Blue-300) cho nút chưa chọn để dịu mắt */
     text-decoration: none;
     font-weight: 500;
     font-size: 13px;
-    transition: var(--transition-base);
+    transition: all 0.2s ease;
 }
 
-.navLink:hover { background-color: rgba(15, 91, 76, 0.05); }
-.navLink.active { background-color: var(--primary-color); color: #fff; }
-.icon { font-size: 16px; display: flex; }
+.navLink:hover {
+    background-color: rgba(255, 255, 255, 0.1); /* Phủ một lớp nền trắng trong suốt nhẹ khi lướt chuột */
+    color: #FFFFFF; /* Chữ sáng lên màu trắng tinh */
+}
+
+.navLink.active {
+    background-color: #2563EB; /* Nền Xanh dương chính cho trang hiện tại */
+    color: #FFFFFF;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4); /* Đổ bóng tạo cảm giác nút nổi lên */
+}
+
+.icon {
+    font-size: 16px;
+    display: flex;
+}

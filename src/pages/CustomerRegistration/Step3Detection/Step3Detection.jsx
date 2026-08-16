@@ -1,42 +1,85 @@
 import React, { useState, useEffect } from 'react';
-import { FiCheckCircle, FiLoader } from 'react-icons/fi';
+import { FiCheckCircle, FiLoader, FiAlertCircle } from 'react-icons/fi';
 import styles from './Step3Detection.module.css';
+import { ekycService } from '../../../services/ekycService';
 
 const Step3Detection = ({ onNext, onPrev, initialData }) => {
     const [progress, setProgress] = useState(0);
     const [currentAction, setCurrentAction] = useState('Khởi tạo engine AI...');
     const [isComplete, setIsComplete] = useState(false);
+    const [error, setError] = useState(null);
+    const [ocrResult, setOcrResult] = useState(null);
 
-    // Lấy ảnh mặt trước từ dữ liệu Bước 2 đã lưu
-    const frontImage = initialData?.cccdImages?.front;
+    // Lấy ảnh hiển thị và file gốc từ Bước 2
+    const frontImagePreview = initialData?.cccdImages?.front;
+    const frontFile = initialData?.cccdImages?.frontFile; // BẮT BUỘC PHẢI CÓ FILE GỐC ĐỂ GỬI API
 
-    // Hiệu ứng giả lập tiến trình quét AI
     useEffect(() => {
+        let isSubscribed = true;
+
+        const processAI = async () => {
+            if (!frontFile) {
+                if (isSubscribed) {
+                    setError('Không tìm thấy tệp ảnh gốc. Vui lòng quay lại Bước 2.');
+                    setCurrentAction('Lỗi dữ liệu đầu vào!');
+                }
+                return;
+            }
+
+            try {
+                // Gọi API sang Spring Boot Backend (chỉ gửi ảnh mặt trước theo Controller)
+                const apiResponse = await ekycService.detectOcr(frontFile);
+
+                if (isSubscribed) {
+                    // Kiểm tra trường success trong ApiResponse của Spring Boot
+                    if (apiResponse.success) {
+                        // apiResponse.data chính là đối tượng CccdInformation
+                        setOcrResult(apiResponse.data);
+                        setProgress(100);
+                        setIsComplete(true);
+                        setCurrentAction(apiResponse.message || 'Nhận diện hoàn tất!');
+                    } else {
+                        setError(apiResponse.message || 'Hệ thống AI không thể nhận diện được thẻ.');
+                        setCurrentAction('Nhận diện thất bại!');
+                    }
+                }
+            } catch (err) {
+                if (isSubscribed) {
+                    console.error("Lỗi gọi API OCR:", err);
+                    // Bắt lỗi từ cấu trúc trả về của ExceptionHandler trong Spring Boot
+                    setError(err.response?.data?.message || 'Có lỗi xảy ra khi kết nối với máy chủ.');
+                    setCurrentAction('Nhận diện thất bại!');
+                }
+            }
+        };
+
+        processAI();
+
+        // Hiệu ứng UX: Thanh tiến trình chạy lên 90% rồi đợi API
         const timer = setInterval(() => {
             setProgress((prev) => {
-                if (prev >= 100) {
+                if (prev >= 90) {
                     clearInterval(timer);
-                    setIsComplete(true);
-                    setCurrentAction('Nhận diện hoàn tất!');
-                    return 100;
+                    return 90;
                 }
 
-                // Thay đổi dòng text trạng thái theo % tiến độ
                 if (prev === 20) setCurrentAction('Đang kiểm tra chất lượng ảnh (độ mờ, chói lóa)...');
-                if (prev === 45) setCurrentAction('Đang tìm kiếm và cắt khung CCCD...');
+                if (prev === 45) setCurrentAction('Đang kết nối AI Server và cắt khung CCCD...');
                 if (prev === 70) setCurrentAction('Đang chạy mô hình OCR trích xuất văn bản...');
-                if (prev === 90) setCurrentAction('Đang kiểm tra tính hợp lệ của dữ liệu...');
 
-                return prev + 2; // Tăng dần 2%
+                return prev + 5;
             });
-        }, 100); // Tốc độ chạy giả lập
+        }, 500);
 
-        return () => clearInterval(timer);
-    }, []);
+        return () => {
+            isSubscribed = false;
+            clearInterval(timer);
+        };
+    }, [frontFile]);
 
     const handleNext = () => {
-        // Ở bước này không sinh ra data form mới, chỉ chuyển tiếp
-        onNext({});
+        // Truyền kết quả CccdInformation sang component cha để đưa vào Bước 4
+        onNext({ ocrData: ocrResult });
     };
 
     return (
@@ -57,38 +100,47 @@ const Step3Detection = ({ onNext, onPrev, initialData }) => {
 
                         <div className={styles.progressBarBg}>
                             <div
-                                className={styles.progressBarFill}
-                                style={{ width: `${progress}%` }}
+                                className={`${styles.progressBarFill} ${error ? styles.errorFill : ''}`}
+                                style={{
+                                    width: `${progress}%`,
+                                    backgroundColor: error ? '#E53E3E' : '#3182ce'
+                                }}
                             ></div>
                         </div>
 
                         <div className={styles.statusText}>
-                            {isComplete ? <FiCheckCircle color="#38A169" /> : <FiLoader className={styles.spinning} />}
-                            <span>{currentAction}</span>
+                            {error ? (
+                                <FiAlertCircle color="#E53E3E" />
+                            ) : isComplete ? (
+                                <FiCheckCircle color="#38A169" />
+                            ) : (
+                                <FiLoader className={styles.spinning} />
+                            )}
+                            <span style={{ color: error ? '#E53E3E' : 'inherit' }}>{currentAction}</span>
                         </div>
+
+                        {error && <div className={styles.errorMessage}>{error}</div>}
                     </div>
 
                     <ul className={styles.checklist}>
                         <li className={progress > 20 ? styles.checkDone : ''}>Kiểm tra tính toàn vẹn của ảnh</li>
-                        <li className={progress > 45 ? styles.checkDone : ''}>Phát hiện gian lận (Anti-spoofing)</li>
+                        <li className={progress > 45 ? styles.checkDone : ''}>Gửi dữ liệu qua kênh bảo mật</li>
                         <li className={progress > 70 ? styles.checkDone : ''}>Trích xuất dữ liệu quang học (OCR)</li>
-                        <li className={progress >= 100 ? styles.checkDone : ''}>Đóng gói và mã hóa dữ liệu</li>
+                        <li className={isComplete ? styles.checkDone : ''}>Đóng gói và mã hóa dữ liệu</li>
                     </ul>
                 </div>
 
                 {/* CỘT PHẢI: HIỆU ỨNG QUÉT ẢNH TIA LASER */}
                 <div className={styles.rightColumn}>
                     <div className={styles.scannerWrapper}>
-                        {frontImage ? (
-                            <img src={frontImage} alt="Scanning" className={styles.scanningImg} />
+                        {frontImagePreview ? (
+                            <img src={frontImagePreview} alt="Scanning" className={styles.scanningImg} />
                         ) : (
                             <div className={styles.noImg}>Không tìm thấy ảnh</div>
                         )}
 
-                        {/* Tia laser chạy lên xuống (Chỉ chạy khi chưa 100%) */}
-                        {!isComplete && <div className={styles.laserBeam}></div>}
+                        {!isComplete && !error && <div className={styles.laserBeam}></div>}
 
-                        {/* Khung nhắm góc */}
                         <div className={`${styles.corner} ${styles.topLeft}`}></div>
                         <div className={`${styles.corner} ${styles.topRight}`}></div>
                         <div className={`${styles.corner} ${styles.bottomLeft}`}></div>
@@ -98,14 +150,14 @@ const Step3Detection = ({ onNext, onPrev, initialData }) => {
             </div>
 
             <div className={styles.actionGroup}>
-                <button type="button" className={styles.backBtn} onClick={onPrev} disabled={!isComplete}>
+                <button type="button" className={styles.backBtn} onClick={onPrev}>
                     Quay lại tải ảnh
                 </button>
                 <button
                     type="button"
                     className={styles.nextBtn}
                     onClick={handleNext}
-                    disabled={!isComplete}
+                    disabled={!isComplete || error !== null}
                 >
                     Xem kết quả OCR ›
                 </button>

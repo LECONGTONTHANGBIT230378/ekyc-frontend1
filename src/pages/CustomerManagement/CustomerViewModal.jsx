@@ -1,81 +1,78 @@
 import React from 'react';
-import { FiX, FiUser } from 'react-icons/fi';
+import { FiX } from 'react-icons/fi';
 import styles from './CustomerManagement.module.css';
 
-const CustomerViewModal = ({ isOpen, onClose, customer }) => {
-    if (!isOpen || !customer) return null;
+const CustomerViewModal = ({ customer, onClose }) => {
+    if (!customer) return null;
 
-    // Hàm phụ trợ để render màu sắc thẻ trạng thái cho đúng
-    const renderStatusBadge = (status) => {
-        switch (status) {
-            case 'verified':
-                return <span className={`${styles.badge} ${styles.badgeVerified}`}>Đã xác thực</span>;
-            case 'pending':
-                return <span className={`${styles.badge} ${styles.badgePending}`}>Đang chờ</span>;
-            case 'failed':
-                return <span className={`${styles.badge} ${styles.badgeFailed}`}>Thất bại</span>;
-            default:
-                return null;
-        }
+    // Lấy chữ cái đầu tiên của tên làm Avatar
+    const getInitials = (name) => {
+        if (!name) return '?';
+        const parts = name.trim().split(' ');
+        return parts[parts.length - 1].charAt(0).toUpperCase();
+    };
+
+    const formatDateTime = (dateVal) => {
+        if (!dateVal) return 'N/A';
+        let dateStr = typeof dateVal === 'string' ? dateVal.replace(' ', 'T') : dateVal;
+        const date = new Date(dateStr);
+        if (isNaN(date.getTime())) return 'N/A';
+        return date.toLocaleString('vi-VN', {
+            hour: '2-digit', minute: '2-digit',
+            day: '2-digit', month: '2-digit', year: 'numeric'
+        });
     };
 
     return (
         <div className={styles.modalOverlay} onClick={onClose}>
             <div className={styles.modalContent} onClick={e => e.stopPropagation()}>
-
-                {/* HEADER CƠ BẢN */}
                 <div className={styles.modalHeader}>
-                    <h3>Chi tiết hồ sơ khách hàng</h3>
-                    <button className={styles.closeBtn} onClick={onClose}><FiX /></button>
+                    <h3>Hồ sơ khách hàng #{customer.id}</h3>
+                    <button className={styles.closeBtn} onClick={onClose}>
+                        <FiX />
+                    </button>
                 </div>
 
                 <div className={styles.modalBody}>
-
-                    {/* PHẦN 1: PROFILE HEADER (AVATAR + TÊN + TRẠNG THÁI) */}
                     <div className={styles.profileSection}>
                         <div className={styles.avatarPlaceholder}>
-                            <FiUser />
+                            {getInitials(customer.fullName)}
                         </div>
                         <div className={styles.profileTitle}>
-                            <h2 className={styles.customerName}>{customer.name}</h2>
-                            <div className={styles.statusWrapper}>
-                                {renderStatusBadge(customer.status)}
-                            </div>
+                            <h4 className={styles.customerName}>{customer.fullName || 'Chưa cập nhật'}</h4>
+                            <span style={{ fontSize: '13px', color: '#64748B' }}>
+                                ID: {customer.id}
+                            </span>
                         </div>
                     </div>
 
-                    {/* PHẦN 2: THÔNG TIN CHI TIẾT DẠNG GRID */}
                     <div className={styles.infoBox}>
                         <div className={styles.infoGrid}>
-                            <div className={styles.infoItem}>
-                                <span className={styles.infoLabel}>Mã khách hàng</span>
-                                <strong className={styles.infoValue}>{customer.id}</strong>
+                            <div className={styles.infoItemFull}>
+                                <span className={styles.infoLabel}>Số thẻ CCCD</span>
+                                <span className={styles.infoValue} style={{ fontWeight: 'bold' }}>
+                                    {customer.cccdNumber || 'Chưa định danh CCCD'}
+                                </span>
                             </div>
                             <div className={styles.infoItem}>
                                 <span className={styles.infoLabel}>Số điện thoại</span>
-                                <strong className={styles.infoValue}>{customer.phone}</strong>
+                                <span className={styles.infoValue}>{customer.phone || 'Chưa cập nhật'}</span>
                             </div>
                             <div className={styles.infoItem}>
-                                <span className={styles.infoLabel}>Số CCCD</span>
-                                <strong className={styles.infoValue}>{customer.cccd}</strong>
-                            </div>
-                            <div className={styles.infoItem}>
-                                <span className={styles.infoLabel}>Ngày sinh</span>
-                                <strong className={styles.infoValue}>{customer.dob}</strong>
+                                <span className={styles.infoLabel}>Email</span>
+                                <span className={styles.infoValue}>{customer.email || 'Chưa cập nhật'}</span>
                             </div>
                             <div className={styles.infoItemFull}>
-                                <span className={styles.infoLabel}>Địa chỉ liên hệ</span>
-                                <strong className={styles.infoValue}>{customer.address}</strong>
+                                <span className={styles.infoLabel}>Ngày đăng ký tài khoản</span>
+                                <span className={styles.infoValue}>{formatDateTime(customer.createdAt)}</span>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                {/* FOOTER */}
                 <div className={styles.modalFooter}>
-                    <button className={styles.btnPrimary} onClick={onClose}>Hoàn tất</button>
+                    <button className={styles.btnPrimary} onClick={onClose}>Đóng cửa sổ</button>
                 </div>
-
             </div>
         </div>
     );

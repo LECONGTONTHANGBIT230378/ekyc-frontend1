@@ -2,38 +2,90 @@ import React, { useState } from 'react';
 import InputField from '../../../components/Form/InputField';
 import TextAreaField from '../../../components/Form/TextAreaField';
 import ImageUpload from '../../../components/Form/ImageUpload';
+import { customerService } from '../../../services/customerService';
 import styles from './Step1Info.module.css';
 
-// 1. HÀM TẠO MÃ KHÁCH HÀNG TỰ ĐỘNG & DUY NHẤT
 const generateCustomerId = () => {
-    const timestamp = Date.now().toString().slice(-6); // Lấy 6 số cuối của thời gian hiện tại
-    const randomStr = Math.random().toString(36).substring(2, 5).toUpperCase(); // Lấy 3 ký tự ngẫu nhiên
-    return `CUS-${timestamp}${randomStr}`; // Ví dụ kết quả: CUS-123456ABC
+    const timestamp = Date.now().toString().slice(-6);
+    const randomStr = Math.random().toString(36).substring(2, 5).toUpperCase();
+    return `CUS-${timestamp}${randomStr}`;
 };
 
 const Step1Info = ({ onNext, initialData }) => {
     const [formData, setFormData] = useState({
-        // Nếu đã có mã (do quay lại từ bước 2) thì giữ nguyên, nếu chưa có (lần đầu vào) thì tự tạo mới
         customerId: initialData?.customerId || generateCustomerId(),
         fullName: initialData?.fullName || '',
         phone: initialData?.phone || '',
         email: initialData?.email || '',
         notes: initialData?.notes || '',
         frontImage: initialData?.frontImage || null,
-        backImage: initialData?.backImage || null,
+        frontFile: initialData?.frontFile || null,
     });
+
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
-    const handleUpload = (field, url) => {
-        setFormData({ ...formData, [field]: url });
+    const handleUpload = (field, url, file) => {
+        setFormData({
+            ...formData,
+            [field]: url,
+            [`${field.replace('Image', 'File')}`]: file
+        });
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        onNext({ combinedData: formData });
+        setError('');
+        setLoading(true);
+
+        try {
+            const payload = new FormData();
+
+            // Map tên biến chính xác với @RequestParam của Spring Boot
+            payload.append('fullName', formData.fullName);
+            payload.append('phone', formData.phone);
+
+            if (formData.email) payload.append('email', formData.email);
+            if (formData.notes) payload.append('note', formData.notes); // React: notes -> Java: note
+
+            // Nếu có upload file mặt trước CCCD
+            if (formData.frontFile) {
+                payload.append('fileFront', formData.frontFile); // React: frontFile -> Java: fileFront
+            }
+
+            // Gọi API
+            const res = await customerService.createCustomer(payload);
+
+            // Xử lý logic check response dựa theo cấu trúc ApiResponse của Spring Boot
+            if (res && (res.code === 200 || res.success === true)) {
+                // Lấy ID thật từ Database trả về để gán cho các bước sau
+                const savedCustomerId = res.data?.id;
+
+                // Chuyển sang Bước 2, mang theo data và ID của Backend
+                onNext({
+                    combinedData: {
+                        ...formData,
+                        dbId: savedCustomerId
+                    }
+                });
+            } else {
+                setError(res.message || 'Có lỗi xảy ra từ máy chủ, vui lòng thử lại.');
+            }
+        } catch (err) {
+            // Xử lý lỗi validation từ Spring Boot (VD: Sai regex SĐT, email)
+            const errorMessage =
+                err.response?.data?.message ||
+                err.response?.data?.data || // Đôi khi lỗi validation danh sách được Spring Boot đẩy vào data
+                'Không thể kết nối đến máy chủ. Vui lòng kiểm tra lại mạng.';
+
+            setError(errorMessage);
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -44,12 +96,16 @@ const Step1Info = ({ onNext, initialData }) => {
             </div>
 
             <form onSubmit={handleSubmit} className={styles.formWrapper}>
-                <div className={styles.contentGrid}>
+                {/* HIỂN THỊ LỖI NẾU CÓ */}
+                {error && (
+                    <div style={{ color: '#d32f2f', backgroundColor: '#ffebee', padding: '10px', borderRadius: '4px', marginBottom: '15px' }}>
+                        {error}
+                    </div>
+                )}
 
-                    {/* CỘT TRÁI: THÔNG TIN TEXT */}
+                <div className={styles.contentGrid}>
                     <div className={styles.leftColumn}>
                         <div className={styles.row}>
-                            {/* 2. THÊM THUỘC TÍNH disabled ĐỂ KHÓA Ô MÃ KHÁCH HÀNG */}
                             <InputField
                                 label="Mã khách hàng (Tự động)"
                                 name="customerId"
@@ -69,21 +125,13 @@ const Step1Info = ({ onNext, initialData }) => {
                         </div>
                     </div>
 
-                    {/* CỘT PHẢI: UPLOAD ẢNH MẶT TRƯỚC VÀ MẶT SAU */}
                     <div className={styles.rightColumn}>
                         <ImageUpload
                             label="Mặt trước CCCD (Tùy chọn)"
                             hint="Kéo thả hoặc chọn ảnh PNG/JPG tối đa 10MB"
                             image={formData.frontImage}
-                            onUpload={(url) => handleUpload('frontImage', url)}
-                            onRemove={() => handleUpload('frontImage', null)}
-                        />
-                        <ImageUpload
-                            label="Mặt sau CCCD (Tùy chọn)"
-                            hint="Kéo thả hoặc chọn ảnh PNG/JPG tối đa 10MB"
-                            image={formData.backImage}
-                            onUpload={(url) => handleUpload('backImage', url)}
-                            onRemove={() => handleUpload('backImage', null)}
+                            onUpload={(url, file) => handleUpload('frontImage', url, file)}
+                            onRemove={() => handleUpload('frontImage', null, null)}
                         />
                     </div>
                 </div>
@@ -93,9 +141,9 @@ const Step1Info = ({ onNext, initialData }) => {
                     <button
                         type="submit"
                         className={styles.nextBtn}
-                        disabled={!formData.fullName || !formData.phone}
+                        disabled={!formData.fullName || !formData.phone || loading}
                     >
-                        Tiếp tục ›
+                        {loading ? 'Đang xử lý...' : 'Tiếp tục ›'}
                     </button>
                 </div>
             </form>

@@ -9,7 +9,8 @@ const ImageUpload = ({ label, hint, image, onUpload, onRemove }) => {
         const file = e.target.files[0];
         if (file) {
             const imageUrl = URL.createObjectURL(file);
-            onUpload(imageUrl);
+            // SỬA LỖI Ở ĐÂY: Truyền cả imageUrl và đối tượng file gốc lên component cha
+            onUpload(imageUrl, file);
         }
     };
 

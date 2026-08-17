@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import InputField from '../../../components/Form/InputField';
-import TextAreaField from '../../../components/Form/TextAreaField';
 import ImageUpload from '../../../components/Form/ImageUpload';
 import { customerService } from '../../../services/customerService';
 import styles from './Step1Info.module.css';
@@ -17,7 +16,6 @@ const Step1Info = ({ onNext, initialData }) => {
         fullName: initialData?.fullName || '',
         phone: initialData?.phone || '',
         email: initialData?.email || '',
-        notes: initialData?.notes || '',
         frontImage: initialData?.frontImage || null,
         frontFile: initialData?.frontFile || null,
     });
@@ -50,7 +48,6 @@ const Step1Info = ({ onNext, initialData }) => {
             payload.append('phone', formData.phone);
 
             if (formData.email) payload.append('email', formData.email);
-            if (formData.notes) payload.append('note', formData.notes); // React: notes -> Java: note
 
             // Nếu có upload file mặt trước CCCD
             if (formData.frontFile) {
@@ -119,9 +116,6 @@ const Step1Info = ({ onNext, initialData }) => {
                         <div className={styles.row}>
                             <InputField label="Số điện thoại" name="phone" value={formData.phone} onChange={handleChange} required />
                             <InputField label="Email" type="email" name="email" value={formData.email} onChange={handleChange} />
-                        </div>
-                        <div className={styles.fullWidth}>
-                            <TextAreaField label="Ghi chú" name="notes" value={formData.notes} onChange={handleChange} />
                         </div>
                     </div>
 

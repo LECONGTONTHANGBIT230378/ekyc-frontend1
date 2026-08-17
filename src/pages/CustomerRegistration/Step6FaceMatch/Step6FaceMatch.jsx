@@ -1,17 +1,24 @@
 import React, { useState, useEffect } from 'react';
+import { FiCheckCircle, FiXCircle, FiAlertTriangle } from 'react-icons/fi'; // Import bộ Icon mới
 import { ekycService } from '../../../services/ekycService';
 import styles from './Step6FaceMatch.module.css';
 
 const Step6FaceMatch = ({ onNext, onPrev, initialData }) => {
     const [isMatching, setIsMatching] = useState(true);
     const [matchScore, setMatchScore] = useState(0);
-    // State để lưu kết luận Khớp/Không khớp từ Backend
     const [isMatch, setIsMatch] = useState(false);
     const [error, setError] = useState(null);
     const [rawResult, setRawResult] = useState(null);
 
-    // Lấy ảnh preview để hiển thị trên UI
-    const cccdImage = initialData?.cccdImages?.front;
+    // =========================================================================
+    // LẤY ẢNH KHUÔN MẶT ĐÃ CẮT TỪ OCR THAY VÌ LẤY TOÀN BỘ THẺ CCCD
+    // =========================================================================
+    const cccdImage = initialData?.finalOcrData?.faceImage
+        || initialData?.finalOcrData?.croppedFace
+        || initialData?.finalOcrData?.face_image_url
+        || initialData?.finalOcrData?.avatar
+        || initialData?.cccdImages?.front; // Fallback: Nếu không tìm thấy mặt cắt thì mới dùng thẻ CCCD
+
     const selfieImage = initialData?.selfieImages?.selfiePreview;
 
     useEffect(() => {
@@ -19,7 +26,7 @@ const Step6FaceMatch = ({ onNext, onPrev, initialData }) => {
 
         const verifyWithAI = async () => {
             try {
-                // 1. Lấy File vật lý và dữ liệu chữ từ các bước trước
+                // Lấy File vật lý và dữ liệu chữ từ các bước trước
                 const frontFile = initialData?.cccdImages?.frontFile;
                 const selfieFile = initialData?.selfieImages?.selfieFile;
                 const ocrData = initialData?.finalOcrData || {};
@@ -30,7 +37,7 @@ const Step6FaceMatch = ({ onNext, onPrev, initialData }) => {
                     return;
                 }
 
-                // 2. TẠO JSON ĐÚNG CHUẨN BACKEND
+                // TẠO JSON ĐÚNG CHUẨN BACKEND
                 const cccdDataJson = {
                     cccdNumber: ocrData.idNumber || '',
                     fullName: ocrData.fullName || '',
@@ -41,7 +48,7 @@ const Step6FaceMatch = ({ onNext, onPrev, initialData }) => {
                     placeOfResidence: ocrData.address || ''
                 };
 
-                // 3. LẤY ID KHÁCH HÀNG TỪ BƯỚC 1
+                // LẤY ID KHÁCH HÀNG TỪ BƯỚC 1
                 const customerId = initialData?.combinedData?.dbId || initialData?.customerId;
 
                 if (!customerId) {
@@ -50,7 +57,7 @@ const Step6FaceMatch = ({ onNext, onPrev, initialData }) => {
                     return;
                 }
 
-                // 4. GỌI API XÁC THỰC KHUÔN MẶT (Truyền customerId vào tham số thứ 4)
+                // GỌI API XÁC THỰC KHUÔN MẶT
                 const response = await ekycService.verifyFace(frontFile, selfieFile, cccdDataJson, customerId);
 
                 if (isMounted) {
@@ -67,10 +74,9 @@ const Step6FaceMatch = ({ onNext, onPrev, initialData }) => {
                     }
                     setMatchScore(score.toFixed(2));
 
-                    // 5. LẤY KẾT LUẬN TỪ BACKEND
+                    // LẤY KẾT LUẬN TỪ BACKEND
                     let finalMatchStatus = false;
                     if (resultData.result !== undefined) {
-                        // Spring Boot đang trả về Enum VerificationStatus (MATCHED / NOT_MATCHED)
                         finalMatchStatus = resultData.result === 'MATCHED' || resultData.result === true;
                     } else if (resultData.isMatch !== undefined) {
                         finalMatchStatus = resultData.isMatch;
@@ -88,11 +94,14 @@ const Step6FaceMatch = ({ onNext, onPrev, initialData }) => {
                     let errorMsg = err.response?.data?.message || err.message || 'Mất kết nối đến hệ thống AI hoặc lỗi dữ liệu.';
 
                     if (errorMsg.includes("Duplicate entry") || errorMsg.includes("cccd_information")) {
-                        errorMsg = "Căn cước công dân này đã tồn tại trong hệ thống. Vui lòng quay lại Bước 4 để kiểm tra hoặc sử dụng giấy tờ khác.";
+                        errorMsg = "Căn cước công dân này đã được đăng ký trong hệ thống. Vui lòng sử dụng giấy tờ khác.";
+                    }
+                    else if (errorMsg.includes("MULTIPLE_WEBCAM_FACES") || errorMsg.includes("đúng một khuôn mặt") || errorMsg.includes("faceCount")) {
+                        errorMsg = "Phát hiện có nhiều hơn 1 khuôn mặt trong khung hình. Bạn vui lòng quay lại Bước 5 chụp lại ảnh chỉ có một mình bạn nhé.";
                     }
 
                     // Hiển thị trực tiếp lỗi ra UI
-                    setError(`Lỗi: ${errorMsg}`);
+                    setError(errorMsg);
                     setIsMatching(false);
                 }
             }
@@ -123,7 +132,7 @@ const Step6FaceMatch = ({ onNext, onPrev, initialData }) => {
             <div className={styles.comparisonArea}>
                 <div className={styles.imageCard}>
                     {cccdImage ? (
-                        <img src={cccdImage} alt="CCCD" className={styles.previewImage} />
+                        <img src={cccdImage} alt="Khuôn mặt CCCD" className={styles.previewImage} />
                     ) : (
                         <div className={styles.placeholderCccd}>
                             <span className={styles.fakeTextHeader}>CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</span>
@@ -150,23 +159,44 @@ const Step6FaceMatch = ({ onNext, onPrev, initialData }) => {
                 </div>
             </div>
 
-            {/* THẺ KẾT QUẢ / TRẠNG THÁI */}
+            {/* ========================================================================= */}
+            {/* KHU VỰC THÔNG BÁO MỚI SỬ DỤNG CSS BANNER VÀ ICON                          */}
+            {/* ========================================================================= */}
             {isMatching ? (
                 <div className={styles.loadingBanner}>
                     <div className={styles.spinner}></div>
-                    <p>Hệ thống AI đang tiến hành đối chiếu khuôn mặt...</p>
+                    <p>Hệ thống AI đang tiến hành phân tích và đối chiếu khuôn mặt...</p>
                 </div>
             ) : error ? (
-                <div className={styles.resultBanner} style={{ backgroundColor: '#FEF2F2', borderColor: '#F87171' }}>
-                    <p style={{ color: '#DC2626', margin: 0, fontWeight: 600, fontSize: '14px', textAlign: 'center' }}>{error}</p>
+                <div className={styles.errorBanner}>
+                    <div className={styles.errorIconWrapper}>
+                        <FiAlertTriangle size={28} />
+                    </div>
+                    <div className={styles.errorContent}>
+                        <h4 className={styles.errorTitle}>Xác thực thất bại</h4>
+                        <p className={styles.errorDesc}>{error}</p>
+                    </div>
                 </div>
             ) : (
-                <div className={styles.resultBanner}>
-                    <span className={styles.resultLabel}>Điểm tương đồng</span>
-                    <div className={styles.resultScore}>{matchScore}%</div>
-                    <div className={styles.badge} style={{ backgroundColor: isMatch ? '#10B981' : '#EF4444' }}>
-                        {isMatch ? 'KHỚP' : 'KHÔNG KHỚP'}
+                <div className={`${styles.resultBanner} ${isMatch ? styles.matchSuccess : styles.matchFailed}`}>
+                    <div className={styles.resultHeader}>
+                        {isMatch ? <FiCheckCircle size={32} /> : <FiXCircle size={32} />}
+                        <span className={styles.resultTitle}>
+                            {isMatch ? 'XÁC THỰC THÀNH CÔNG' : 'KHUÔN MẶT KHÔNG TRÙNG KHỚP'}
+                        </span>
                     </div>
+
+                    <div className={styles.scoreWrapper}>
+                        <span className={styles.resultLabel}>Điểm tương đồng:</span>
+                        <span className={styles.resultScore}>{matchScore}%</span>
+                    </div>
+
+                    {/* Hộp gợi ý nếu khuôn mặt không khớp */}
+                    {!isMatch && (
+                        <div className={styles.suggestionBox}>
+                            <strong>Lưu ý:</strong> Hệ thống nhận thấy rủi ro sai lệch khuôn mặt cao. Vui lòng quay lại Bước 5 để chụp ảnh rõ nét hơn, đảm bảo đủ sáng và không đeo kính râm/khẩu trang.
+                        </div>
+                    )}
                 </div>
             )}
 

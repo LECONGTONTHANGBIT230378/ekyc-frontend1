@@ -57,6 +57,27 @@
 }
 
 /* ========================================= */
+/* ĐỊNH DẠNG DẤU * BẮT BUỘC THÀNH MÀU ĐỎ     */
+/* ========================================= */
+.required {
+    color: #EF4444 !important; /* Đỏ tươi */
+    margin-left: 4px;
+    font-weight: bold;
+}
+
+/* Nếu component InputField của bạn dùng thẻ <span> cho dấu * bên trong thẻ <label> */
+.leftColumn label span {
+    color: #EF4444 !important;
+}
+
+/* Nếu component InputField tạo dấu * bằng phần tử giả (pseudo-element) ::after */
+.leftColumn label.required::after,
+.leftColumn label[data-required="true"]::after {
+    content: " *";
+    color: #EF4444 !important;
+}
+
+/* ========================================= */
 /* CỘT PHẢI: KHU VỰC TẢI ẢNH NỔI BẬT         */
 /* ========================================= */
 .rightColumn {

@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { FiEye, FiTrash2, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
+import { FiEye, FiEdit2, FiTrash2, FiChevronLeft, FiChevronRight } from 'react-icons/fi'; // Đã thêm FiEdit2
 import { customerService } from '../../services/customerService';
 import CustomerToolbar from './CustomerToolbar';
 import CustomerViewModal from './CustomerViewModal';
+import CustomerEditModal from './CustomerEditModal'; // Đã thêm import Modal Edit
 import CustomerDeleteModal from './CustomerDeleteModal';
 import styles from './CustomerManagement.module.css';
 
@@ -15,6 +16,7 @@ const CustomerManagement = () => {
     const [searchKeyword, setSearchKeyword] = useState('');
 
     const [viewModalOpen, setViewModalOpen] = useState(false);
+    const [editModalOpen, setEditModalOpen] = useState(false); // Đã thêm state quản lý Edit Modal
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
     const [selectedCustomer, setSelectedCustomer] = useState(null);
 
@@ -146,6 +148,17 @@ const CustomerManagement = () => {
                                             >
                                                 <FiEye />
                                             </button>
+
+                                            {/* NÚT CHỈNH SỬA ĐÃ ĐƯỢC THÊM VÀO */}
+                                            <button
+                                                className={styles.iconBtn}
+                                                title="Chỉnh sửa hồ sơ"
+                                                style={{ color: '#2563EB' }}
+                                                onClick={() => { setSelectedCustomer(customer); setEditModalOpen(true); }}
+                                            >
+                                                <FiEdit2 />
+                                            </button>
+
                                             <button
                                                 className={styles.iconBtn}
                                                 title="Xóa hồ sơ"
@@ -172,6 +185,19 @@ const CustomerManagement = () => {
                     onClose={() => setViewModalOpen(false)}
                 />
             )}
+
+            {/* MODAL CHỈNH SỬA ĐÃ ĐƯỢC THÊM VÀO */}
+            {editModalOpen && (
+                <CustomerEditModal
+                    customer={selectedCustomer}
+                    onClose={() => setEditModalOpen(false)}
+                    onSuccess={() => {
+                        setEditModalOpen(false);
+                        fetchCustomers(); // Load lại bảng sau khi lưu thành công
+                    }}
+                />
+            )}
+
             {deleteModalOpen && (
                 <CustomerDeleteModal
                     customerId={selectedCustomer?.id}

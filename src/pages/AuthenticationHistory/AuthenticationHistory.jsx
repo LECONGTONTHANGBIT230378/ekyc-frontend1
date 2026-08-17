@@ -173,11 +173,11 @@ const AuthenticationHistory = () => {
                                 let displayScore = (score !== undefined && score !== null) ? (score <= 1 ? score * 100 : score) : null;
 
                                 // Trạng thái lấy từ biến result
-                                const status = item.result || 'N/A';
+                                const status = item.result || item.verificationResult || 'N/A';
 
                                 return (
-                                    <tr key={item.id}>
-                                        <td style={{ fontWeight: 600 }}>#{item.id}</td>
+                                    <tr key={item.id || item.verification_id}>
+                                        <td style={{ fontWeight: 600 }}>#{item.id || item.verification_id}</td>
                                         <td>{cccd}</td>
                                         <td>{formatDateTime(time)}</td>
                                         <td>
@@ -197,7 +197,20 @@ const AuthenticationHistory = () => {
                                                 <button
                                                     className={styles.iconBtn}
                                                     title="Xem chi tiết"
-                                                    onClick={() => { setSelectedHistory(item); setViewModalOpen(true); }}
+                                                    onClick={async () => {
+                                                        try {
+                                                            const historyId = item.id || item.verification_id;
+                                                            // Gọi API lấy chi tiết từ Backend
+                                                            const res = await historyService.getHistoryById(historyId);
+                                                            // Bóc tách vỏ ApiResponse của Spring Boot
+                                                            const detailData = res.data || res;
+                                                            setSelectedHistory(detailData);
+                                                            setViewModalOpen(true);
+                                                        } catch (error) {
+                                                            console.error("Lỗi lấy chi tiết:", error);
+                                                            alert("Không thể tải chi tiết lịch sử!");
+                                                        }
+                                                    }}
                                                 >
                                                     <FiEye />
                                                 </button>

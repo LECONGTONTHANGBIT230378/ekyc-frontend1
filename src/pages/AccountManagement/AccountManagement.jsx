@@ -54,8 +54,8 @@ const AccountManagement = () => {
         }
     };
 
-    // Chạy khi mở trang lần đầu
-    useEffect(() => {
+        // Chạy khi mở trang lần đầu
+        useEffect(() => {
         fetchAccounts();
     }, []);
 

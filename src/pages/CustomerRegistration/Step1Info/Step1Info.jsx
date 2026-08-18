@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import InputField from '../../../components/Form/InputField';
 import ImageUpload from '../../../components/Form/ImageUpload';
-import { customerService } from '../../../services/customerService';
 import styles from './Step1Info.module.css';
 
 const generateCustomerId = () => {
@@ -20,7 +19,6 @@ const Step1Info = ({ onNext, initialData }) => {
         frontFile: initialData?.frontFile || null,
     });
 
-    const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
 
     const handleChange = (e) => {
@@ -35,54 +33,14 @@ const Step1Info = ({ onNext, initialData }) => {
         });
     };
 
-    const handleSubmit = async (e) => {
+    const handleSubmit = (e) => {
         e.preventDefault();
         setError('');
-        setLoading(true);
 
-        try {
-            const payload = new FormData();
-
-            // Map tên biến chính xác với @RequestParam của Spring Boot
-            payload.append('fullName', formData.fullName);
-            payload.append('phone', formData.phone);
-
-            if (formData.email) payload.append('email', formData.email);
-
-            // Nếu có upload file mặt trước CCCD
-            if (formData.frontFile) {
-                payload.append('fileFront', formData.frontFile); // React: frontFile -> Java: fileFront
-            }
-
-            // Gọi API
-            const res = await customerService.createCustomer(payload);
-
-            // Xử lý logic check response dựa theo cấu trúc ApiResponse của Spring Boot
-            if (res && (res.code === 200 || res.success === true)) {
-                // Lấy ID thật từ Database trả về để gán cho các bước sau
-                const savedCustomerId = res.data?.id;
-
-                // Chuyển sang Bước 2, mang theo data và ID của Backend
-                onNext({
-                    combinedData: {
-                        ...formData,
-                        dbId: savedCustomerId
-                    }
-                });
-            } else {
-                setError(res.message || 'Có lỗi xảy ra từ máy chủ, vui lòng thử lại.');
-            }
-        } catch (err) {
-            // Xử lý lỗi validation từ Spring Boot (VD: Sai regex SĐT, email)
-            const errorMessage =
-                err.response?.data?.message ||
-                err.response?.data?.data || // Đôi khi lỗi validation danh sách được Spring Boot đẩy vào data
-                'Không thể kết nối đến máy chủ. Vui lòng kiểm tra lại mạng.';
-
-            setError(errorMessage);
-        } finally {
-            setLoading(false);
-        }
+        // Không gọi API, chỉ chuyển dữ liệu vào State tổng của CustomerRegistration
+        onNext({
+            combinedData: formData
+        });
     };
 
     return (
@@ -93,7 +51,6 @@ const Step1Info = ({ onNext, initialData }) => {
             </div>
 
             <form onSubmit={handleSubmit} className={styles.formWrapper}>
-                {/* HIỂN THỊ LỖI NẾU CÓ */}
                 {error && (
                     <div style={{ color: '#d32f2f', backgroundColor: '#ffebee', padding: '10px', borderRadius: '4px', marginBottom: '15px' }}>
                         {error}
@@ -135,9 +92,9 @@ const Step1Info = ({ onNext, initialData }) => {
                     <button
                         type="submit"
                         className={styles.nextBtn}
-                        disabled={!formData.fullName || !formData.phone || loading}
+                        disabled={!formData.fullName || !formData.phone}
                     >
-                        {loading ? 'Đang xử lý...' : 'Tiếp tục ›'}
+                        Tiếp tục ›
                     </button>
                 </div>
             </form>

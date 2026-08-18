@@ -21,7 +21,21 @@ const CustomerRegistration = () => {
     const [formData, setFormData] = useState({});
 
     const handleNextStep = (stepData) => {
-        setFormData(prev => ({ ...prev, ...stepData }));
+        setFormData(prev => {
+            const newData = { ...prev, ...stepData };
+
+            // FIX LỖI ĐỒNG BỘ ẢNH:
+            // Nếu stepData có chứa combinedData (tức là người dùng vừa bấm "Tiếp tục" từ Bước 1)
+            // Ta sẽ ghi đè lại dữ liệu ảnh của Bước 2 bằng ảnh mới nhất từ Bước 1
+            if (stepData.combinedData) {
+                newData.cccdImages = {
+                    front: stepData.combinedData.frontImage || null,
+                    frontFile: stepData.combinedData.frontFile || null
+                };
+            }
+
+            return newData;
+        });
         setCurrentStep(prev => prev + 1);
     };
 
@@ -34,13 +48,12 @@ const CustomerRegistration = () => {
             case 1:
                 return <Step1Info onNext={handleNextStep} initialData={formData?.combinedData} />;
             case 2:
-                const step1Data = formData?.combinedData || {};
+                // Do đã đồng bộ ở handleNextStep, ta chỉ cần lấy thẳng từ cccdImages
                 const step2Data = formData?.cccdImages || {};
 
-                // Đã loại bỏ mặt sau, chỉ giữ lại mặt trước (front preview) và file gốc (frontFile)
                 const combinedImages = {
-                    front: step2Data.front || step1Data.frontImage || null,
-                    frontFile: step2Data.frontFile || step1Data.frontFile || null
+                    front: step2Data.front || null,
+                    frontFile: step2Data.frontFile || null
                 };
 
                 return (
@@ -71,10 +84,7 @@ const CustomerRegistration = () => {
     };
 
     return (
-        /* Chỉ giữ lại Khung bọc trang và Stepper, sử dụng đúng class trong CSS của bạn */
         <div className={styles.pageContainer}>
-
-            {/* THANH TIẾN TRÌNH (STEPPER) */}
             <div className={styles.stepperWrapper}>
                 <div className={styles.stepperContainer}>
                     {STEPS.map((step, index) => {
@@ -95,7 +105,6 @@ const CustomerRegistration = () => {
                 </div>
             </div>
 
-            {/* NỘI DUNG TỪNG BƯỚC */}
             <div className={styles.stepContent}>
                 {renderCurrentStep()}
             </div>

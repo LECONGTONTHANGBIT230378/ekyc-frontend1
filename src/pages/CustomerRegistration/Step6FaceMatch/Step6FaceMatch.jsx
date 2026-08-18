@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { FiCheckCircle, FiXCircle, FiAlertTriangle } from 'react-icons/fi'; // Import bộ Icon mới
+import React, { useState, useEffect, useRef } from 'react';
+import { FiCheckCircle, FiXCircle, FiAlertTriangle } from 'react-icons/fi';
 import { ekycService } from '../../../services/ekycService';
+import { customerService } from '../../../services/customerService';
 import styles from './Step6FaceMatch.module.css';
 
 const Step6FaceMatch = ({ onNext, onPrev, initialData }) => {
@@ -10,107 +11,120 @@ const Step6FaceMatch = ({ onNext, onPrev, initialData }) => {
     const [error, setError] = useState(null);
     const [rawResult, setRawResult] = useState(null);
 
-    // =========================================================================
-    // LẤY ẢNH KHUÔN MẶT ĐÃ CẮT TỪ OCR THAY VÌ LẤY TOÀN BỘ THẺ CCCD
-    // =========================================================================
+    const apiPromise = useRef(null);
+
     const cccdImage = initialData?.finalOcrData?.faceImage
         || initialData?.finalOcrData?.croppedFace
         || initialData?.finalOcrData?.face_image_url
         || initialData?.finalOcrData?.avatar
-        || initialData?.cccdImages?.front; // Fallback: Nếu không tìm thấy mặt cắt thì mới dùng thẻ CCCD
+        || initialData?.cccdImages?.front;
 
     const selfieImage = initialData?.selfieImages?.selfiePreview;
 
     useEffect(() => {
         let isMounted = true;
 
-        const verifyWithAI = async () => {
+        const executeVerifyAPI = async () => {
+            const step1Data = initialData?.combinedData || {};
+            const frontFile = initialData?.cccdImages?.frontFile;
+            const selfieFile = initialData?.selfieImages?.selfieFile;
+            const ocrData = initialData?.finalOcrData || {};
+
+            if (!frontFile || !selfieFile) {
+                throw new Error("Hệ thống không tìm thấy tệp ảnh gốc. Vui lòng quay lại các bước trước.");
+            }
+
+            // 1. TẠO KHÁCH HÀNG (Tạm thời để lấy ID)
+            const customerPayload = new FormData();
+            customerPayload.append('fullName', step1Data.fullName);
+            customerPayload.append('phone', step1Data.phone);
+            if (step1Data.email) customerPayload.append('email', step1Data.email);
+            if (frontFile) customerPayload.append('fileFront', frontFile);
+
+            const customerRes = await customerService.createCustomer(customerPayload);
+            const customerId = customerRes.data?.id || customerRes.id || customerRes.data?.customerId;
+
+            if (!customerId) {
+                throw new Error("Lỗi: Không thể khởi tạo dữ liệu khách hàng mới.");
+            }
+
+            if (initialData.combinedData) {
+                initialData.combinedData.dbId = customerId;
+            }
+
+            // 2. GỌI API XÁC THỰC KHUÔN MẶT
+            const cccdDataJson = {
+                cccdNumber: ocrData.idNumber || '',
+                fullName: ocrData.fullName || '',
+                dateOfBirth: ocrData.dob || '',
+                gender: ocrData.gender || '',
+                nationality: ocrData.nationality || '',
+                placeOfOrigin: ocrData.homeTown || '',
+                placeOfResidence: ocrData.address || ''
+            };
+
             try {
-                // Lấy File vật lý và dữ liệu chữ từ các bước trước
-                const frontFile = initialData?.cccdImages?.frontFile;
-                const selfieFile = initialData?.selfieImages?.selfieFile;
-                const ocrData = initialData?.finalOcrData || {};
-
-                if (!frontFile || !selfieFile) {
-                    setError("Hệ thống không tìm thấy tệp ảnh gốc. Vui lòng quay lại các bước trước.");
-                    setIsMatching(false);
-                    return;
-                }
-
-                // TẠO JSON ĐÚNG CHUẨN BACKEND
-                const cccdDataJson = {
-                    cccdNumber: ocrData.idNumber || '',
-                    fullName: ocrData.fullName || '',
-                    dateOfBirth: ocrData.dob || '',
-                    gender: ocrData.gender || '',
-                    nationality: ocrData.nationality || '',
-                    placeOfOrigin: ocrData.homeTown || '',
-                    placeOfResidence: ocrData.address || ''
-                };
-
-                // LẤY ID KHÁCH HÀNG TỪ BƯỚC 1
-                const customerId = initialData?.combinedData?.dbId || initialData?.customerId;
-
-                if (!customerId) {
-                    setError("Lỗi: Không tìm thấy ID khách hàng từ Bước 1. Vui lòng làm lại từ đầu.");
-                    setIsMatching(false);
-                    return;
-                }
-
-                // GỌI API XÁC THỰC KHUÔN MẶT
                 const response = await ekycService.verifyFace(frontFile, selfieFile, cccdDataJson, customerId);
-
-                if (isMounted) {
-                    setIsMatching(false);
-
-                    const resultData = response.data || response;
-                    setRawResult(resultData);
-
-                    let score = resultData.similarity_score || resultData.similarityScore || 0;
-
-                    // Xử lý hiển thị %
-                    if (score <= 1 && score > 0) {
-                        score = score * 100;
-                    }
-                    setMatchScore(score.toFixed(2));
-
-                    // LẤY KẾT LUẬN TỪ BACKEND
-                    let finalMatchStatus = false;
-                    if (resultData.result !== undefined) {
-                        finalMatchStatus = resultData.result === 'MATCHED' || resultData.result === true;
-                    } else if (resultData.isMatch !== undefined) {
-                        finalMatchStatus = resultData.isMatch;
-                    } else {
-                        finalMatchStatus = score >= 80;
-                    }
-                    setIsMatch(finalMatchStatus);
-                }
-
+                // Trả về cả response và customerId để xử lý ở bước .then
+                return { response, customerId };
             } catch (err) {
-                if (isMounted) {
-                    console.error("Lỗi xác thực khuôn mặt:", err);
-
-                    // Bắt chính xác câu thông báo lỗi từ Backend Spring Boot
-                    let errorMsg = err.response?.data?.message || err.message || 'Mất kết nối đến hệ thống AI hoặc lỗi dữ liệu.';
-
-                    if (errorMsg.includes("Duplicate entry") || errorMsg.includes("cccd_information")) {
-                        errorMsg = "Căn cước công dân này đã được đăng ký trong hệ thống. Vui lòng sử dụng giấy tờ khác.";
-                    }
-                    else if (errorMsg.includes("MULTIPLE_WEBCAM_FACES") || errorMsg.includes("đúng một khuôn mặt") || errorMsg.includes("faceCount")) {
-                        errorMsg = "Phát hiện có nhiều hơn 1 khuôn mặt trong khung hình. Bạn vui lòng quay lại Bước 5 chụp lại ảnh chỉ có một mình bạn nhé.";
-                    }
-
-                    // Hiển thị trực tiếp lỗi ra UI
-                    setError(errorMsg);
-                    setIsMatching(false);
-                }
+                // ROLLBACK: Xóa tài khoản rác nếu API eKYC ném lỗi (vd: trùng CCCD, ảnh mờ)
+                await customerService.deleteCustomer(customerId).catch(e => console.error("Lỗi dọn rác:", e));
+                throw err;
             }
         };
 
-        verifyWithAI();
+        if (!apiPromise.current) {
+            apiPromise.current = executeVerifyAPI();
+        }
+
+        apiPromise.current
+            .then(({ response, customerId }) => {
+                if (!isMounted) return;
+                setIsMatching(false);
+
+                const resultData = response.data || response;
+                setRawResult(resultData);
+
+                let score = resultData.similarity_score || resultData.similarityScore || 0;
+                if (score <= 1 && score > 0) score = score * 100;
+                setMatchScore(score.toFixed(2));
+
+                let finalMatchStatus = false;
+                if (resultData.result !== undefined) {
+                    finalMatchStatus = resultData.result === 'MATCHED' || resultData.result === true;
+                } else if (resultData.isMatch !== undefined) {
+                    finalMatchStatus = resultData.isMatch;
+                } else {
+                    finalMatchStatus = score >= 80;
+                }
+
+                setIsMatch(finalMatchStatus);
+
+                // ROLLBACK: Nếu điểm quá thấp (Không khớp), Xóa tài khoản rác
+                if (!finalMatchStatus) {
+                    customerService.deleteCustomer(customerId).catch(e => console.error("Lỗi dọn rác:", e));
+                }
+            })
+            .catch((err) => {
+                if (!isMounted) return;
+                setIsMatching(false);
+
+                console.error("Lỗi xác thực khuôn mặt hoặc tạo hồ sơ:", err);
+                let errorMsg = err.response?.data?.message || err.message || 'Mất kết nối đến hệ thống AI hoặc lỗi dữ liệu.';
+
+                if (errorMsg.includes("Duplicate entry") || errorMsg.includes("cccd_information")) {
+                    errorMsg = "Căn cước công dân này đã được đăng ký trong hệ thống. Vui lòng sử dụng giấy tờ khác.";
+                } else if (errorMsg.includes("MULTIPLE_WEBCAM_FACES") || errorMsg.includes("đúng một khuôn mặt") || errorMsg.includes("faceCount")) {
+                    errorMsg = "Phát hiện có nhiều hơn 1 khuôn mặt trong khung hình. Bạn vui lòng quay lại Bước 5 chụp lại ảnh chỉ có một mình bạn nhé.";
+                }
+                setError(errorMsg);
+            });
 
         return () => {
             isMounted = false;
+            // Xóa cache promise khi component unmount (ví dụ khi người dùng ấn nút "Quay lại")
+            apiPromise.current = null;
         };
     }, [initialData]);
 
@@ -128,7 +142,6 @@ const Step6FaceMatch = ({ onNext, onPrev, initialData }) => {
                 <p>So sánh khuôn mặt trên CCCD với ảnh selfie.</p>
             </div>
 
-            {/* KHU VỰC SO SÁNH */}
             <div className={styles.comparisonArea}>
                 <div className={styles.imageCard}>
                     {cccdImage ? (
@@ -159,9 +172,6 @@ const Step6FaceMatch = ({ onNext, onPrev, initialData }) => {
                 </div>
             </div>
 
-            {/* ========================================================================= */}
-            {/* KHU VỰC THÔNG BÁO MỚI SỬ DỤNG CSS BANNER VÀ ICON                          */}
-            {/* ========================================================================= */}
             {isMatching ? (
                 <div className={styles.loadingBanner}>
                     <div className={styles.spinner}></div>
@@ -191,7 +201,6 @@ const Step6FaceMatch = ({ onNext, onPrev, initialData }) => {
                         <span className={styles.resultScore}>{matchScore}%</span>
                     </div>
 
-                    {/* Hộp gợi ý nếu khuôn mặt không khớp */}
                     {!isMatch && (
                         <div className={styles.suggestionBox}>
                             <strong>Lưu ý:</strong> Hệ thống nhận thấy rủi ro sai lệch khuôn mặt cao. Vui lòng quay lại Bước 5 để chụp ảnh rõ nét hơn, đảm bảo đủ sáng và không đeo kính râm/khẩu trang.
@@ -200,7 +209,6 @@ const Step6FaceMatch = ({ onNext, onPrev, initialData }) => {
                 </div>
             )}
 
-            {/* Nút điều hướng */}
             <div className={styles.actionGroup}>
                 <button type="button" className={styles.backBtn} onClick={onPrev} disabled={isMatching}>
                     Quay lại
@@ -209,7 +217,7 @@ const Step6FaceMatch = ({ onNext, onPrev, initialData }) => {
                     type="button"
                     className={styles.nextBtn}
                     onClick={handleNext}
-                    disabled={isMatching || error}
+                    disabled={isMatching || error || !isMatch}
                 >
                     Hoàn tất hồ sơ ›
                 </button>

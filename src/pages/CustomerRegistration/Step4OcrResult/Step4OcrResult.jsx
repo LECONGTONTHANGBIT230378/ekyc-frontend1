@@ -9,13 +9,15 @@ const Step4OcrResult = ({ onNext, onPrev, initialData }) => {
     // Lấy dữ liệu OCR từ API Bước 3 trả về
     const apiData = initialData?.ocrData || {};
 
-    // 💡 ĐÃ SỬA Ở ĐÂY: Bao phủ tất cả các biến thể tên biến (keys) có thể có từ Spring Boot
+    // Khởi tạo state chứa các trường dữ liệu, bao phủ các biến thể tên biến từ Backend
     const [ocrData, setOcrData] = useState({
         idNumber: apiData.cccdNumber || apiData.cccd_number || apiData.idNumber || '',
         fullName: apiData.fullName || apiData.full_name || '',
         dob: apiData.birthday || apiData.dateOfBirth || apiData.dob || '',
         gender: apiData.gender || '',
         nationality: apiData.nationality || 'Việt Nam',
+        // ĐÃ THÊM: Ngày hết hạn
+        expiryDate: apiData.expiryDate || apiData.dateOfExpiry || apiData.date_of_expiry || '',
         homeTown: apiData.placeOfOrigin || apiData.hometown || apiData.homeTown || '',
         address: apiData.placeOfResidence || apiData.residence || apiData.address || ''
     });
@@ -29,6 +31,8 @@ const Step4OcrResult = ({ onNext, onPrev, initialData }) => {
                 dob: apiData.birthday || apiData.dateOfBirth || apiData.dob || '',
                 gender: apiData.gender || '',
                 nationality: apiData.nationality || 'Việt Nam',
+                // ĐÃ THÊM: Ngày hết hạn
+                expiryDate: apiData.expiryDate || apiData.dateOfExpiry || apiData.date_of_expiry || '',
                 homeTown: apiData.placeOfOrigin || apiData.hometown || apiData.homeTown || '',
                 address: apiData.placeOfResidence || apiData.residence || apiData.address || ''
             });
@@ -67,8 +71,8 @@ const Step4OcrResult = ({ onNext, onPrev, initialData }) => {
                             <InputField label="Giới tính" name="gender" value={ocrData.gender} onChange={handleChange} required />
                             <InputField label="Quốc tịch" name="nationality" value={ocrData.nationality} onChange={handleChange} required />
 
-                            {/* Thẻ div rỗng để căn ô Input cho đẹp */}
-                            <div></div>
+                            {/* ĐÃ THÊM: Input Ngày hết hạn thay thế cho thẻ div rỗng */}
+                            <InputField label="Ngày hết hạn" name="expiryDate" value={ocrData.expiryDate} onChange={handleChange} required />
 
                             <div className={styles.fullWidth}>
                                 <InputField label="Quê quán" name="homeTown" value={ocrData.homeTown} onChange={handleChange} required />

@@ -86,7 +86,6 @@ const Step3Detection = ({ onNext, onPrev, initialData }) => {
         <div className={styles.container}>
             <div className={styles.header}>
                 <h2>Hệ thống AI đang xử lý</h2>
-                <p>Vui lòng không đóng trình duyệt trong quá trình này. Việc nhận diện mất khoảng 5-10 giây.</p>
             </div>
 
             <div className={styles.contentGrid}>

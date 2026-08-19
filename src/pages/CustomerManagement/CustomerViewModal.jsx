@@ -12,10 +12,21 @@ const CustomerViewModal = ({ customer, onClose }) => {
         return parts[parts.length - 1].charAt(0).toUpperCase();
     };
 
+    // ĐÃ SỬA: Hàm formatDateTime thông minh, hỗ trợ cả định dạng mảng từ Backend
     const formatDateTime = (dateVal) => {
         if (!dateVal) return 'N/A';
-        let dateStr = typeof dateVal === 'string' ? dateVal.replace(' ', 'T') : dateVal;
-        const date = new Date(dateStr);
+
+        let date;
+        // Xử lý trường hợp Backend trả về mảng [Năm, Tháng, Ngày, Giờ, Phút, Giây]
+        if (Array.isArray(dateVal)) {
+            // Mảng trả về tháng từ 1-12, nhưng JavaScript Date dùng tháng 0-11 nên phải trừ 1
+            date = new Date(dateVal[0], dateVal[1] - 1, dateVal[2], dateVal[3] || 0, dateVal[4] || 0, dateVal[5] || 0);
+        } else {
+            // Xử lý trường hợp Backend trả về chuỗi String
+            let dateStr = typeof dateVal === 'string' ? dateVal.replace(' ', 'T') : dateVal;
+            date = new Date(dateStr);
+        }
+
         if (isNaN(date.getTime())) return 'N/A';
         return date.toLocaleString('vi-VN', {
             hour: '2-digit', minute: '2-digit',

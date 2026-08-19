@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { FiCheckCircle, FiXCircle, FiAlertTriangle } from 'react-icons/fi';
 import { ekycService } from '../../../services/ekycService';
-import { customerService } from '../../../services/customerService';
 import styles from './Step6FaceMatch.module.css';
 
 const Step6FaceMatch = ({ onNext, onPrev, initialData }) => {
@@ -25,53 +24,15 @@ const Step6FaceMatch = ({ onNext, onPrev, initialData }) => {
         let isMounted = true;
 
         const executeVerifyAPI = async () => {
-            const step1Data = initialData?.combinedData || {};
             const frontFile = initialData?.cccdImages?.frontFile;
             const selfieFile = initialData?.selfieImages?.selfieFile;
-            const ocrData = initialData?.finalOcrData || {};
 
             if (!frontFile || !selfieFile) {
                 throw new Error("Hệ thống không tìm thấy tệp ảnh gốc. Vui lòng quay lại các bước trước.");
             }
 
-            // 1. TẠO KHÁCH HÀNG (Tạm thời để lấy ID)
-            const customerPayload = new FormData();
-            customerPayload.append('fullName', step1Data.fullName);
-            customerPayload.append('phone', step1Data.phone);
-            if (step1Data.email) customerPayload.append('email', step1Data.email);
-            if (frontFile) customerPayload.append('fileFront', frontFile);
-
-            const customerRes = await customerService.createCustomer(customerPayload);
-            const customerId = customerRes.data?.id || customerRes.id || customerRes.data?.customerId;
-
-            if (!customerId) {
-                throw new Error("Lỗi: Không thể khởi tạo dữ liệu khách hàng mới.");
-            }
-
-            if (initialData.combinedData) {
-                initialData.combinedData.dbId = customerId;
-            }
-
-            // 2. GỌI API XÁC THỰC KHUÔN MẶT
-            const cccdDataJson = {
-                cccdNumber: ocrData.idNumber || '',
-                fullName: ocrData.fullName || '',
-                dateOfBirth: ocrData.dob || '',
-                gender: ocrData.gender || '',
-                nationality: ocrData.nationality || '',
-                placeOfOrigin: ocrData.homeTown || '',
-                placeOfResidence: ocrData.address || ''
-            };
-
-            try {
-                const response = await ekycService.verifyFace(frontFile, selfieFile, cccdDataJson, customerId);
-                // Trả về cả response và customerId để xử lý ở bước .then
-                return { response, customerId };
-            } catch (err) {
-                // ROLLBACK: Xóa tài khoản rác nếu API eKYC ném lỗi (vd: trùng CCCD, ảnh mờ)
-                await customerService.deleteCustomer(customerId).catch(e => console.error("Lỗi dọn rác:", e));
-                throw err;
-            }
+            // GỌI AI ĐỐI SÁNH KHUÔN MẶT
+            return await ekycService.verifyFace(frontFile, selfieFile);
         };
 
         if (!apiPromise.current) {
@@ -79,51 +40,94 @@ const Step6FaceMatch = ({ onNext, onPrev, initialData }) => {
         }
 
         apiPromise.current
-            .then(({ response, customerId }) => {
-                if (!isMounted) return;
-                setIsMatching(false);
+            .then((response) => {
+                if (!isMounted) return;                setIsMatching(false);
 
-                const resultData = response.data || response;
-                setRawResult(resultData);
+                // Dữ liệu thực tế từ Backend
+                const actualData = response?.data?.data || response?.data || response || {};
+                setRawResult(actualData);
+                console.log("Dữ liệu AI trả về thực tế:", actualData);
 
-                let score = resultData.similarity_score || resultData.similarityScore || 0;
-                if (score <= 1 && score > 0) score = score * 100;
+                // =========================================================================
+                // THUẬT TOÁN TÌM KIẾM ĐIỂM SỐ NÂNG CẤP (Bao phủ mọi trường hợp)
+                // =========================================================================
+                const possibleScoreKeys = ['similarityscore', 'similarity_score', 'similarity', 'score', 'matchscore', 'match_score', 'confidence'];
+
+                const findScore = (obj) => {
+                    if (!obj || typeof obj !== 'object') return null;
+
+                    // Ưu tiên tìm kiếm các key có khả năng chứa điểm số trước
+                    for (let k of Object.keys(obj)) {
+                        const lowerKey = k.toLowerCase();
+                        if (possibleScoreKeys.includes(lowerKey)) {
+                            // Cắt bỏ dấu % nếu AI trả về dạng chuỗi "82.23%"
+                            const cleanVal = String(obj[k]).replace('%', '').trim();
+                            const parsed = parseFloat(cleanVal);
+                            if (!isNaN(parsed)) return parsed;
+                        }
+                    }
+
+                    // Nếu không thấy, tiếp tục đệ quy vào các object con
+                    for (let k of Object.keys(obj)) {
+                        if (typeof obj[k] === 'object') {
+                            const nestedVal = findScore(obj[k]);
+                            if (nestedVal !== null) return nestedVal;
+                        }
+                    }
+                    return null;
+                };
+
+                // THUẬT TOÁN TÌM KIẾM TRẠNG THÁI KHỚP
+                const findMatchStatus = (obj) => {
+                    if (!obj || typeof obj !== 'object') return null;
+                    const keys = ['isMatch', 'is_match', 'match', 'matched', 'isMatched'];
+                    for (let k of keys) {
+                        if (obj[k] !== undefined && obj[k] !== null) {
+                            return obj[k] === true || obj[k] === 'true' || obj[k] === 'MATCHED';
+                        }
+                    }
+                    if (obj.result !== undefined && obj.result !== null) {
+                        if (obj.result === 'MATCHED' || obj.result === true) return true;
+                        if (obj.result === 'NOT_MATCHED' || obj.result === false) return false;
+                    }
+                    for (let k in obj) {
+                        if (typeof obj[k] === 'object') {
+                            const val = findMatchStatus(obj[k]);
+                            if (val !== null) return val;
+                        }
+                    }
+                    return null;
+                };
+
+                // 1. Lấy điểm số
+                let rawScore = findScore(actualData);
+                let score = rawScore !== null ? parseFloat(rawScore) : 0;
+
+                // Nếu AI trả về hệ số 0 -> 1 (vd: 0.8223), nhân 100 thành 82.23%
+                // Nếu AI trả về số lớn hơn 1 (vd: 82.23), giữ nguyên
+                if (score > 0 && score <= 1) {
+                    score = score * 100;
+                }
                 setMatchScore(score.toFixed(2));
 
-                let finalMatchStatus = false;
-                if (resultData.result !== undefined) {
-                    finalMatchStatus = resultData.result === 'MATCHED' || resultData.result === true;
-                } else if (resultData.isMatch !== undefined) {
-                    finalMatchStatus = resultData.isMatch;
-                } else {
-                    finalMatchStatus = score >= 80;
+                // 2. Lấy trạng thái Khớp
+                let finalMatchStatus = findMatchStatus(actualData);
+
+                // Nếu Backend không trả về biến báo trạng thái, tự tính dựa trên ngưỡng 50%
+                if (finalMatchStatus === null) {
+                    finalMatchStatus = score >= 50;
                 }
 
                 setIsMatch(finalMatchStatus);
-
-                // ROLLBACK: Nếu điểm quá thấp (Không khớp), Xóa tài khoản rác
-                if (!finalMatchStatus) {
-                    customerService.deleteCustomer(customerId).catch(e => console.error("Lỗi dọn rác:", e));
-                }
             })
             .catch((err) => {
                 if (!isMounted) return;
                 setIsMatching(false);
-
-                console.error("Lỗi xác thực khuôn mặt hoặc tạo hồ sơ:", err);
-                let errorMsg = err.response?.data?.message || err.message || 'Mất kết nối đến hệ thống AI hoặc lỗi dữ liệu.';
-
-                if (errorMsg.includes("Duplicate entry") || errorMsg.includes("cccd_information")) {
-                    errorMsg = "Căn cước công dân này đã được đăng ký trong hệ thống. Vui lòng sử dụng giấy tờ khác.";
-                } else if (errorMsg.includes("MULTIPLE_WEBCAM_FACES") || errorMsg.includes("đúng một khuôn mặt") || errorMsg.includes("faceCount")) {
-                    errorMsg = "Phát hiện có nhiều hơn 1 khuôn mặt trong khung hình. Bạn vui lòng quay lại Bước 5 chụp lại ảnh chỉ có một mình bạn nhé.";
-                }
-                setError(errorMsg);
+                setError(err.response?.data?.message || err.message || 'Mất kết nối đến hệ thống AI.');
             });
 
         return () => {
             isMounted = false;
-            // Xóa cache promise khi component unmount (ví dụ khi người dùng ấn nút "Quay lại")
             apiPromise.current = null;
         };
     }, [initialData]);

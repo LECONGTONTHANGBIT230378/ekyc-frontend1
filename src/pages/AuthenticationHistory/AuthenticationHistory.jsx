@@ -22,7 +22,8 @@ const AuthenticationHistory = () => {
             const params = {
                 page: currentPage,
                 size: 10,
-                keyword: searchKeyword
+                keyword: searchKeyword,
+                paged: true // ĐÃ THÊM: Bắt buộc truyền lên để Backend trả về dạng Phân trang (Pageable)
             };
             if (statusFilter !== 'ALL') {
                 params.status = statusFilter;
@@ -30,10 +31,29 @@ const AuthenticationHistory = () => {
 
             const response = await historyService.getAllHistory(params);
 
-            setHistoryList(response.content || response.data || []);
-            setTotalPages(response.totalPages > 0 ? response.totalPages : 1);
+            // BÓC TÁCH DỮ LIỆU THÔNG MINH BAO PHỦ MỌI TRƯỜNG HỢP
+            let dataList = [];
+            let total = 1;
+
+            if (response && (response.success === true || response.code === 200)) {
+                if (response.data && response.data.content) { // Dạng Phân trang Page<T>
+                    dataList = response.data.content;
+                    total = response.data.totalPages || 1;
+                } else { // Dạng Danh sách List<T>
+                    dataList = response.data || [];
+                }
+            } else if (response && response.content) {
+                dataList = response.content;
+                total = response.totalPages || 1;
+            } else if (Array.isArray(response)) {
+                dataList = response;
+            }
+
+            setHistoryList(dataList);
+            setTotalPages(total);
         } catch (error) {
             console.error('Lỗi khi tải lịch sử xác thực:', error);
+            setHistoryList([]);
         } finally {
             setLoading(false);
         }
@@ -51,16 +71,18 @@ const AuthenticationHistory = () => {
         return styles.badgePending;
     };
 
-    // Sửa lỗi Parse ngày tháng của chuỗi "yyyy-MM-dd HH:mm:ss" từ @JsonFormat
     const formatDateTime = (dateVal) => {
         if (!dateVal) return 'N/A';
 
-        // Thay khoảng trắng thành chữ 'T' để Javascript Date hiểu được (VD: "2026-08-12T14:30:00")
-        let dateStr = typeof dateVal === 'string' ? dateVal.replace(' ', 'T') : dateVal;
-        const date = new Date(dateStr);
+        let date;
+        if (Array.isArray(dateVal)) {
+            date = new Date(dateVal[0], dateVal[1] - 1, dateVal[2], dateVal[3] || 0, dateVal[4] || 0, dateVal[5] || 0);
+        } else {
+            let dateStr = typeof dateVal === 'string' ? dateVal.replace(' ', 'T') : dateVal;
+            date = new Date(dateStr);
+        }
 
         if (isNaN(date.getTime())) return 'N/A';
-
         return date.toLocaleString('vi-VN', {
             hour: '2-digit', minute: '2-digit',
             day: '2-digit', month: '2-digit', year: 'numeric'
@@ -159,20 +181,11 @@ const AuthenticationHistory = () => {
                             <tr><td colSpan="6" className={styles.emptyState}>Không có lịch sử xác thực nào.</td></tr>
                         ) : (
                             historyList.map((item) => {
-                                // MAPPING DỮ LIỆU CHÍNH XÁC THEO EkycHistory.java
-
-                                // Số CCCD lấy từ quan hệ ManyToOne với Customer
+                                // MAPPING DỮ LIỆU
                                 const cccd = item.customer?.cccdNumber || item.customer?.cccdInformation?.cccdNumber || 'N/A';
-
-                                // Thời gian lấy từ biến verifyTime
                                 const time = item.verifyTime;
-
-                                // Điểm lấy từ biến similarityScore
                                 let score = item.similarityScore;
-                                // Nếu điểm lưu dạng 0.85 thì nhân 100 để hiển thị 85%
                                 let displayScore = (score !== undefined && score !== null) ? (score <= 1 ? score * 100 : score) : null;
-
-                                // Trạng thái lấy từ biến result
                                 const status = item.result || item.verificationResult || 'N/A';
 
                                 return (
@@ -200,9 +213,7 @@ const AuthenticationHistory = () => {
                                                     onClick={async () => {
                                                         try {
                                                             const historyId = item.id || item.verification_id;
-                                                            // Gọi API lấy chi tiết từ Backend
                                                             const res = await historyService.getHistoryById(historyId);
-                                                            // Bóc tách vỏ ApiResponse của Spring Boot
                                                             const detailData = res.data || res;
                                                             setSelectedHistory(detailData);
                                                             setViewModalOpen(true);

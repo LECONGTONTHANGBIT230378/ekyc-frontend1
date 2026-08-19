@@ -46,18 +46,36 @@
 .infoList {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 14px;
 }
 
+/* Dòng hiển thị thông tin ngắn (Nằm ngang) */
 .infoRow {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-start;
+    gap: 16px;
+}
+
+/* Dòng hiển thị thông tin dài (Nằm dọc) */
+.infoRowVertical {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    padding-top: 14px;
+    margin-top: 4px;
+    border-top: 1px dashed #e0e0e0; /* Đường nét đứt mỏng phân cách khối địa chỉ */
 }
 
 .label {
     font-size: 13.5px;
     color: var(--gray-color);
+    white-space: nowrap; /* Giữ label trên 1 dòng đối với thẻ ngang */
+}
+
+.infoRowVertical .label {
+    white-space: normal;
 }
 
 .value {
@@ -65,6 +83,13 @@
     font-weight: 700;
     color: var(--text-color);
     text-transform: uppercase;
+    text-align: right;
+    line-height: 1.4;
+}
+
+.infoRowVertical .value {
+    text-align: right; /* Căn chữ sang bên phải */
+    word-break: break-word; /* Tự động xuống dòng bên phải nếu địa chỉ quá dài */
 }
 
 /* CỘT PHẢI: Layout kết quả và nút bấm */
@@ -93,7 +118,7 @@
     background-color: var(--primary-color);
     color: #fff;
     border: none;
-    border-radius: 100px; /* Bo góc hoàn toàn giống ảnh */
+    border-radius: 100px;
     font-weight: 600;
     font-size: 12px;
     cursor: pointer;
@@ -129,10 +154,12 @@
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
 }
+
+/* Modal Styles */
 .modalOverlay {
     position: fixed;
     top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(0, 0, 0, 0.6); /* Nền đen mờ */
+    background: rgba(0, 0, 0, 0.6);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -145,16 +172,15 @@
     max-width: 90%;
     background: #ffffff;
     border-radius: 12px;
-    overflow: hidden; /* Cắt góc tròn cho Header */
+    overflow: hidden;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
     animation: slideDown 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     display: flex;
     flex-direction: column;
 }
 
-/* 1. Header có màu nền */
 .modalHeader {
-    background-color: #137333; /* Màu xanh lá báo thành công. Bạn có thể đổi thành var(--primary-color) */
+    background-color: #137333;
     color: #ffffff;
     padding: 16px 20px;
     display: flex;
@@ -186,7 +212,6 @@
     transform: scale(1.1);
 }
 
-/* 2. Nội dung Body */
 .modalBody {
     padding: 32px 24px;
     text-align: center;
@@ -223,12 +248,11 @@
     line-height: 1.5;
 }
 
-/* 3. Footer chứa các nút bấm */
 .modalFooter {
     padding: 16px 24px;
     border-top: 1px solid #EEEEEE;
     display: flex;
-    justify-content: center; /* Để nút ra giữa, hoặc đổi thành flex-end để dạt sang phải */
+    justify-content: center;
     gap: 12px;
     background-color: #FAFAFA;
 }
@@ -258,12 +282,6 @@
     transition: 0.2s;
 }
 .btnPrimary:hover { background-color: #0d5224; }
-
-/* Hiệu ứng chuyển động */
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}
 
 @keyframes slideDown {
     0% { transform: translateY(-30px); opacity: 0; }

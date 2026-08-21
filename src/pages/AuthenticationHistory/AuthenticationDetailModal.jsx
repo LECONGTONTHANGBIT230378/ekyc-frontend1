@@ -36,24 +36,6 @@ const AuthenticationDetailModal = ({ historyData, onClose }) => {
 
                 <div className={styles.modalBody} style={{ maxHeight: '75vh', overflowY: 'auto', padding: '20px' }}>
 
-                    {/* KHU VỰC ẢNH ĐỐI CHIẾU AI (NẾU CÓ) */}
-                    {(historyData.faceImageUrl || cccdInfo.frontImageUrl) && (
-                        <div style={{ display: 'flex', gap: '20px', marginBottom: '24px', justifyContent: 'center' }}>
-                            {cccdInfo.frontImageUrl && (
-                                <div style={{ textAlign: 'center', flex: 1 }}>
-                                    <p style={{ fontSize: '13px', color: '#64748B', marginBottom: '8px', fontWeight: 600 }}>ẢNH CĂN CƯỚC</p>
-                                    <img src={cccdInfo.frontImageUrl} alt="CCCD" style={{ width: '100%', height: '160px', objectFit: 'cover', borderRadius: '8px', border: '1px solid #E2E8F0' }} />
-                                </div>
-                            )}
-                            {historyData.faceImageUrl && (
-                                <div style={{ textAlign: 'center', flex: 1 }}>
-                                    <p style={{ fontSize: '13px', color: '#64748B', marginBottom: '8px', fontWeight: 600 }}>ẢNH AI NHẬN DIỆN (SELFIE)</p>
-                                    <img src={historyData.faceImageUrl} alt="Selfie Face" style={{ width: '100%', height: '160px', objectFit: 'cover', borderRadius: '8px', border: '1px solid #E2E8F0' }} />
-                                </div>
-                            )}
-                        </div>
-                    )}
-
                     {/* KHỐI KẾT QUẢ AI */}
                     <h4 style={{ fontSize: '16px', color: '#1E293B', marginBottom: '12px', borderBottom: '2px solid #F1F5F9', paddingBottom: '8px' }}>
                         Kết quả xác thực AI
@@ -89,7 +71,10 @@ const AuthenticationDetailModal = ({ historyData, onClose }) => {
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                             <div style={{ display: 'flex', flexDirection: 'column', gridColumn: 'span 2' }}>
                                 <span style={{ fontSize: '13px', color: '#64748B' }}>Số CCCD</span>
-                                <span style={{ fontWeight: 600, fontSize: '15px' }}>{cccdInfo.cccdNumber || customer.cccdNumber || 'N/A'}</span>
+                                {/* ĐÃ SỬA LẠI DÒNG DƯỚI ĐÂY */}
+                                <span style={{ fontWeight: 600, fontSize: '15px', color: '#0F172A' }}>
+                                    {historyData.cccdNumber || cccdInfo.cccdNumber || customer.cccdNumber || 'N/A'}
+                                </span>
                             </div>
                             <div style={{ display: 'flex', flexDirection: 'column', gridColumn: 'span 2' }}>
                                 <span style={{ fontSize: '13px', color: '#64748B' }}>Họ và tên</span>

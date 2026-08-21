@@ -27,12 +27,15 @@ const Step6FaceMatch = ({ onNext, onPrev, initialData }) => {
             const frontFile = initialData?.cccdImages?.frontFile;
             const selfieFile = initialData?.selfieImages?.selfieFile;
 
+            // ĐÃ THÊM: Lấy số CCCD từ dữ liệu OCR của Bước 4
+            const cccdNumber = initialData?.finalOcrData?.idNumber || initialData?.finalOcrData?.cccdNumber || '';
+
             if (!frontFile || !selfieFile) {
                 throw new Error("Hệ thống không tìm thấy tệp ảnh gốc. Vui lòng quay lại các bước trước.");
             }
 
-            // GỌI AI ĐỐI SÁNH KHUÔN MẶT
-            return await ekycService.verifyFace(frontFile, selfieFile);
+            // ĐÃ SỬA: Truyền thêm cccdNumber vào hàm verifyFace
+            return await ekycService.verifyFace(frontFile, selfieFile, cccdNumber);
         };
 
         if (!apiPromise.current) {
@@ -41,33 +44,29 @@ const Step6FaceMatch = ({ onNext, onPrev, initialData }) => {
 
         apiPromise.current
             .then((response) => {
-                if (!isMounted) return;                setIsMatching(false);
+                if (!isMounted) return;
+                setIsMatching(false);
 
                 // Dữ liệu thực tế từ Backend
                 const actualData = response?.data?.data || response?.data || response || {};
                 setRawResult(actualData);
                 console.log("Dữ liệu AI trả về thực tế:", actualData);
 
-                // =========================================================================
-                // THUẬT TOÁN TÌM KIẾM ĐIỂM SỐ NÂNG CẤP (Bao phủ mọi trường hợp)
-                // =========================================================================
+                // THUẬT TOÁN TÌM KIẾM ĐIỂM SỐ
                 const possibleScoreKeys = ['similarityscore', 'similarity_score', 'similarity', 'score', 'matchscore', 'match_score', 'confidence'];
 
                 const findScore = (obj) => {
                     if (!obj || typeof obj !== 'object') return null;
 
-                    // Ưu tiên tìm kiếm các key có khả năng chứa điểm số trước
                     for (let k of Object.keys(obj)) {
                         const lowerKey = k.toLowerCase();
                         if (possibleScoreKeys.includes(lowerKey)) {
-                            // Cắt bỏ dấu % nếu AI trả về dạng chuỗi "82.23%"
                             const cleanVal = String(obj[k]).replace('%', '').trim();
                             const parsed = parseFloat(cleanVal);
                             if (!isNaN(parsed)) return parsed;
                         }
                     }
 
-                    // Nếu không thấy, tiếp tục đệ quy vào các object con
                     for (let k of Object.keys(obj)) {
                         if (typeof obj[k] === 'object') {
                             const nestedVal = findScore(obj[k]);
@@ -103,8 +102,6 @@ const Step6FaceMatch = ({ onNext, onPrev, initialData }) => {
                 let rawScore = findScore(actualData);
                 let score = rawScore !== null ? parseFloat(rawScore) : 0;
 
-                // Nếu AI trả về hệ số 0 -> 1 (vd: 0.8223), nhân 100 thành 82.23%
-                // Nếu AI trả về số lớn hơn 1 (vd: 82.23), giữ nguyên
                 if (score > 0 && score <= 1) {
                     score = score * 100;
                 }
@@ -113,7 +110,6 @@ const Step6FaceMatch = ({ onNext, onPrev, initialData }) => {
                 // 2. Lấy trạng thái Khớp
                 let finalMatchStatus = findMatchStatus(actualData);
 
-                // Nếu Backend không trả về biến báo trạng thái, tự tính dựa trên ngưỡng 50%
                 if (finalMatchStatus === null) {
                     finalMatchStatus = score >= 50;
                 }

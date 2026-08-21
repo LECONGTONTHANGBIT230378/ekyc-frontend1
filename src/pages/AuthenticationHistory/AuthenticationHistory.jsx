@@ -182,7 +182,9 @@ const AuthenticationHistory = () => {
                         ) : (
                             historyList.map((item) => {
                                 // MAPPING DỮ LIỆU
-                                const cccd = item.customer?.cccdNumber || item.customer?.cccdInformation?.cccdNumber || 'N/A';
+                                // MAPPING DỮ LIỆU
+// ĐÃ SỬA: Ưu tiên lấy cccdNumber độc lập từ history, nếu không có thì fallback
+                                const cccd = item.cccdNumber || item.customer?.cccdNumber || item.customer?.cccdInformation?.cccdNumber || 'N/A';
                                 const time = item.verifyTime;
                                 let score = item.similarityScore;
                                 let displayScore = (score !== undefined && score !== null) ? (score <= 1 ? score * 100 : score) : null;
@@ -195,7 +197,7 @@ const AuthenticationHistory = () => {
                                         <td>{formatDateTime(time)}</td>
                                         <td>
                                             {displayScore !== null ? (
-                                                <span style={{ color: displayScore >= 80 ? '#16A34A' : '#DC2626', fontWeight: 600 }}>
+                                                <span style={{ color: displayScore >= 50 ? '#16A34A' : '#DC2626', fontWeight: 600 }}>
                                                     {Number(displayScore).toFixed(2)}%
                                                 </span>
                                             ) : 'N/A'}

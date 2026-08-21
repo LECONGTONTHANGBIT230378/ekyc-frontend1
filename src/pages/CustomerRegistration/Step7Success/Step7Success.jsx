@@ -15,7 +15,7 @@ const Step7Success = ({ initialData, onPrev }) => {
     } else if (resultData.isMatch !== undefined) {
         isMatched = resultData.isMatch;
     } else {
-        isMatched = score >= 80;
+        isMatched = score >= 50;
     }
 
     // ĐÃ SỬA: Lấy đầy đủ 8 trường thông tin từ dữ liệu OCR

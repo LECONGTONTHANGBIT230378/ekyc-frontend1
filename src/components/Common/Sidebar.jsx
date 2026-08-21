@@ -1,6 +1,5 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-// Đã import thêm icon FiShield cho Quản lý tài khoản nội bộ
 import { FiPieChart, FiUserPlus, FiUsers, FiClock, FiFileText, FiSettings, FiShield } from 'react-icons/fi';
 import styles from './Sidebar.module.css';
 
@@ -10,14 +9,23 @@ const menuItems = [
     { path: '/customers', name: 'Quản lý khách hàng', icon: <FiUsers /> },
     { path: '/history', name: 'Lịch sử xác thực', icon: <FiClock /> },
     { path: '/reports', name: 'Báo cáo', icon: <FiFileText /> },
-
-    // BỔ SUNG THÊM MENU QUẢN LÝ TÀI KHOẢN VÀO ĐÂY
     { path: '/accounts', name: 'Quản lý tài khoản', icon: <FiShield /> },
-
     { path: '/settings', name: 'Cài đặt cá nhân', icon: <FiSettings /> },
 ];
 
 const Sidebar = () => {
+    // Lấy chức vụ từ localStorage (thay 'role' bằng tên biến của bạn)
+    const userRole = localStorage.getItem('role') || 'EMPLOYEE';
+
+    // Danh sách các đường dẫn nhân viên được phép xem
+    const allowedEmployeePaths = ['/registration', '/customers', '/history'];
+
+    // Lọc menu dựa trên chức vụ
+    const filteredMenuItems = menuItems.filter(item => {
+        if (userRole === 'ADMIN') return true; // Admin thấy tất cả
+        return allowedEmployeePaths.includes(item.path); // Nhân viên chỉ thấy 3 trang
+    });
+
     return (
         <aside className={styles.sidebar}>
             <div className={styles.logoWrapper}>
@@ -29,7 +37,7 @@ const Sidebar = () => {
             </div>
 
             <nav className={styles.navMenu}>
-                {menuItems.map((item) => (
+                {filteredMenuItems.map((item) => (
                     <NavLink
                         key={item.path}
                         to={item.path}

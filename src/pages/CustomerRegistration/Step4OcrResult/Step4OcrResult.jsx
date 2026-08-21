@@ -8,39 +8,41 @@ const Step4OcrResult = ({ onNext, onPrev, initialData }) => {
 
     // Lấy dữ liệu OCR từ API Bước 3 trả về
     const apiData = initialData?.ocrData || {};
+    const savedData = initialData?.finalOcrData || {};
 
-    // Khởi tạo state chứa các trường dữ liệu, bao phủ các biến thể tên biến từ Backend
     const [ocrData, setOcrData] = useState({
-        idNumber: apiData.cccdNumber || apiData.cccd_number || apiData.idNumber || '',
-        fullName: apiData.fullName || apiData.full_name || '',
-        dob: apiData.birthday || apiData.dateOfBirth || apiData.dob || '',
-        gender: apiData.gender || '',
-        nationality: apiData.nationality || 'Việt Nam',
-        // ĐÃ THÊM: Ngày hết hạn
-        expiryDate: apiData.expiryDate || apiData.dateOfExpiry || apiData.date_of_expiry || '',
-        homeTown: apiData.placeOfOrigin || apiData.hometown || apiData.homeTown || '',
-        address: apiData.placeOfResidence || apiData.residence || apiData.address || ''
+        // Ưu tiên 1: Dữ liệu đã sửa. Ưu tiên 2: Dữ liệu AI. Ưu tiên 3: Rỗng
+        idNumber: savedData.idNumber || apiData.cccdNumber || apiData.cccd_number || apiData.idNumber || '',
+        fullName: savedData.fullName || apiData.fullName || apiData.full_name || '',
+        dob: savedData.dob || apiData.birthday || apiData.dateOfBirth || apiData.dob || '',
+        gender: savedData.gender || apiData.gender || '',
+        nationality: savedData.nationality || apiData.nationality || 'Việt Nam',
+        expiryDate: savedData.expiryDate || apiData.expiryDate || apiData.dateOfExpiry || apiData.date_of_expiry || '',
+        homeTown: savedData.homeTown || apiData.placeOfOrigin || apiData.hometown || apiData.homeTown || '',
+        address: savedData.address || apiData.placeOfResidence || apiData.residence || apiData.address || ''
     });
 
-    // Đồng bộ lại form khi dữ liệu API load xong
     useEffect(() => {
-        if (initialData?.ocrData) {
-            setOcrData({
-                idNumber: apiData.cccdNumber || apiData.cccd_number || apiData.idNumber || '',
-                fullName: apiData.fullName || apiData.full_name || '',
-                dob: apiData.birthday || apiData.dateOfBirth || apiData.dob || '',
-                gender: apiData.gender || '',
-                nationality: apiData.nationality || 'Việt Nam',
-                // ĐÃ THÊM: Ngày hết hạn
-                expiryDate: apiData.expiryDate || apiData.dateOfExpiry || apiData.date_of_expiry || '',
-                homeTown: apiData.placeOfOrigin || apiData.hometown || apiData.homeTown || '',
-                address: apiData.placeOfResidence || apiData.residence || apiData.address || ''
-            });
+        // Mỗi khi initialData cập nhật, đồng bộ lại State theo đúng nguyên tắc ưu tiên trên
+        const latestSaved = initialData?.finalOcrData || {};
+        const latestApi = initialData?.ocrData || {};
 
-            // Dòng này giúp bạn debug: Bật F12 -> Console để xem chính xác Backend trả về chữ gì
-            console.log("Dữ liệu OCR từ Backend trả về:", apiData);
-        }
+        setOcrData({
+            idNumber: latestSaved.idNumber || latestApi.cccdNumber || latestApi.cccd_number || latestApi.idNumber || '',
+            fullName: latestSaved.fullName || latestApi.fullName || latestApi.full_name || '',
+            dob: latestSaved.dob || latestApi.birthday || latestApi.dateOfBirth || latestApi.dob || '',
+            gender: latestSaved.gender || latestApi.gender || '',
+            nationality: latestSaved.nationality || latestApi.nationality || 'Việt Nam',
+            expiryDate: latestSaved.expiryDate || latestApi.expiryDate || latestApi.dateOfExpiry || latestApi.date_of_expiry || '',
+            homeTown: latestSaved.homeTown || latestApi.placeOfOrigin || latestApi.hometown || latestApi.homeTown || '',
+            address: latestSaved.address || latestApi.placeOfResidence || latestApi.residence || latestApi.address || ''
+        });
     }, [initialData]);
+
+    // Đồng thời, gắn thêm tính năng bảo lưu vào nút Quay Lại (đóng gói finalOcrData)
+    const handleBack = () => {
+        onPrev({ finalOcrData: ocrData });
+    };
 
     const handleChange = (e) => {
         setOcrData({ ...ocrData, [e.target.name]: e.target.value });
@@ -98,7 +100,7 @@ const Step4OcrResult = ({ onNext, onPrev, initialData }) => {
                 </div>
 
                 <div className={styles.actionGroup}>
-                    <button type="button" className={styles.backBtn} onClick={onPrev}>Quay lại</button>
+                    <button type="button" className={styles.backBtn} onClick={handleBack}>Quay lại</button>
                     <button type="submit" className={styles.nextBtn}>Tiếp tục tải Selfie ›</button>
                 </div>
             </form>

@@ -24,9 +24,7 @@ const CustomerRegistration = () => {
         setFormData(prev => {
             const newData = { ...prev, ...stepData };
 
-            // FIX LỖI ĐỒNG BỘ ẢNH:
-            // Nếu stepData có chứa combinedData (tức là người dùng vừa bấm "Tiếp tục" từ Bước 1)
-            // Ta sẽ ghi đè lại dữ liệu ảnh của Bước 2 bằng ảnh mới nhất từ Bước 1
+            // Logic đồng bộ ảnh từ Bước 1 sang Bước 2 (Giữ nguyên)
             if (stepData.combinedData) {
                 newData.cccdImages = {
                     front: stepData.combinedData.frontImage || null,
@@ -34,12 +32,49 @@ const CustomerRegistration = () => {
                 };
             }
 
+            // ====================================================================
+            // ĐÃ THÊM: LOGIC "DỌN RÁC" KHI THAY ĐỔI ẢNH CĂN CƯỚC MỚI
+            // ====================================================================
+            const oldFrontFile = prev.cccdImages?.frontFile;
+            const newFrontFile = newData.cccdImages?.frontFile;
+
+            // Nếu hệ thống phát hiện File ảnh CCCD mới nộp lên KHÁC với File cũ trong bộ nhớ
+            if (oldFrontFile && newFrontFile && oldFrontFile !== newFrontFile) {
+                console.log("Phát hiện CCCD mới! Đang tiến hành xóa dữ liệu cũ...");
+
+                // Tiêu diệt toàn bộ tàn tích của bộ hồ sơ cũ
+                delete newData.ocrData;       // Xóa kết quả quét AI (Bước 3)
+                delete newData.finalOcrData;  // Xóa kết quả gõ tay (Bước 4)
+                delete newData.selfieImages;  // Xóa ảnh khuôn mặt (Bước 5)
+            }
+
             return newData;
         });
         setCurrentStep(prev => prev + 1);
     };
 
-    const handlePrevStep = () => {
+    const handlePrevStep = (stepData) => {
+        // KIỂM TRA BẢO MẬT: Đảm bảo stepData là 1 Object mang dữ liệu (tránh nhận nhầm sự kiện click chuột)
+        if (stepData && typeof stepData === 'object' && !stepData.nativeEvent) {
+            setFormData(prev => {
+                const newData = { ...prev, ...stepData };
+
+                // ====================================================================
+                // ĐỒNG BỘ NGƯỢC: Nếu lùi từ Bước 2 về Bước 1, phải cập nhật lại
+                // ảnh cho combinedData (vì Bước 1 đang dùng biến combinedData để hiển thị)
+                // ====================================================================
+                if (stepData.cccdImages) {
+                    newData.combinedData = {
+                        ...(prev.combinedData || {}),
+                        frontImage: stepData.cccdImages.front,
+                        frontFile: stepData.cccdImages.frontFile
+                    };
+                }
+
+                return newData;
+            });
+        }
+
         setCurrentStep(prev => prev - 1);
     };
 

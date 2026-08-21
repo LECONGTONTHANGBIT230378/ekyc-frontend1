@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react'; // Đã gộp useEffect vào đây
+import { useNavigate, useLocation } from 'react-router-dom';
 import { FcGoogle } from 'react-icons/fc';
 import { BsMicrosoft, BsCheckLg, BsExclamationTriangleFill, BsCheckCircleFill } from 'react-icons/bs'; // Thêm BsCheckCircleFill
 import { CgSpinner } from 'react-icons/cg';
@@ -8,8 +8,10 @@ import styles from './Login.module.css';
 import { authService } from '../../services/authService';
 import heroImg from '../../assets/hero.png';
 
+
 const Login = () => {
     const navigate = useNavigate();
+    const location = useLocation();
 
     const [formData, setFormData] = useState({ username: '', password: '' });
     const [error, setError] = useState('');
@@ -18,6 +20,14 @@ const Login = () => {
     // 1. THÊM STATE ĐỂ THEO DÕI TRẠNG THÁI THÀNH CÔNG
     const [isSuccess, setIsSuccess] = useState(false);
 
+    useEffect(() => {
+        if (location.state && location.state.errorMsg) {
+            setError(location.state.errorMsg); // Đổ câu thông báo vào hộp màu đỏ
+
+            // Xóa state trong lịch sử trình duyệt để F5 không bị hiện lại lỗi mãi mãi
+            window.history.replaceState({}, document.title);
+        }
+    }, [location.state]);
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
@@ -29,24 +39,41 @@ const Login = () => {
 
         try {
             const res = await authService.login(formData.username, formData.password);
-            const token = res.token || res.data?.token || res.accessToken;
+
+            // ====================================================================
+            // ĐÃ SỬA: Xuyên thủng lớp vỏ ApiResponse để lấy đúng token và role
+            // ====================================================================
+            // Bóc tách dữ liệu từ API
+            const token = res.data?.token || res.token;
+            const rawRole = res.data?.role || res.role || 'EMPLOYEE';
+
+            // ====================================================================
+            // ĐÃ SỬA: Chuẩn hóa Role ngay từ lúc đăng nhập
+            // ====================================================================
+            const userRole = String(rawRole).toUpperCase().includes('ADMIN') ? 'ADMIN' : 'EMPLOYEE';
 
             if (token) {
-                localStorage.setItem('accessToken', token);
+                // Lưu chính xác 2 chìa khóa vào LocalStorage
+                localStorage.setItem('token', token);
+                localStorage.setItem('role', userRole); // Lưu Role đã chuẩn hóa
 
-                // 2. KÍCH HOẠT HIỆU ỨNG VÀ TRÌ HOÃN CHUYỂN TRANG
                 setIsSuccess(true);
                 setTimeout(() => {
-                    navigate('/dashboard');
-                }, 600); // 600ms khớp với thời gian chạy CSS Animation
+                    // Điều hướng cực chuẩn
+                    if (userRole === 'ADMIN') {
+                        navigate('/dashboard');
+                    } else {
+                        navigate('/registration');
+                    }
+                }, 600);
 
             } else {
-                setError('Lỗi: Không nhận được thông tin xác thực từ Server.');
-                setIsLoading(false); // Chỉ tắt loading khi có lỗi
+                setError('Lỗi: Cấu trúc dữ liệu từ Server không chứa token hợp lệ.');
+                setIsLoading(false);
             }
         } catch (err) {
             setError(err.message || 'Đăng nhập thất bại. Vui lòng kiểm tra lại!');
-            setIsLoading(false); // Chỉ tắt loading khi có lỗi
+            setIsLoading(false);
         }
     };
 

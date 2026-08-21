@@ -1,7 +1,6 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 
-// 1. Import các trang
 import CustomerRegistration from './pages/CustomerRegistration/CustomerRegistration';
 import CustomerManagement from './pages/CustomerManagement/CustomerManagement';
 import Login from './pages/Login/Login';
@@ -11,11 +10,9 @@ import Reports from './pages/Reports/Reports';
 import AccountSettings from './pages/AccountSettings/AccountSettings';
 import AccountManagement from './pages/AccountManagement/AccountManagement';
 
-// Import Layout
 import Sidebar from './components/Common/Sidebar';
 import Navbar from './components/Common/Navbar';
 
-// 2. Tạo bộ khung (Layout) bọc ngoài các trang quản trị
 const MainLayout = ({ children }) => {
     return (
         <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: 'var(--bg-color)' }}>
@@ -28,46 +25,45 @@ const MainLayout = ({ children }) => {
     );
 };
 
-// 3. Component tạm thời cho các trang chưa phát triển
-const PlaceholderPage = ({ title }) => (
-    <div style={{ padding: '40px', fontSize: '20px', color: '#666' }}>
-        <h2>{title}</h2>
-        <p>Giao diện đang trong quá trình phát triển...</p>
-    </div>
-);
+// COMPONENT BẢO VỆ ĐƯỜNG DẪN
+// COMPONENT BẢO VỆ ĐƯỜNG DẪN (ĐÃ CHỐNG LẶP VÔ HẠN)
+const ProtectedRoute = ({ children, allowedRoles }) => {
+    const rawRole = localStorage.getItem('role') || 'EMPLOYEE';
+    const upperRole = String(rawRole).toUpperCase();
+    const normalizedRole = upperRole.includes('ADMIN') ? 'ADMIN' : 'EMPLOYEE';
+
+    // ĐÃ SỬA: Gắn thêm state chứa câu thông báo khi bị đẩy về trang /login
+    if (!localStorage.getItem('token')) {
+        return <Navigate
+            to="/login"
+            state={{ errorMsg: 'Bạn cần đăng nhập tài khoản mới có thể vào hệ thống.' }}
+            replace
+        />;
+    }
+
+    if (!allowedRoles.includes(normalizedRole)) {
+        return <Navigate to={normalizedRole === 'ADMIN' ? "/dashboard" : "/registration"} replace />;
+    }
+
+    return children;
+};
 
 function App() {
     return (
         <Routes>
-            {/* Tự động nhảy sang trang login khi vào web */}
             <Route path="/" element={<Navigate to="/login" replace />} />
-
-            {/* Trang đăng nhập độc lập */}
             <Route path="/login" element={<Login />} />
 
-            {/* CÁC TRANG CÓ SIDEBAR KHỚP 100% VỚI MENU */}
+            {/* CÁC TRANG CỦA ADMIN (Chỉ ADMIN mới vào được) */}
+            <Route path="/dashboard" element={<ProtectedRoute allowedRoles={['ADMIN']}><MainLayout><Dashboard /></MainLayout></ProtectedRoute>} />
+            <Route path="/reports" element={<ProtectedRoute allowedRoles={['ADMIN']}><MainLayout><Reports title="Báo cáo" /></MainLayout></ProtectedRoute>} />
+            <Route path="/accounts" element={<ProtectedRoute allowedRoles={['ADMIN']}><MainLayout><AccountManagement title="Quản lý tài khoản" /></MainLayout></ProtectedRoute>} />
+            <Route path="/settings" element={<ProtectedRoute allowedRoles={['ADMIN']}><MainLayout><AccountSettings title="Cài đặt tài khoản" /></MainLayout></ProtectedRoute>} />
 
-            {/* 1. Tổng quan */}
-            <Route path="/dashboard" element={<MainLayout><Dashboard /></MainLayout>} />
-
-            {/* 2. Đăng ký khách hàng */}
-            <Route path="/registration" element={<MainLayout><CustomerRegistration /></MainLayout>} />
-
-            {/* 3. Quản lý khách hàng */}
-            <Route path="/customers" element={<MainLayout><CustomerManagement /></MainLayout>} />
-
-            {/* 4. Lịch sử xác thực (ĐÃ SỬA LỖI Ở ĐÂY) */}
-            <Route path="/history" element={<MainLayout><AuthenticationHistory /></MainLayout>} />
-
-            {/* 5. Báo cáo */}
-            <Route path="/reports" element={<MainLayout><Reports title="Báo cáo" /></MainLayout>} />
-
-            {/* 6.QL Tài khoản */}
-            <Route path="/accounts" element={<MainLayout><AccountManagement title="Quản lý tài khoản" /></MainLayout>} />
-
-            {/* 7. Tài khoản */}
-            <Route path="/settings" element={<MainLayout><AccountSettings title="Cài đặt tài khoản" /></MainLayout>} />
-
+            {/* CÁC TRANG DÙNG CHUNG (Cả ADMIN và EMPLOYEE đều vào được) */}
+            <Route path="/registration" element={<ProtectedRoute allowedRoles={['ADMIN', 'EMPLOYEE']}><MainLayout><CustomerRegistration /></MainLayout></ProtectedRoute>} />
+            <Route path="/customers" element={<ProtectedRoute allowedRoles={['ADMIN', 'EMPLOYEE']}><MainLayout><CustomerManagement /></MainLayout></ProtectedRoute>} />
+            <Route path="/history" element={<ProtectedRoute allowedRoles={['ADMIN', 'EMPLOYEE']}><MainLayout><AuthenticationHistory /></MainLayout></ProtectedRoute>} />
         </Routes>
     );
 }

@@ -3,7 +3,6 @@ import ImageUpload from '../../../components/Form/ImageUpload.jsx';
 import styles from './Step2Upload.module.css';
 
 const Step2Upload = ({ onNext, onPrev, initialData }) => {
-    // Chỉ cần các trường front và frontFile để lưu ảnh mặt trước
     const [images, setImages] = useState({
         front: initialData?.front || null,
         frontFile: initialData?.frontFile || null,
@@ -29,6 +28,13 @@ const Step2Upload = ({ onNext, onPrev, initialData }) => {
         onNext({ cccdImages: images });
     };
 
+    // ====================================================================
+    // ĐÃ THÊM: Đóng gói ảnh mới nhất để mang theo khi ấn "Quay lại"
+    // ====================================================================
+    const handleBack = () => {
+        onPrev({ cccdImages: images });
+    };
+
     return (
         <div className={styles.container}>
             <div className={styles.header}>
@@ -37,6 +43,7 @@ const Step2Upload = ({ onNext, onPrev, initialData }) => {
             </div>
 
             <form onSubmit={handleSubmit} className={styles.formWrapper}>
+                {/* ... (Các phần ở giữa giữ nguyên không đổi) ... */}
                 <div className={styles.contentGrid}>
                     <div className={styles.leftColumn}>
                         <h3 className={styles.sectionTitle}>Yêu cầu hình ảnh</h3>
@@ -52,7 +59,6 @@ const Step2Upload = ({ onNext, onPrev, initialData }) => {
                     </div>
 
                     <div className={styles.rightColumn}>
-                        {/* Chỉ hiển thị một ImageUpload cho mặt trước */}
                         <ImageUpload
                             label="Mặt trước CCCD"
                             hint="Kéo thả hoặc chọn ảnh PNG/JPG"
@@ -64,11 +70,11 @@ const Step2Upload = ({ onNext, onPrev, initialData }) => {
                 </div>
 
                 <div className={styles.actionGroup}>
-                    <button type="button" className={styles.backBtn} onClick={onPrev}>Quay lại</button>
+                    {/* ĐÃ SỬA: Gọi hàm handleBack thay vì onPrev trống không */}
+                    <button type="button" className={styles.backBtn} onClick={handleBack}>Quay lại</button>
                     <button
                         type="submit"
                         className={styles.nextBtn}
-                        // Khóa nút nếu chưa có file vật lý của mặt trước
                         disabled={!images.frontFile}
                     >
                         Tiếp tục ›

@@ -1,15 +1,12 @@
 import api from './api';
 
 export const authService = {
-    // Đổi tham số nhận vào thành username
     login: async (username, password) => {
         try {
-            // Gửi đúng cặp { username, password }
             const response = await api.post('/auth/login', { username, password });
-            return response.data;
+            return response.data; // Trả về cục ApiResponse từ Backend
         } catch (error) {
             if (error.response && error.response.data) {
-                // Lấy thông báo lỗi trực tiếp từ Backend để hiển thị ra UI
                 throw new Error(error.response.data.message || 'Tài khoản hoặc mật khẩu không chính xác');
             }
             throw new Error('Không thể kết nối đến máy chủ!');
@@ -17,6 +14,9 @@ export const authService = {
     },
 
     logout: () => {
-        localStorage.removeItem('accessToken');
+        // ĐÃ SỬA: Đồng bộ dùng đúng tên biến là 'token' và xóa cả 'role'
+        localStorage.removeItem('token');
+        localStorage.removeItem('role');
+        window.location.href = '/login'; // Tự động đẩy về trang login khi đăng xuất
     }
 };

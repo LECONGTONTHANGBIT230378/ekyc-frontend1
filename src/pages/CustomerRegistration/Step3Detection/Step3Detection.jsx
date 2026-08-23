@@ -42,6 +42,17 @@ const Step3Detection = ({ onNext, onPrev, initialData }) => {
                 setShowModal(true);
                 setError('Ảnh CCCD bị mờ/lóa.');
             }
+                // ====================================================================
+                // ĐÃ THÊM: Xử lý lỗi thẻ CCCD hết hạn
+            // ====================================================================
+            else if (errorString.toLowerCase().includes('hết hạn') || errorString.includes('EXPIRED') || errorString.includes('het han')) {
+                setModalContent({
+                    title: 'Căn cước công dân hết hạn',
+                    message: 'Thẻ Căn cước công dân của bạn đã hết hạn sử dụng. Vui lòng sử dụng thẻ CCCD/CMND bản gốc còn hiệu lực để tiếp tục quá trình đăng ký.'
+                });
+                setShowModal(true);
+                setError('Thẻ CCCD đã hết hạn sử dụng.');
+            }
             else {
                 setError(defaultMsg || 'Hệ thống AI không thể nhận diện được thẻ.');
             }
@@ -85,7 +96,8 @@ const Step3Detection = ({ onNext, onPrev, initialData }) => {
                     setCurrentAction(apiResponse.message || 'Nhận diện hoàn tất!');
                 } else {
                     const respStr = JSON.stringify(apiResponse);
-                    handleSmartError(respStr, apiResponse.message);
+                    // ĐÃ SỬA: Ghép thêm câu thông báo vào chuỗi để quét từ khóa
+                    handleSmartError(respStr + " " + (apiResponse.message || ''), apiResponse.message);
                 }
             } catch (err) {
                 if (!isSubscribed) return;
@@ -99,7 +111,8 @@ const Step3Detection = ({ onNext, onPrev, initialData }) => {
                     : (err.message || '');
 
                 const defaultMsg = err.response?.data?.message || 'Có lỗi xảy ra khi kết nối với máy chủ.';
-                handleSmartError(errorStr, defaultMsg);
+                // ĐÃ SỬA: Ghép thêm câu thông báo vào chuỗi để quét từ khóa
+                handleSmartError(errorStr + " " + defaultMsg, defaultMsg);
             }
         };
 

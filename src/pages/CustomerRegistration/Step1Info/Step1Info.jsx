@@ -19,10 +19,42 @@ const Step1Info = ({ onNext, initialData }) => {
         frontFile: initialData?.frontFile || null,
     });
 
-    const [error, setError] = useState('');
+    // ====================================================================
+    // ĐÃ SỬA: Biến lỗi thành một Object chứa lỗi riêng cho từng ô
+    // ====================================================================
+    const [errors, setErrors] = useState({
+        phone: '',
+        email: '',
+        fullName: ''
+    });
+
+    // Hàm kiểm tra lỗi dùng chung
+    const validateField = (name, value) => {
+        let errorMsg = '';
+        const valStr = value.trim();
+
+        if (name === 'phone') {
+            const phoneRegex = /^0\d{9}$/;
+            if (valStr && !phoneRegex.test(valStr)) {
+                errorMsg = 'Số điện thoại phải gồm đúng 10 số và bắt đầu bằng số 0.';
+            }
+        }
+        if (name === 'email') {
+            const emailValue = valStr.toLowerCase();
+            if (emailValue && !emailValue.endsWith('@gmail.com')) {
+                errorMsg = 'Email không hợp lệ. Vui lòng nhập đuôi @gmail.com.';
+            }
+        }
+        return errorMsg;
+    };
 
     const handleChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
+        const { name, value } = e.target;
+        setFormData({ ...formData, [name]: value });
+
+        // Real-time: Gõ đến đâu, xóa lỗi (hoặc báo lỗi mới) đến đó
+        const errorMsg = validateField(name, value);
+        setErrors(prev => ({ ...prev, [name]: errorMsg }));
     };
 
     const handleUpload = (field, url, file) => {
@@ -35,9 +67,25 @@ const Step1Info = ({ onNext, initialData }) => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        setError('');
 
-        // Không gọi API, chỉ chuyển dữ liệu vào State tổng của CustomerRegistration
+        // Kiểm tra lại lần cuối toàn bộ các trường trước khi sang Bước 2
+        const phoneError = validateField('phone', formData.phone);
+        const emailError = validateField('email', formData.email);
+
+        // Bắt lỗi bỏ trống (do ta đã tắt Required của HTML5)
+        const fullNameError = !formData.fullName.trim() ? 'Vui lòng nhập họ và tên.' : '';
+        const emptyPhoneError = !formData.phone.trim() ? 'Vui lòng nhập số điện thoại.' : phoneError;
+        const emptyEmailError = !formData.email.trim() ? 'Vui lòng nhập email.' : emailError;
+
+        if (fullNameError || emptyPhoneError || emptyEmailError) {
+            setErrors({
+                fullName: fullNameError,
+                phone: emptyPhoneError,
+                email: emptyEmailError
+            });
+            return; // Khóa lại, không cho đi tiếp
+        }
+
         onNext({
             combinedData: formData
         });
@@ -50,12 +98,8 @@ const Step1Info = ({ onNext, initialData }) => {
                 <p>Bắt đầu tạo hồ sơ với thông tin cơ bản. (Có thể bỏ trống phần hình ảnh để tải lên ở bước sau)</p>
             </div>
 
-            <form onSubmit={handleSubmit} className={styles.formWrapper}>
-                {error && (
-                    <div style={{ color: '#d32f2f', backgroundColor: '#ffebee', padding: '10px', borderRadius: '4px', marginBottom: '15px' }}>
-                        {error}
-                    </div>
-                )}
+            {/* ĐÃ SỬA: Thêm thuộc tính noValidate để tắt popup báo lỗi xấu xí của trình duyệt */}
+            <form onSubmit={handleSubmit} className={styles.formWrapper} noValidate>
 
                 <div className={styles.contentGrid}>
                     <div className={styles.leftColumn}>
@@ -68,11 +112,24 @@ const Step1Info = ({ onNext, initialData }) => {
                                 disabled={true}
                                 readOnly={true}
                             />
-                            <InputField label="Họ và tên" name="fullName" value={formData.fullName} onChange={handleChange} required />
+                            {/* Truyền biến lỗi vào từng ô */}
+                            <InputField
+                                label="Họ và tên" name="fullName"
+                                value={formData.fullName} onChange={handleChange} required
+                                error={errors.fullName}
+                            />
                         </div>
                         <div className={styles.row}>
-                            <InputField label="Số điện thoại" name="phone" value={formData.phone} onChange={handleChange} required />
-                            <InputField label="Email" type="email" name="email" value={formData.email} onChange={handleChange} />
+                            <InputField
+                                label="Số điện thoại" name="phone"
+                                value={formData.phone} onChange={handleChange} required
+                                error={errors.phone}
+                            />
+                            <InputField
+                                label="Email" type="email" name="email"
+                                value={formData.email} onChange={handleChange} required
+                                error={errors.email}
+                            />
                         </div>
                     </div>
 
@@ -92,7 +149,6 @@ const Step1Info = ({ onNext, initialData }) => {
                     <button
                         type="submit"
                         className={styles.nextBtn}
-                        disabled={!formData.fullName || !formData.phone}
                     >
                         Tiếp tục ›
                     </button>

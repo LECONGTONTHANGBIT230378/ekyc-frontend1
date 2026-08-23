@@ -107,14 +107,11 @@ const Step6FaceMatch = ({ onNext, onPrev, initialData }) => {
                 }
                 setMatchScore(score.toFixed(2));
 
-                // 2. Lấy trạng thái Khớp
-                let finalMatchStatus = findMatchStatus(actualData);
-
-                if (finalMatchStatus === null) {
-                    finalMatchStatus = score >= 50;
-                }
-
-                setIsMatch(finalMatchStatus);
+                // =======================================================
+                // ĐÃ SỬA: DÙNG BÀN TAY SẮT - BỎ QUA CHỮ MATCHED CỦA API
+                // Chỉ dựa duy nhất vào điểm số thực tế >= 70
+                // =======================================================
+                setIsMatch(score >= 70);
             })
             .catch((err) => {
                 if (!isMounted) return;

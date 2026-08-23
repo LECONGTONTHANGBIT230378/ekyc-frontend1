@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { FiEye, FiEdit2, FiTrash2, FiChevronLeft, FiChevronRight } from 'react-icons/fi'; // Đã thêm FiEdit2
+import { FiEye, FiEdit, FiTrash2, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import { customerService } from '../../services/customerService';
 import CustomerToolbar from './CustomerToolbar';
 import CustomerViewModal from './CustomerViewModal';
-import CustomerEditModal from './CustomerEditModal'; // Đã thêm import Modal Edit
+import CustomerEditModal from './CustomerEditModal';
 import CustomerDeleteModal from './CustomerDeleteModal';
 import styles from './CustomerManagement.module.css';
 
@@ -16,7 +16,7 @@ const CustomerManagement = () => {
     const [searchKeyword, setSearchKeyword] = useState('');
 
     const [viewModalOpen, setViewModalOpen] = useState(false);
-    const [editModalOpen, setEditModalOpen] = useState(false); // Đã thêm state quản lý Edit Modal
+    const [editModalOpen, setEditModalOpen] = useState(false);
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
     const [selectedCustomer, setSelectedCustomer] = useState(null);
 
@@ -31,14 +31,10 @@ const CustomerManagement = () => {
 
             const response = await customerService.getAllCustomers(params);
 
-            // BÓC TÁCH DỮ LIỆU TỪ API RESPONSE CỦA SPRING BOOT
             if (response && (response.success === true || response.code === 200)) {
-                // response.data chứa mảng List<CustomerResponse> từ Backend
                 setCustomers(response.data || []);
-                // Backend hiện trả về List (không có totalPages), tạm set cứng là 1
                 setTotalPages(1);
             } else if (Array.isArray(response)) {
-                // Dự phòng trường hợp Axios interceptor đã tự bóc tách vỏ ApiResponse
                 setCustomers(response);
                 setTotalPages(1);
             } else {
@@ -149,20 +145,17 @@ const CustomerManagement = () => {
                                                 <FiEye />
                                             </button>
 
-                                            {/* NÚT CHỈNH SỬA ĐÃ ĐƯỢC THÊM VÀO */}
                                             <button
                                                 className={styles.iconBtn}
                                                 title="Chỉnh sửa hồ sơ"
-                                                style={{ color: '#2563EB' }}
                                                 onClick={() => { setSelectedCustomer(customer); setEditModalOpen(true); }}
                                             >
-                                                <FiEdit2 />
+                                                <FiEdit />
                                             </button>
 
                                             <button
-                                                className={styles.iconBtn}
+                                                className={styles.iconBtnTrash}
                                                 title="Xóa hồ sơ"
-                                                style={{ color: '#EF4444' }}
                                                 onClick={() => { setSelectedCustomer(customer); setDeleteModalOpen(true); }}
                                             >
                                                 <FiTrash2 />
@@ -186,14 +179,13 @@ const CustomerManagement = () => {
                 />
             )}
 
-            {/* MODAL CHỈNH SỬA ĐÃ ĐƯỢC THÊM VÀO */}
             {editModalOpen && (
                 <CustomerEditModal
                     customer={selectedCustomer}
                     onClose={() => setEditModalOpen(false)}
                     onSuccess={() => {
                         setEditModalOpen(false);
-                        fetchCustomers(); // Load lại bảng sau khi lưu thành công
+                        fetchCustomers();
                     }}
                 />
             )}

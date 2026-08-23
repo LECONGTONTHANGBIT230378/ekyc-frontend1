@@ -74,12 +74,12 @@
     color: #94A3B8;
 }
 
-/* TABLE DỮ LIỆU - ÁP DỤNG PHƯƠNG ÁN 1 */
+/* TABLE DỮ LIỆU */
 .tableWrapper {
     width: 100%;
     overflow-x: auto;
-    border-radius: 8px 8px 0 0; /* Bo góc cho Header nền đậm */
-    overflow: hidden; /* Cắt phần nền thừa để giữ đúng góc bo */
+    border-radius: 8px 8px 0 0;
+    overflow: hidden;
 }
 
 .dataTable {
@@ -88,7 +88,6 @@
     text-align: left;
 }
 
-/* Header nền Xanh đậm - Chữ trắng */
 .dataTable th {
     background-color: #1E3A8A;
     color: #FFFFFF;
@@ -119,11 +118,55 @@
     padding-right: 24px !important;
 }
 
+/* ========================================= */
+/* ĐÃ SỬA: NHÓM NÚT THAO TÁC GIỐNG QUẢN LÝ TÀI KHOẢN */
+/* ========================================= */
 .actionGroup {
     display: flex;
     justify-content: flex-end;
-    gap: 16px;
+    align-items: center;
+    gap: 8px; /* Thu nhỏ khoảng cách giữa các khối icon */
     padding-right: 12px;
+}
+
+.iconBtn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    border: none;
+    background-color: #f3f4f6; /* Nền xám nhạt */
+    color: #4b5563;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.iconBtn:hover {
+    background-color: #e5e7eb;
+    color: #111827;
+}
+
+.iconBtnTrash {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    border: none;
+    background-color: #fee2e2; /* Nền đỏ nhạt */
+    color: #ef4444; /* Viền đỏ */
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.iconBtnTrash:hover {
+    background-color: #fecaca;
+    color: #b91c1c;
 }
 
 /* BADGE TRẠNG THÁI */
@@ -148,26 +191,6 @@
 .badgeFailed {
     background-color: #FEE2E2;
     color: #DC2626;
-}
-
-/* ICON NÚT BẤM */
-.iconBtn {
-    background: transparent;
-    border: none;
-    color: #94A3B8;
-    font-size: 18px;
-    cursor: pointer;
-    padding: 6px;
-    border-radius: 6px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s;
-}
-
-.iconBtn:hover {
-    color: #2563EB;
-    background-color: #EFF6FF;
 }
 
 .emptyState {

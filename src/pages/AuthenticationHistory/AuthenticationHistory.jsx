@@ -5,25 +5,38 @@ import AuthenticationDetailModal from './AuthenticationDetailModal';
 import styles from '../CustomerManagement/CustomerManagement.module.css';
 
 const AuthenticationHistory = () => {
-    const [historyList, setHistoryList] = useState([]);
+    // State lưu TOÀN BỘ dữ liệu lấy từ API
+    const [fullDataList, setFullDataList] = useState([]);
     const [loading, setLoading] = useState(false);
 
     const [currentPage, setCurrentPage] = useState(0);
-    const [totalPages, setTotalPages] = useState(1);
-    const [searchKeyword, setSearchKeyword] = useState('');
-    const [statusFilter, setStatusFilter] = useState('ALL');
 
+    // State quản lý tìm kiếm
+    const [inputValue, setInputValue] = useState('');
+    const [searchKeyword, setSearchKeyword] = useState('');
+
+    const [statusFilter, setStatusFilter] = useState('ALL');
     const [viewModalOpen, setViewModalOpen] = useState(false);
     const [selectedHistory, setSelectedHistory] = useState(null);
 
+    // Kích hoạt tính năng tìm kiếm sau 0.5s ngừng gõ phím
+    useEffect(() => {
+        const delaySearch = setTimeout(() => {
+            setSearchKeyword(inputValue);
+            setCurrentPage(0); // Về trang đầu tiên khi có kết quả mới
+        }, 500);
+        return () => clearTimeout(delaySearch);
+    }, [inputValue]);
+
+    // GỌI API LẤY DỮ LIỆU
     const fetchHistory = async () => {
         setLoading(true);
         try {
+            // Lấy lượng lớn dữ liệu (VD: 1000 bản ghi) để Frontend tự do lọc
             const params = {
-                page: currentPage,
-                size: 10,
-                keyword: searchKeyword,
-                paged: true // ĐÃ THÊM: Bắt buộc truyền lên để Backend trả về dạng Phân trang (Pageable)
+                page: 0,
+                size: 1000,
+                paged: true
             };
             if (statusFilter !== 'ALL') {
                 params.status = statusFilter;
@@ -31,38 +44,35 @@ const AuthenticationHistory = () => {
 
             const response = await historyService.getAllHistory(params);
 
-            // BÓC TÁCH DỮ LIỆU THÔNG MINH BAO PHỦ MỌI TRƯỜNG HỢP
             let dataList = [];
-            let total = 1;
-
             if (response && (response.success === true || response.code === 200)) {
-                if (response.data && response.data.content) { // Dạng Phân trang Page<T>
+                if (response.data && response.data.content) {
                     dataList = response.data.content;
-                    total = response.data.totalPages || 1;
-                } else { // Dạng Danh sách List<T>
+                } else {
                     dataList = response.data || [];
                 }
             } else if (response && response.content) {
                 dataList = response.content;
-                total = response.totalPages || 1;
             } else if (Array.isArray(response)) {
                 dataList = response;
             }
 
-            setHistoryList(dataList);
-            setTotalPages(total);
+            setFullDataList(dataList);
         } catch (error) {
             console.error('Lỗi khi tải lịch sử xác thực:', error);
-            setHistoryList([]);
+            setFullDataList([]);
         } finally {
             setLoading(false);
         }
     };
 
+    // Chỉ gọi lại API khi đổi trạng thái (ALL/Khớp/Không Khớp)
+    // KHÔNG gọi lại API khi gõ tìm kiếm nữa
     useEffect(() => {
         fetchHistory();
-    }, [currentPage, searchKeyword, statusFilter]);
+    }, [statusFilter]);
 
+    // HÀM FORMAT HIỂN THỊ
     const getStatusBadgeClass = (status) => {
         const s = status?.toUpperCase() || '';
         if (s === 'VERIFIED' || s === 'SUCCESS' || s === 'MATCHED') return styles.badgeVerified;
@@ -73,7 +83,6 @@ const AuthenticationHistory = () => {
 
     const formatDateTime = (dateVal) => {
         if (!dateVal) return 'N/A';
-
         let date;
         if (Array.isArray(dateVal)) {
             date = new Date(dateVal[0], dateVal[1] - 1, dateVal[2], dateVal[3] || 0, dateVal[4] || 0, dateVal[5] || 0);
@@ -81,13 +90,47 @@ const AuthenticationHistory = () => {
             let dateStr = typeof dateVal === 'string' ? dateVal.replace(' ', 'T') : dateVal;
             date = new Date(dateStr);
         }
-
         if (isNaN(date.getTime())) return 'N/A';
         return date.toLocaleString('vi-VN', {
             hour: '2-digit', minute: '2-digit',
             day: '2-digit', month: '2-digit', year: 'numeric'
         });
     };
+
+    // ====================================================================
+    // BỘ LỌC MA THUẬT: NHẬP GÌ RA ĐÓ (LỌC TRỰC TIẾP TRÊN FRONTEND)
+    // ====================================================================
+    const filteredData = fullDataList.filter(item => {
+        if (!searchKeyword) return true;
+
+        const kw = searchKeyword.toLowerCase().trim();
+
+        // Dựng lại chính xác các chữ sẽ hiển thị ra màn hình
+        const idStr = `#${item.id || item.verification_id}`;
+        const cccd = item.cccdNumber || item.customer?.cccdNumber || item.customer?.cccdInformation?.cccdNumber || 'N/A';
+        const timeStr = formatDateTime(item.verifyTime);
+
+        let score = item.similarityScore;
+        let displayScore = (score !== undefined && score !== null) ? (score <= 1 ? score * 100 : score) : null;
+        const scoreStr = displayScore !== null ? `${Number(displayScore).toFixed(2)}%` : 'N/A';
+
+        const status = item.result || item.verificationResult || 'N/A';
+        const statusStr = status === 'MATCHED' ? 'khớp' : status === 'NOT_MATCHED' ? 'không khớp' : status.toLowerCase();
+
+        // So khớp từ khóa với tất cả các trường
+        return idStr.toLowerCase().includes(kw) ||
+            cccd.toLowerCase().includes(kw) ||
+            timeStr.toLowerCase().includes(kw) ||
+            scoreStr.toLowerCase().includes(kw) ||
+            statusStr.includes(kw);
+    });
+
+    // ====================================================================
+    // PHÂN TRANG CỤC BỘ (Tính toán trang hiện tại dựa trên dữ liệu đã lọc)
+    // ====================================================================
+    const itemsPerPage = 10;
+    const totalPages = Math.ceil(filteredData.length / itemsPerPage) || 1;
+    const currentDisplayData = filteredData.slice(currentPage * itemsPerPage, (currentPage + 1) * itemsPerPage);
 
     const renderPagination = () => {
         const pages = [];
@@ -145,9 +188,8 @@ const AuthenticationHistory = () => {
                             type="text"
                             className={styles.searchInput}
                             placeholder="Tìm kiếm mã giao dịch, CCCD..."
-                            value={searchKeyword}
-                            onChange={(e) => setSearchKeyword(e.target.value)}
-                            onKeyDown={(e) => e.key === 'Enter' && setCurrentPage(0)}
+                            value={inputValue}
+                            onChange={(e) => setInputValue(e.target.value)}
                         />
                     </div>
                     <select
@@ -177,13 +219,13 @@ const AuthenticationHistory = () => {
                         <tbody>
                         {loading ? (
                             <tr><td colSpan="6" className={styles.emptyState}>Đang tải dữ liệu...</td></tr>
-                        ) : historyList.length === 0 ? (
+                        ) : currentDisplayData.length === 0 ? (
                             <tr><td colSpan="6" className={styles.emptyState}>Không có lịch sử xác thực nào.</td></tr>
                         ) : (
-                            historyList.map((item) => {
-                                // MAPPING DỮ LIỆU
-                                // MAPPING DỮ LIỆU
-// ĐÃ SỬA: Ưu tiên lấy cccdNumber độc lập từ history, nếu không có thì fallback
+                            // ========================================================
+                            // ĐÃ SỬA: Hiển thị từ mảng currentDisplayData (đã lọc & phân trang)
+                            // ========================================================
+                            currentDisplayData.map((item) => {
                                 const cccd = item.cccdNumber || item.customer?.cccdNumber || item.customer?.cccdInformation?.cccdNumber || 'N/A';
                                 const time = item.verifyTime;
                                 let score = item.similarityScore;

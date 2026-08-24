@@ -10,7 +10,6 @@ const menuItems = [
     { path: '/history', name: 'Lịch sử xác thực', icon: <FiClock /> },
     { path: '/reports', name: 'Báo cáo', icon: <FiFileText /> },
     { path: '/accounts', name: 'Quản lý tài khoản', icon: <FiShield /> },
-    { path: '/settings', name: 'Cài đặt cá nhân', icon: <FiSettings /> },
 ];
 
 const Sidebar = () => {

@@ -80,9 +80,6 @@ const Step4OcrResult = ({ onNext, onPrev, initialData }) => {
         onPrev({ finalOcrData: ocrData });
     };
 
-    // ====================================================================
-    // ĐÃ SỬA: Cưỡng chế DOM khôi phục giá trị cũ nếu phát hiện nhập chữ
-    // ====================================================================
     const handleChange = (e) => {
         const { name, value } = e.target;
 
@@ -112,8 +109,18 @@ const Step4OcrResult = ({ onNext, onPrev, initialData }) => {
         }
     };
 
+    // ====================================================================
+    // ĐÃ THÊM: Biến kiểm tra tất cả các trường dữ liệu có được điền đầy đủ không
+    // ====================================================================
+    const isFormComplete = Object.values(ocrData).every(val => val !== null && val !== undefined && val.toString().trim() !== '');
+
     const handleSubmit = (e) => {
         e.preventDefault();
+
+        // Chặn submit nếu form chưa được điền đủ (đề phòng ấn Enter)
+        if (!isFormComplete) {
+            return;
+        }
 
         const idError = validateIdNumber(ocrData.idNumber);
         const expiryError = validateExpiryDate(ocrData.expiryDate);
@@ -194,7 +201,10 @@ const Step4OcrResult = ({ onNext, onPrev, initialData }) => {
                     <button
                         type="submit"
                         className={styles.nextBtn}
-                        disabled={!!errors.idNumber || !!errors.expiryDate}
+                        // ==============================================================
+                        // ĐÃ SỬA: Nút bị khóa nếu 1 trong các trường còn trống, HOẶC có lỗi
+                        // ==============================================================
+                        disabled={!isFormComplete || !!errors.idNumber || !!errors.expiryDate}
                     >
                         Tiếp tục tải Selfie ›
                     </button>

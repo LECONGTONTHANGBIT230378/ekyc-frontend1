@@ -1,23 +1,10 @@
-// Tên file: Dashboard.jsx
 import React, { useState, useEffect } from 'react';
 import styles from './Dashboard.module.css';
 import StatsCard from './StatsCard';
 import { FiServer, FiUsers, FiUserPlus, FiShield, FiXCircle } from 'react-icons/fi';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { dashboardService } from '../../services/dashboardService'; // Import service gọi API
+import { dashboardService } from '../../services/dashboardService';
 
-// Dữ liệu mẫu cho biểu đồ (Chờ Backend cung cấp API sau)
-const chartData = [
-    { name: 'T2', register: 160, verified: 145 },
-    { name: 'T3', register: 240, verified: 215 },
-    { name: 'T4', register: 210, verified: 196 },
-    { name: 'T5', register: 310, verified: 280 },
-    { name: 'T6', register: 400, verified: 370 },
-    { name: 'T7', register: 280, verified: 250 },
-    { name: 'CN', register: 190, verified: 175 },
-];
-
-// Component tạo Hộp Tooltip khi Hover cho biểu đồ
 const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
         return (
@@ -25,7 +12,7 @@ const CustomTooltip = ({ active, payload, label }) => {
                 <p className={styles.tooltipLabel}>{label}</p>
                 {payload.map((entry, index) => (
                     <p key={index} className={styles.tooltipItem} style={{ color: entry.stroke }}>
-                        {entry.dataKey} : <span>{entry.value}</span>
+                        {entry.dataKey === 'register' ? 'Đăng ký' : 'Xác thực'} : <span>{entry.value}</span>
                     </p>
                 ))}
             </div>
@@ -35,16 +22,18 @@ const CustomTooltip = ({ active, payload, label }) => {
 };
 
 const Dashboard = () => {
-    // 1. Khai báo State để lưu dữ liệu từ API
+    // ĐÃ SỬA: Bổ sung thêm dữ liệu mặc định cho biểu đồ
     const [stats, setStats] = useState({
         totalCustomers: 0,
         totalVerifications: 0,
         successfulMatches: 0,
-        failedMatches: 0
+        failedMatches: 0,
+        avgOcrScore: 0,
+        avgFaceMatchScore: 0,
+        chartData: []
     });
     const [loading, setLoading] = useState(true);
 
-    // 2. Gọi API khi component được mount
     useEffect(() => {
         const fetchDashboardData = async () => {
             try {
@@ -63,7 +52,6 @@ const Dashboard = () => {
         fetchDashboardData();
     }, []);
 
-    // 3. Tính toán tỷ lệ phần trăm động
     const successRate = stats.totalVerifications > 0
         ? ((stats.successfulMatches / stats.totalVerifications) * 100).toFixed(1) + '%'
         : '0%';
@@ -72,7 +60,6 @@ const Dashboard = () => {
         ? ((stats.failedMatches / stats.totalVerifications) * 100).toFixed(1) + '%'
         : '0%';
 
-    // 4. Map dữ liệu API vào mảng hiển thị Card
     const dynamicStatData = [
         {
             title: 'Tổng khách hàng', index: '01',
@@ -102,7 +89,6 @@ const Dashboard = () => {
 
     return (
         <div className={styles.container}>
-            {/* Render 4 Thẻ Thống kê bằng dữ liệu từ API */}
             <div className={styles.statsGrid}>
                 {dynamicStatData.map((stat, idx) => (
                     <StatsCard key={idx} {...stat} />
@@ -110,7 +96,6 @@ const Dashboard = () => {
             </div>
 
             <div className={styles.bottomGrid}>
-                {/* Khu vực Biểu đồ Recharts */}
                 <div className={styles.panel}>
                     <div className={styles.panelHeader}>
                         <h3>Luồng đăng ký tuần này</h3>
@@ -118,7 +103,8 @@ const Dashboard = () => {
 
                     <div className={styles.chartArea}>
                         <ResponsiveContainer width="100%" height="100%">
-                            <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                            {/* ĐÃ SỬA: Lấy dữ liệu mảng chartData từ API thay vì Fix cứng */}
+                            <AreaChart data={stats.chartData || []} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                                 <defs>
                                     <linearGradient id="colorRegister" x1="0" y1="0" x2="0" y2="1">
                                         <stop offset="5%" stopColor="#115E59" stopOpacity={0.2}/>
@@ -140,7 +126,6 @@ const Dashboard = () => {
                     </div>
                 </div>
 
-                {/* Khu vực Tình trạng xác thực giữ nguyên */}
                 <div className={styles.panel}>
                     <div className={styles.panelHeader}>
                         <h3>Tình trạng xác thực</h3>
@@ -148,13 +133,15 @@ const Dashboard = () => {
                     </div>
 
                     <div className={styles.progressGroup}>
-                        <div className={styles.progressText}><span>Tỷ lệ chính xác OCR</span> <strong>97%</strong></div>
-                        <div className={styles.progressBg}><div className={styles.progressFill} style={{width: '97%'}}></div></div>
+                        {/* ĐÃ SỬA: Kết nối biến điểm OCR từ hệ thống */}
+                        <div className={styles.progressText}><span>Tỷ lệ chính xác OCR</span> <strong>{stats.avgOcrScore}%</strong></div>
+                        <div className={styles.progressBg}><div className={styles.progressFill} style={{width: `${stats.avgOcrScore}%`}}></div></div>
                     </div>
 
                     <div className={styles.progressGroup}>
-                        <div className={styles.progressText}><span>Tỷ lệ khớp khuôn mặt</span> <strong>96%</strong></div>
-                        <div className={styles.progressBg}><div className={styles.progressFill} style={{width: '96%'}}></div></div>
+                        {/* ĐÃ SỬA: Kết nối biến điểm Face Match từ hệ thống */}
+                        <div className={styles.progressText}><span>Tỷ lệ khớp khuôn mặt</span> <strong>{stats.avgFaceMatchScore}%</strong></div>
+                        <div className={styles.progressBg}><div className={styles.progressFill} style={{width: `${stats.avgFaceMatchScore}%`}}></div></div>
                     </div>
 
                     <div className={styles.infoBox}>

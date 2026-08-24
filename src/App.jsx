@@ -58,7 +58,6 @@ function App() {
             <Route path="/dashboard" element={<ProtectedRoute allowedRoles={['ADMIN']}><MainLayout><Dashboard /></MainLayout></ProtectedRoute>} />
             <Route path="/reports" element={<ProtectedRoute allowedRoles={['ADMIN']}><MainLayout><Reports title="Báo cáo" /></MainLayout></ProtectedRoute>} />
             <Route path="/accounts" element={<ProtectedRoute allowedRoles={['ADMIN']}><MainLayout><AccountManagement title="Quản lý tài khoản" /></MainLayout></ProtectedRoute>} />
-            <Route path="/settings" element={<ProtectedRoute allowedRoles={['ADMIN']}><MainLayout><AccountSettings title="Cài đặt tài khoản" /></MainLayout></ProtectedRoute>} />
 
             {/* CÁC TRANG DÙNG CHUNG (Cả ADMIN và EMPLOYEE đều vào được) */}
             <Route path="/registration" element={<ProtectedRoute allowedRoles={['ADMIN', 'EMPLOYEE']}><MainLayout><CustomerRegistration /></MainLayout></ProtectedRoute>} />

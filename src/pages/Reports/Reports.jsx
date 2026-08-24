@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
     FiCalendar, FiCheckCircle, FiXCircle, FiClock,
-    FiActivity, FiTrendingUp, FiTrendingDown, FiDownload
+    FiActivity, FiDownload
 } from 'react-icons/fi';
 import { dashboardService } from '../../services/dashboardService';
 import styles from './Reports.module.css';
@@ -11,25 +11,22 @@ const Reports = () => {
     const [exportModal, setExportModal] = useState({ isOpen: false, message: '', isError: false });
     const [loading, setLoading] = useState(true);
 
-    // State quản lý số liệu thật từ Backend
     const [stats, setStats] = useState({
         totalVerifications: 0,
         successfulMatches: 0,
-        failedMatches: 0
+        failedMatches: 0,
+        avgProcessingTime: 0,
+        chartData: [],
+        errorStats: []
     });
 
-    // Gọi API lấy dữ liệu thống kê khi trang được tải
     useEffect(() => {
         const fetchStatistics = async () => {
             try {
                 setLoading(true);
                 const data = await dashboardService.getStatistics();
                 if (data) {
-                    setStats({
-                        totalVerifications: data.totalVerifications || 0,
-                        successfulMatches: data.successfulMatches || 0,
-                        failedMatches: data.failedMatches || 0
-                    });
+                    setStats(data);
                 }
             } catch (error) {
                 console.error("Lỗi khi tải dữ liệu báo cáo:", error);
@@ -40,31 +37,22 @@ const Reports = () => {
         fetchStatistics();
     }, []);
 
-    // Tính tỷ lệ thành công dựa trên dữ liệu thật
     const successRate = stats.totalVerifications === 0
         ? 0
         : ((stats.successfulMatches / stats.totalVerifications) * 100).toFixed(1);
 
-    // Dữ liệu biểu đồ (Mock data - Đợi Backend nâng cấp sau)
-    const barChartData = [
-        { label: 'T2', value: 120, height: '40%' },
-        { label: 'T3', value: 250, height: '70%' },
-        { label: 'T4', value: 180, height: '55%' },
-        { label: 'T5', value: 310, height: '90%' },
-        { label: 'T6', value: 220, height: '65%' },
-        { label: 'T7', value: 400, height: '100%' },
-        { label: 'CN', value: 290, height: '80%' },
-    ];
+    const maxVerified = stats.chartData && stats.chartData.length > 0
+        ? Math.max(...stats.chartData.map(d => d.verified))
+        : 1;
 
-    // Dữ liệu nguyên nhân lỗi (Mock data)
-    const errorStats = [
-        { reason: 'Khuôn mặt bị mờ/nhòe', percent: 45, count: 124 },
-        { reason: 'CCCD bị chói sáng', percent: 30, count: 82 },
-        { reason: 'Không khớp với cơ sở dữ liệu', percent: 15, count: 41 },
-        { reason: 'Lý do khác', percent: 10, count: 28 },
-    ];
+    const barChartData = (stats.chartData || []).map(d => ({
+        label: d.name,
+        value: d.verified,
+        height: maxVerified === 0 ? '0%' : `${(d.verified / maxVerified) * 100}%`
+    }));
 
-    // XỬ LÝ TẢI FILE EXCEL CÓ GỌI API
+    const errorStats = stats.errorStats || [];
+
     const handleExportExcel = async () => {
         setExportModal({
             isOpen: true,
@@ -90,7 +78,6 @@ const Reports = () => {
         }
     };
 
-    // XỬ LÝ TẢI FILE CSV CÓ GỌI API
     const handleExportCSV = async () => {
         setExportModal({
             isOpen: true,
@@ -155,7 +142,6 @@ const Reports = () => {
                 </div>
             </div>
 
-            {/* KHỐI 4 THẺ THỐNG KÊ */}
             <div className={styles.statsGrid}>
                 {/* Thẻ 1: Tổng lượt xác thực */}
                 <div className={styles.statCard}>
@@ -167,10 +153,7 @@ const Reports = () => {
                         <strong className={styles.statValue}>
                             {loading ? '...' : stats.totalVerifications.toLocaleString('vi-VN')}
                         </strong>
-                        <div className={styles.statTrend}>
-                            <FiTrendingUp className={styles.trendUp} />
-                            <span className={styles.trendTextUp}>+12.5% so với kỳ trước</span>
-                        </div>
+                        {/* ĐÃ XÓA: Khối hiển thị xu hướng so với kỳ trước */}
                     </div>
                 </div>
 
@@ -184,10 +167,7 @@ const Reports = () => {
                         <strong className={styles.statValue}>
                             {loading ? '...' : `${successRate}%`}
                         </strong>
-                        <div className={styles.statTrend}>
-                            <FiTrendingUp className={styles.trendUp} />
-                            <span className={styles.trendTextUp}>+2.1% so với kỳ trước</span>
-                        </div>
+                        {/* ĐÃ XÓA: Khối hiển thị xu hướng so với kỳ trước */}
                     </div>
                 </div>
 
@@ -201,10 +181,7 @@ const Reports = () => {
                         <strong className={styles.statValue}>
                             {loading ? '...' : stats.failedMatches.toLocaleString('vi-VN')}
                         </strong>
-                        <div className={styles.statTrend}>
-                            <FiTrendingDown className={styles.trendDown} />
-                            <span className={styles.trendTextDown}>-5.4% so với kỳ trước</span>
-                        </div>
+                        {/* ĐÃ XÓA: Khối hiển thị xu hướng so với kỳ trước */}
                     </div>
                 </div>
 
@@ -215,15 +192,14 @@ const Reports = () => {
                     </div>
                     <div className={styles.statInfo}>
                         <span className={styles.statLabel}>Thời gian xử lý TB</span>
-                        <strong className={styles.statValue}>1.2s</strong>
-                        <div className={styles.statTrend}>
-                            <span className={styles.trendTextNeutral}>Giữ nguyên so với kỳ trước</span>
-                        </div>
+                        <strong className={styles.statValue}>
+                            {loading ? '...' : `${stats.avgProcessingTime}s`}
+                        </strong>
+                        {/* ĐÃ XÓA: Khối hiển thị xu hướng so với kỳ trước */}
                     </div>
                 </div>
             </div>
 
-            {/* KHỐI BIỂU ĐỒ */}
             <div className={styles.chartsGrid}>
                 <div className={styles.chartCard}>
                     <h3 className={styles.chartTitle}>Lưu lượng xác thực (7 ngày qua)</h3>
@@ -264,7 +240,6 @@ const Reports = () => {
                 </div>
             </div>
 
-            {/* MODAL THÔNG BÁO TẢI FILE */}
             {exportModal.isOpen && (
                 <div className={styles.modalOverlay} onClick={closeExportModal}>
                     <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>

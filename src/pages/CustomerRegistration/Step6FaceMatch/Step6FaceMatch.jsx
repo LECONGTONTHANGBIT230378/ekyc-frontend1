@@ -10,6 +10,9 @@ const Step6FaceMatch = ({ onNext, onPrev, initialData }) => {
     const [error, setError] = useState(null);
     const [rawResult, setRawResult] = useState(null);
 
+    // SỬA LẠI: Dùng 1 state duy nhất để quản lý các loại Modal cảnh báo
+    const [modalType, setModalType] = useState(null); // 'MULTIPLE_FACES' | 'NO_FACE' | null
+
     const apiPromise = useRef(null);
 
     const cccdImage = initialData?.finalOcrData?.faceImage
@@ -27,14 +30,12 @@ const Step6FaceMatch = ({ onNext, onPrev, initialData }) => {
             const frontFile = initialData?.cccdImages?.frontFile;
             const selfieFile = initialData?.selfieImages?.selfieFile;
 
-            // ĐÃ THÊM: Lấy số CCCD từ dữ liệu OCR của Bước 4
             const cccdNumber = initialData?.finalOcrData?.idNumber || initialData?.finalOcrData?.cccdNumber || '';
 
             if (!frontFile || !selfieFile) {
                 throw new Error("Hệ thống không tìm thấy tệp ảnh gốc. Vui lòng quay lại các bước trước.");
             }
 
-            // ĐÃ SỬA: Truyền thêm cccdNumber vào hàm verifyFace
             return await ekycService.verifyFace(frontFile, selfieFile, cccdNumber);
         };
 
@@ -47,12 +48,10 @@ const Step6FaceMatch = ({ onNext, onPrev, initialData }) => {
                 if (!isMounted) return;
                 setIsMatching(false);
 
-                // Dữ liệu thực tế từ Backend
                 const actualData = response?.data?.data || response?.data || response || {};
                 setRawResult(actualData);
                 console.log("Dữ liệu AI trả về thực tế:", actualData);
 
-                // THUẬT TOÁN TÌM KIẾM ĐIỂM SỐ
                 const possibleScoreKeys = ['similarityscore', 'similarity_score', 'similarity', 'score', 'matchscore', 'match_score', 'confidence'];
 
                 const findScore = (obj) => {
@@ -76,29 +75,6 @@ const Step6FaceMatch = ({ onNext, onPrev, initialData }) => {
                     return null;
                 };
 
-                // THUẬT TOÁN TÌM KIẾM TRẠNG THÁI KHỚP
-                const findMatchStatus = (obj) => {
-                    if (!obj || typeof obj !== 'object') return null;
-                    const keys = ['isMatch', 'is_match', 'match', 'matched', 'isMatched'];
-                    for (let k of keys) {
-                        if (obj[k] !== undefined && obj[k] !== null) {
-                            return obj[k] === true || obj[k] === 'true' || obj[k] === 'MATCHED';
-                        }
-                    }
-                    if (obj.result !== undefined && obj.result !== null) {
-                        if (obj.result === 'MATCHED' || obj.result === true) return true;
-                        if (obj.result === 'NOT_MATCHED' || obj.result === false) return false;
-                    }
-                    for (let k in obj) {
-                        if (typeof obj[k] === 'object') {
-                            const val = findMatchStatus(obj[k]);
-                            if (val !== null) return val;
-                        }
-                    }
-                    return null;
-                };
-
-                // 1. Lấy điểm số
                 let rawScore = findScore(actualData);
                 let score = rawScore !== null ? parseFloat(rawScore) : 0;
 
@@ -106,17 +82,23 @@ const Step6FaceMatch = ({ onNext, onPrev, initialData }) => {
                     score = score * 100;
                 }
                 setMatchScore(score.toFixed(2));
-
-                // =======================================================
-                // ĐÃ SỬA: DÙNG BÀN TAY SẮT - BỎ QUA CHỮ MATCHED CỦA API
-                // Chỉ dựa duy nhất vào điểm số thực tế >= 70
-                // =======================================================
                 setIsMatch(score >= 70);
             })
             .catch((err) => {
                 if (!isMounted) return;
                 setIsMatching(false);
-                setError(err.response?.data?.message || err.message || 'Mất kết nối đến hệ thống AI.');
+
+                // Lấy thông báo lỗi thô từ Backend trả về
+                const errorMsg = err.response?.data?.message || err.message || 'Mất kết nối đến hệ thống AI.';
+
+                // KIỂM TRA MÃ LỖI ĐỂ HIỂN THỊ MODAL TƯƠNG ỨNG
+                if (errorMsg.includes('MULTIPLE_WEBCAM_FACES')) {
+                    setModalType('MULTIPLE_FACES');
+                } else if (errorMsg.includes('WEBCAM_FACE_NOT_FOUND')) {
+                    setModalType('NO_FACE');
+                } else {
+                    setError(errorMsg);
+                }
             });
 
         return () => {
@@ -134,6 +116,36 @@ const Step6FaceMatch = ({ onNext, onPrev, initialData }) => {
 
     return (
         <div className={styles.container}>
+            {/* HIỂN THỊ KHUNG MODAL NẾU CÓ LỖI CHỤP ẢNH */}
+            {modalType && (
+                <div className={styles.modalOverlay}>
+                    <div className={styles.modalContent}>
+                        <div className={styles.modalIcon}>
+                            <FiAlertTriangle size={42} />
+                        </div>
+
+                        {/* NỘI DUNG THAY ĐỔI THEO LỖI */}
+                        {modalType === 'MULTIPLE_FACES' ? (
+                            <>
+                                <h3>Phát hiện nhiều khuôn mặt</h3>
+                                <p>Ảnh chụp selfie của bạn đang có nhiều hơn một người. Vui lòng đảm bảo <b>chỉ có duy nhất bạn</b> xuất hiện trong khung hình để hệ thống đối chiếu chính xác.</p>
+                            </>
+                        ) : (
+                            <>
+                                <h3>Không tìm thấy khuôn mặt</h3>
+                                <p>Hệ thống không nhận diện được khuôn mặt trong ảnh selfie. Vui lòng đảm bảo môi trường <b>đủ sáng</b>, không bị che khuất và <b>nhìn thẳng</b> vào camera.</p>
+                            </>
+                        )}
+
+                        <div className={styles.modalAction}>
+                            <button className={styles.retryBtnModal} onClick={onPrev}>
+                                Chụp lại ảnh Selfie
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <div className={styles.header}>
                 <h2>Trang xác thực khuôn mặt</h2>
                 <p>So sánh khuôn mặt trên CCCD với ảnh selfie.</p>
@@ -184,7 +196,7 @@ const Step6FaceMatch = ({ onNext, onPrev, initialData }) => {
                         <p className={styles.errorDesc}>{error}</p>
                     </div>
                 </div>
-            ) : (
+            ) : !modalType && (
                 <div className={`${styles.resultBanner} ${isMatch ? styles.matchSuccess : styles.matchFailed}`}>
                     <div className={styles.resultHeader}>
                         {isMatch ? <FiCheckCircle size={32} /> : <FiXCircle size={32} />}
@@ -214,7 +226,7 @@ const Step6FaceMatch = ({ onNext, onPrev, initialData }) => {
                     type="button"
                     className={styles.nextBtn}
                     onClick={handleNext}
-                    disabled={isMatching || error || !isMatch}
+                    disabled={isMatching || error || !isMatch || modalType !== null}
                 >
                     Hoàn tất hồ sơ ›
                 </button>

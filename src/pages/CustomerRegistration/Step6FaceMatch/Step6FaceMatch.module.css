@@ -229,3 +229,92 @@
     .vsText { transform: rotate(90deg); margin: 16px 0; }
     .imageCard { width: 100%; max-width: 100%; height: 300px; }
 }
+/* ========================================= */
+/* MODAL OVERLAY CHO LỖI NHIỀU KHUÔN MẶT     */
+/* ========================================= */
+.modalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(15, 23, 42, 0.7);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(5px);
+    animation: fadeIn 0.3s ease-out;
+}
+
+.modalContent {
+    background: #ffffff;
+    border-radius: 20px;
+    padding: 32px;
+    width: 90%;
+    max-width: 420px;
+    text-align: center;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+}
+
+.modalIcon {
+    color: #DC2626;
+    background: #FEF2F2;
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 8px;
+    border: 8px solid #FEFEFE;
+    box-shadow: 0 0 0 4px #FEE2E2;
+}
+
+.modalContent h3 {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 700;
+    color: #0F172A;
+}
+
+.modalContent p {
+    margin: 0;
+    font-size: 15px;
+    color: #475569;
+    line-height: 1.6;
+}
+
+.modalAction {
+    margin-top: 16px;
+    width: 100%;
+}
+
+.retryBtnModal {
+    width: 100%;
+    padding: 14px 24px;
+    background: var(--primary-color, #2563EB);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);
+}
+
+.retryBtnModal:hover {
+    background: #1D4ED8;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 8px -1px rgba(37, 99, 235, 0.3);
+}
+
+.retryBtnModal:active {
+    transform: translateY(0);
+}

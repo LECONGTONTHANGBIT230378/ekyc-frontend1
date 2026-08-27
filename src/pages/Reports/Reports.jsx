@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import {
-    FiCalendar, FiCheckCircle, FiXCircle, FiClock,
+    FiCheckCircle, FiXCircle,
     FiActivity, FiDownload
 } from 'react-icons/fi';
 import { dashboardService } from '../../services/dashboardService';
 import styles from './Reports.module.css';
 
 const Reports = () => {
-    const [timeRange, setTimeRange] = useState('7days');
+    // ĐÃ XÓA: state timeRange không còn sử dụng
     const [exportModal, setExportModal] = useState({ isOpen: false, message: '', isError: false });
     const [loading, setLoading] = useState(true);
 
@@ -15,7 +15,6 @@ const Reports = () => {
         totalVerifications: 0,
         successfulMatches: 0,
         failedMatches: 0,
-        avgProcessingTime: 0,
         chartData: [],
         errorStats: []
     });
@@ -116,19 +115,7 @@ const Reports = () => {
                 </div>
 
                 <div className={styles.headerTools}>
-                    <div className={styles.dateFilter}>
-                        <FiCalendar className={styles.calendarIcon} />
-                        <select
-                            value={timeRange}
-                            onChange={(e) => setTimeRange(e.target.value)}
-                            className={styles.dateSelect}
-                        >
-                            <option value="today">Hôm nay</option>
-                            <option value="7days">7 ngày qua</option>
-                            <option value="30days">30 ngày qua</option>
-                            <option value="thisYear">Năm nay</option>
-                        </select>
-                    </div>
+                    {/* ĐÃ XÓA: Khối chọn ngày tháng (dateFilter) */}
 
                     <button className={styles.exportCsvBtn} onClick={handleExportCSV}>
                         <FiDownload size={16} />
@@ -153,7 +140,6 @@ const Reports = () => {
                         <strong className={styles.statValue}>
                             {loading ? '...' : stats.totalVerifications.toLocaleString('vi-VN')}
                         </strong>
-                        {/* ĐÃ XÓA: Khối hiển thị xu hướng so với kỳ trước */}
                     </div>
                 </div>
 
@@ -167,7 +153,6 @@ const Reports = () => {
                         <strong className={styles.statValue}>
                             {loading ? '...' : `${successRate}%`}
                         </strong>
-                        {/* ĐÃ XÓA: Khối hiển thị xu hướng so với kỳ trước */}
                     </div>
                 </div>
 
@@ -181,23 +166,10 @@ const Reports = () => {
                         <strong className={styles.statValue}>
                             {loading ? '...' : stats.failedMatches.toLocaleString('vi-VN')}
                         </strong>
-                        {/* ĐÃ XÓA: Khối hiển thị xu hướng so với kỳ trước */}
                     </div>
                 </div>
 
-                {/* Thẻ 4: Thời gian xử lý TB */}
-                <div className={styles.statCard}>
-                    <div className={styles.statIconWrapper} style={{ backgroundColor: '#FFF4E5', color: '#F59E0B' }}>
-                        <FiClock size={24} />
-                    </div>
-                    <div className={styles.statInfo}>
-                        <span className={styles.statLabel}>Thời gian xử lý TB</span>
-                        <strong className={styles.statValue}>
-                            {loading ? '...' : `${stats.avgProcessingTime}s`}
-                        </strong>
-                        {/* ĐÃ XÓA: Khối hiển thị xu hướng so với kỳ trước */}
-                    </div>
-                </div>
+                {/* ĐÃ XÓA: Thẻ 4 - Thời gian xử lý TB */}
             </div>
 
             <div className={styles.chartsGrid}>

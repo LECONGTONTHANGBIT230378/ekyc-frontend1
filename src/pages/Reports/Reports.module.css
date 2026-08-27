@@ -113,7 +113,7 @@
 /* ========================================= */
 .statsGrid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(3, 1fr); /* ĐÃ SỬA: Chia làm 3 phần bằng nhau */
     gap: 24px;
     margin-bottom: 32px;
 }

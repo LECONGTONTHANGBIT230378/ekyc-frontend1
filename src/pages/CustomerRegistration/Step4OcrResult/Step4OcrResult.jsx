@@ -21,7 +21,11 @@ const Step4OcrResult = ({ onNext, onPrev, initialData }) => {
 
     const [errors, setErrors] = useState({
         idNumber: '',
-        expiryDate: ''
+        expiryDate: '',
+        dob: '',
+        fullName: '',
+        gender: '',
+        nationality: '' // ĐÃ THÊM: Quản lý lỗi Quốc tịch
     });
 
     const validateIdNumber = (value) => {
@@ -31,17 +35,91 @@ const Step4OcrResult = ({ onNext, onPrev, initialData }) => {
         return '';
     };
 
+    const validateFullName = (value) => {
+        if (!value || !value.trim()) return 'Vui lòng nhập họ và tên.';
+        if (/\d/.test(value)) return 'Họ và tên không được chứa chữ số.';
+        return '';
+    };
+
+    // ====================================================================
+    // ĐÃ THÊM: HÀM VALIDATE QUỐC TỊCH (KHÔNG CHỨA SỐ)
+    // ====================================================================
+    const validateNationality = (value) => {
+        if (!value || !value.trim()) return 'Vui lòng nhập quốc tịch.';
+        if (/\d/.test(value)) return 'Quốc tịch không được chứa chữ số.';
+        return '';
+    };
+
+    const validateDob = (value) => {
+        if (!value || !value.trim()) return 'Vui lòng nhập ngày sinh.';
+
+        const parts = value.trim().split('/');
+        if (parts.length !== 3) return 'Định dạng ngày không hợp lệ (DD/MM/YYYY).';
+
+        const dayStr = parts[0];
+        const monthStr = parts[1];
+        const yearStr = parts[2];
+
+        if (yearStr.length !== 4) return 'Năm sinh phải bao gồm đúng 4 chữ số.';
+
+        const day = parseInt(dayStr, 10);
+        const month = parseInt(monthStr, 10);
+        const year = parseInt(yearStr, 10);
+
+        if (isNaN(day) || isNaN(month) || isNaN(year)) return 'Ngày tháng năm không hợp lệ.';
+
+        if (month < 1 || month > 12) return 'Tháng sinh không được lớn hơn 12.';
+        if (day < 1 || day > 31) return 'Ngày sinh không được lớn hơn 31.';
+
+        const dobDate = new Date(year, month - 1, day);
+        if (dobDate.getFullYear() !== year || dobDate.getMonth() !== month - 1 || dobDate.getDate() !== day) {
+            return 'Ngày sinh này không tồn tại trên lịch.';
+        }
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        if (dobDate > today) {
+            return 'Ngày sinh không được vượt quá ngày hiện tại (ở tương lai).';
+        }
+
+        return '';
+    };
+
+    const validateGender = (value) => {
+        if (!value || !value.trim()) return 'Vui lòng nhập giới tính.';
+
+        const normalized = value.trim().toLowerCase();
+        if (normalized !== 'nam' && normalized !== 'nữ') {
+            return 'Giới tính chỉ được nhập "Nam" hoặc "Nữ".';
+        }
+        return '';
+    };
+
     const validateExpiryDate = (value) => {
         if (!value || !value.trim()) return 'Vui lòng nhập ngày hết hạn.';
 
         const parts = value.trim().split('/');
         if (parts.length !== 3) return 'Định dạng ngày không hợp lệ (DD/MM/YYYY).';
 
-        const day = parseInt(parts[0], 10);
-        const month = parseInt(parts[1], 10) - 1;
-        const year = parseInt(parts[2], 10);
+        const dayStr = parts[0];
+        const monthStr = parts[1];
+        const yearStr = parts[2];
 
-        const expiry = new Date(year, month, day);
+        if (yearStr.length !== 4) return 'Năm hết hạn phải bao gồm đúng 4 chữ số.';
+
+        const day = parseInt(dayStr, 10);
+        const month = parseInt(monthStr, 10);
+        const year = parseInt(yearStr, 10);
+
+        if (isNaN(day) || isNaN(month) || isNaN(year)) return 'Ngày tháng năm không hợp lệ.';
+
+        if (month < 1 || month > 12) return 'Tháng không được lớn hơn 12.';
+        if (day < 1 || day > 31) return 'Ngày không được lớn hơn 31.';
+
+        const expiry = new Date(year, month - 1, day);
+        if (expiry.getFullYear() !== year || expiry.getMonth() !== month - 1 || expiry.getDate() !== day) {
+            return 'Ngày hết hạn này không tồn tại trên lịch.';
+        }
 
         const today = new Date();
         today.setHours(0, 0, 0, 0);
@@ -57,14 +135,18 @@ const Step4OcrResult = ({ onNext, onPrev, initialData }) => {
         const latestApi = initialData?.ocrData || {};
 
         const initialId = latestSaved.idNumber || latestApi.cccdNumber || latestApi.cccd_number || latestApi.idNumber || '';
+        const initialFullName = latestSaved.fullName || latestApi.fullName || latestApi.full_name || '';
+        const initialDob = latestSaved.dob || latestApi.birthday || latestApi.dateOfBirth || latestApi.dob || '';
+        const initialGender = latestSaved.gender || latestApi.gender || '';
+        const initialNationality = latestSaved.nationality || latestApi.nationality || 'Việt Nam'; // Đã thêm
         const initialExpiry = latestSaved.expiryDate || latestApi.expiryDate || latestApi.dateOfExpiry || latestApi.date_of_expiry || '';
 
         setOcrData({
             idNumber: initialId,
-            fullName: latestSaved.fullName || latestApi.fullName || latestApi.full_name || '',
-            dob: latestSaved.dob || latestApi.birthday || latestApi.dateOfBirth || latestApi.dob || '',
-            gender: latestSaved.gender || latestApi.gender || '',
-            nationality: latestSaved.nationality || latestApi.nationality || 'Việt Nam',
+            fullName: initialFullName,
+            dob: initialDob,
+            gender: initialGender,
+            nationality: initialNationality,
             expiryDate: initialExpiry,
             homeTown: latestSaved.homeTown || latestApi.placeOfOrigin || latestApi.hometown || latestApi.homeTown || '',
             address: latestSaved.address || latestApi.placeOfResidence || latestApi.residence || latestApi.address || ''
@@ -72,7 +154,11 @@ const Step4OcrResult = ({ onNext, onPrev, initialData }) => {
 
         setErrors({
             idNumber: initialId ? validateIdNumber(initialId) : '',
-            expiryDate: initialExpiry ? validateExpiryDate(initialExpiry) : ''
+            fullName: initialFullName ? validateFullName(initialFullName) : '',
+            expiryDate: initialExpiry ? validateExpiryDate(initialExpiry) : '',
+            dob: initialDob ? validateDob(initialDob) : '',
+            gender: initialGender ? validateGender(initialGender) : '',
+            nationality: initialNationality ? validateNationality(initialNationality) : '' // Validate ngay khi load
         });
     }, [initialData]);
 
@@ -84,15 +170,12 @@ const Step4OcrResult = ({ onNext, onPrev, initialData }) => {
         const { name, value } = e.target;
 
         if (name === 'idNumber') {
-            // Nếu có chữ cái
             if (/[^\d]/.test(value)) {
-                // Ép giao diện (DOM) hiển thị lại chính xác dãy số cũ
                 e.target.value = ocrData.idNumber;
-                return; // Chặn hệ thống lại, coi như phím chưa từng được gõ
+                return;
             }
         }
         else if (name === 'dob' || name === 'expiryDate') {
-            // Nếu có chữ cái (chỉ chấp nhận số và dấu gạch chéo)
             if (/[^\d/]/.test(value)) {
                 e.target.value = ocrData[name];
                 return;
@@ -101,36 +184,38 @@ const Step4OcrResult = ({ onNext, onPrev, initialData }) => {
 
         setOcrData({ ...ocrData, [name]: value });
 
+        // Real-time validation
         if (name === 'idNumber') {
             setErrors(prev => ({ ...prev, idNumber: validateIdNumber(value) }));
+        }
+        if (name === 'fullName') {
+            setErrors(prev => ({ ...prev, fullName: validateFullName(value) }));
+        }
+        if (name === 'nationality') {
+            setErrors(prev => ({ ...prev, nationality: validateNationality(value) })); // Gọi hàm validate khi gõ
         }
         if (name === 'expiryDate') {
             setErrors(prev => ({ ...prev, expiryDate: validateExpiryDate(value) }));
         }
+        if (name === 'dob') {
+            setErrors(prev => ({ ...prev, dob: validateDob(value) }));
+        }
+        if (name === 'gender') {
+            setErrors(prev => ({ ...prev, gender: validateGender(value) }));
+        }
     };
 
-    // ====================================================================
-    // ĐÃ THÊM: Biến kiểm tra tất cả các trường dữ liệu có được điền đầy đủ không
-    // ====================================================================
     const isFormComplete = Object.values(ocrData).every(val => val !== null && val !== undefined && val.toString().trim() !== '');
+
+    // ĐÃ SỬA: Thêm errors.nationality vào list check
+    const hasErrors = !!errors.idNumber || !!errors.fullName || !!errors.expiryDate || !!errors.dob || !!errors.gender || !!errors.nationality;
+
+    const isNextDisabled = !isFormComplete || hasErrors;
 
     const handleSubmit = (e) => {
         e.preventDefault();
 
-        // Chặn submit nếu form chưa được điền đủ (đề phòng ấn Enter)
-        if (!isFormComplete) {
-            return;
-        }
-
-        const idError = validateIdNumber(ocrData.idNumber);
-        const expiryError = validateExpiryDate(ocrData.expiryDate);
-
-        if (idError || expiryError) {
-            setErrors({
-                ...errors,
-                idNumber: idError,
-                expiryDate: expiryError
-            });
+        if (isNextDisabled) {
             return;
         }
 
@@ -160,10 +245,42 @@ const Step4OcrResult = ({ onNext, onPrev, initialData }) => {
                                 error={errors.idNumber}
                             />
 
-                            <InputField label="Họ và tên" name="fullName" value={ocrData.fullName} onChange={handleChange} required />
-                            <InputField label="Ngày sinh" name="dob" value={ocrData.dob} onChange={handleChange} required />
-                            <InputField label="Giới tính" name="gender" value={ocrData.gender} onChange={handleChange} required />
-                            <InputField label="Quốc tịch" name="nationality" value={ocrData.nationality} onChange={handleChange} required />
+                            <InputField
+                                label="Họ và tên"
+                                name="fullName"
+                                value={ocrData.fullName}
+                                onChange={handleChange}
+                                required
+                                error={errors.fullName}
+                            />
+
+                            <InputField
+                                label="Ngày sinh"
+                                name="dob"
+                                value={ocrData.dob}
+                                onChange={handleChange}
+                                required
+                                error={errors.dob}
+                            />
+
+                            <InputField
+                                label="Giới tính"
+                                name="gender"
+                                value={ocrData.gender}
+                                onChange={handleChange}
+                                required
+                                error={errors.gender}
+                            />
+
+                            {/* ĐÃ SỬA: Truyền prop error vào trường Quốc tịch */}
+                            <InputField
+                                label="Quốc tịch"
+                                name="nationality"
+                                value={ocrData.nationality}
+                                onChange={handleChange}
+                                required
+                                error={errors.nationality}
+                            />
 
                             <InputField
                                 label="Ngày hết hạn"
@@ -201,10 +318,12 @@ const Step4OcrResult = ({ onNext, onPrev, initialData }) => {
                     <button
                         type="submit"
                         className={styles.nextBtn}
-                        // ==============================================================
-                        // ĐÃ SỬA: Nút bị khóa nếu 1 trong các trường còn trống, HOẶC có lỗi
-                        // ==============================================================
-                        disabled={!isFormComplete || !!errors.idNumber || !!errors.expiryDate}
+                        disabled={isNextDisabled}
+                        style={{
+                            opacity: isNextDisabled ? 0.6 : 1,
+                            cursor: isNextDisabled ? 'not-allowed' : 'pointer',
+                            transition: 'all 0.3s ease'
+                        }}
                     >
                         Tiếp tục tải Selfie ›
                     </button>

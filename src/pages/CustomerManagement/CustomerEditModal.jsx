@@ -34,14 +34,25 @@ const CustomerEditModal = ({ customer, onClose, onSuccess }) => {
         e.preventDefault();
 
         // --- VALIDATE SỐ ĐIỆN THOẠI ---
-        // Yêu cầu: Bắt đầu bằng 0 và có đúng 10 chữ số (Ví dụ: 0987654321)
         const phoneRegex = /^0\d{9}$/;
         if (formData.phone && !phoneRegex.test(formData.phone)) {
             setNotification({
                 type: 'error',
                 message: 'Số điện thoại không hợp lệ! Vui lòng nhập đúng 10 số và bắt đầu bằng số 0.'
             });
-            return; // Dừng lại, không thực hiện gọi API
+            return;
+        }
+
+        // ==========================================
+        // ĐÃ THÊM: VALIDATE EMAIL BẮT BUỘC ĐUÔI @GMAIL.COM
+        // ==========================================
+        const gmailRegex = /^[a-zA-Z0-9._%+-]+@gmail\.com$/;
+        if (formData.email && !gmailRegex.test(formData.email)) {
+            setNotification({
+                type: 'error',
+                message: 'Định dạng Email không hợp lệ! Vui lòng nhập địa chỉ có đuôi @gmail.com.'
+            });
+            return; // Dừng lại, không cho phép bấm lưu
         }
 
         setSubmitting(true);
@@ -122,7 +133,7 @@ const CustomerEditModal = ({ customer, onClose, onSuccess }) => {
                             value={formData.email}
                             onChange={handleChange}
                             style={styles.input}
-                            placeholder="Nhập địa chỉ email"
+                            placeholder="ví dụ: khachhang@gmail.com"
                         />
                     </div>
 

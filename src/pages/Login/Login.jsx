@@ -1,13 +1,12 @@
-import React, { useState, useEffect } from 'react'; // Đã gộp useEffect vào đây
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { FcGoogle } from 'react-icons/fc';
-import { BsMicrosoft, BsCheckLg, BsExclamationTriangleFill, BsCheckCircleFill } from 'react-icons/bs'; // Thêm BsCheckCircleFill
+import { BsCheckLg, BsExclamationTriangleFill, BsCheckCircleFill } from 'react-icons/bs';
 import { CgSpinner } from 'react-icons/cg';
+import { FiEye, FiEyeOff } from 'react-icons/fi'; // ĐÃ THÊM: Import icon con mắt
 import InputField from '../../components/Form/InputField';
 import styles from './Login.module.css';
 import { authService } from '../../services/authService';
 import heroImg from '../../assets/hero.png';
-
 
 const Login = () => {
     const navigate = useNavigate();
@@ -16,18 +15,18 @@ const Login = () => {
     const [formData, setFormData] = useState({ username: '', password: '' });
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
-
-    // 1. THÊM STATE ĐỂ THEO DÕI TRẠNG THÁI THÀNH CÔNG
     const [isSuccess, setIsSuccess] = useState(false);
+
+    // ĐÃ THÊM: State quản lý ẩn/hiện mật khẩu
+    const [showPassword, setShowPassword] = useState(false);
 
     useEffect(() => {
         if (location.state && location.state.errorMsg) {
-            setError(location.state.errorMsg); // Đổ câu thông báo vào hộp màu đỏ
-
-            // Xóa state trong lịch sử trình duyệt để F5 không bị hiện lại lỗi mãi mãi
+            setError(location.state.errorMsg);
             window.history.replaceState({}, document.title);
         }
     }, [location.state]);
+
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
@@ -40,26 +39,16 @@ const Login = () => {
         try {
             const res = await authService.login(formData.username, formData.password);
 
-            // ====================================================================
-            // ĐÃ SỬA: Xuyên thủng lớp vỏ ApiResponse để lấy đúng token và role
-            // ====================================================================
-            // Bóc tách dữ liệu từ API
             const token = res.data?.token || res.token;
             const rawRole = res.data?.role || res.role || 'EMPLOYEE';
-
-            // ====================================================================
-            // ĐÃ SỬA: Chuẩn hóa Role ngay từ lúc đăng nhập
-            // ====================================================================
             const userRole = String(rawRole).toUpperCase().includes('ADMIN') ? 'ADMIN' : 'EMPLOYEE';
 
             if (token) {
-                // Lưu chính xác 2 chìa khóa vào LocalStorage
                 localStorage.setItem('token', token);
-                localStorage.setItem('role', userRole); // Lưu Role đã chuẩn hóa
+                localStorage.setItem('role', userRole);
 
                 setIsSuccess(true);
                 setTimeout(() => {
-                    // Điều hướng cực chuẩn
                     if (userRole === 'ADMIN') {
                         navigate('/dashboard');
                     } else {
@@ -78,13 +67,11 @@ const Login = () => {
     };
 
     return (
-        /* 3. BAO BỌC BỞI CLASS HIỆU ỨNG (pageExit) */
         <div className={`${styles.pageWrapper || ''} ${isSuccess ? styles.pageExit : ''}`}>
             <div className={styles.container}>
 
-                {/* --- CỘT TRÁI - GIAO DIỆN MỚI CỦA BẠN --- */}
+                {/* --- CỘT TRÁI --- */}
                 <div className={styles.leftSide}>
-                    {/* Lớp phủ ảnh nền */}
                     <div
                         className={styles.bgOverlay}
                         style={{ backgroundImage: `url(${heroImg})` }}
@@ -145,22 +132,48 @@ const Login = () => {
                                 required
                             />
 
-                            <div className={styles.passwordWrapper}>
-                                <div className={styles.passwordHeader}>
-                                    <label>Mật khẩu</label>
-                                    <a href="#" className={styles.forgotLink}>Quên mật khẩu?</a>
+                            {/* ĐÃ SỬA: Thay thế InputField bằng thẻ HTML chuẩn để chèn icon con mắt */}
+                            <div className={styles.passwordWrapper} style={{ marginBottom: '24px' }}>
+                                <div className={styles.passwordHeader} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                                    <label style={{ fontSize: '14px', fontWeight: '500', color: '#374151' }}>Mật khẩu</label>
+                                    {/* Đã xóa link Quên mật khẩu */}
                                 </div>
-                                <InputField
-                                    name="password"
-                                    type="password"
-                                    placeholder="••••••••"
-                                    value={formData.password}
-                                    onChange={handleChange}
-                                    required
-                                />
+                                <div style={{ position: 'relative' }}>
+                                    <input
+                                        name="password"
+                                        type={showPassword ? 'text' : 'password'}
+                                        placeholder="••••••••"
+                                        value={formData.password}
+                                        onChange={handleChange}
+                                        required
+                                        style={{
+                                            width: '100%',
+                                            padding: '12px 40px 12px 14px',
+                                            borderRadius: '8px',
+                                            border: '1px solid #D1D5DB',
+                                            fontSize: '14px',
+                                            boxSizing: 'border-box',
+                                            outline: 'none',
+                                            fontFamily: 'inherit'
+                                        }}
+                                        onFocus={(e) => e.target.style.borderColor = '#3182ce'}
+                                        onBlur={(e) => e.target.style.borderColor = '#D1D5DB'}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                        style={{
+                                            position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)',
+                                            background: 'none', border: 'none', cursor: 'pointer', color: '#6B7280',
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0
+                                        }}
+                                        title={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+                                    >
+                                        {showPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
+                                    </button>
+                                </div>
                             </div>
 
-                            {/* 4. NÚT ĐĂNG NHẬP (TÍCH HỢP HIỆU ỨNG THÀNH CÔNG) */}
                             <button
                                 type="submit"
                                 className={`${styles.submitBtn} ${isSuccess ? styles.submitSuccess : ''}`}
@@ -182,16 +195,8 @@ const Login = () => {
                             </button>
                         </form>
 
-                        <div className={styles.divider}><span>ĐĂNG NHẬP BẰNG MẠNG XÃ HỘI</span></div>
+                        {/* ĐÃ XÓA: Nút đăng nhập mạng xã hội và phần Đăng ký */}
 
-                        <div className={styles.socialGroup}>
-                            <button type="button" className={styles.socialBtn}><FcGoogle size={20} /> Google</button>
-                            <button type="button" className={styles.socialBtn}><BsMicrosoft size={18} color="#00a4ef" /> Microsoft</button>
-                        </div>
-
-                        <div className={styles.footer}>
-                            Chưa có tài khoản? <a href="#">Đăng ký ngay</a>
-                        </div>
                     </div>
                 </div>
 

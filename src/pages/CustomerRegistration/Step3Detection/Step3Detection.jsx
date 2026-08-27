@@ -16,7 +16,6 @@ const Step3Detection = ({ onNext, onPrev, initialData }) => {
     const frontImagePreview = initialData?.cccdImages?.front;
     const frontFile = initialData?.cccdImages?.frontFile;
 
-    // Sử dụng useRef để lưu trữ ID của bộ đếm thời gian, giúp ta có thể "giết" nó bất cứ lúc nào
     const timerRef = useRef(null);
 
     useEffect(() => {
@@ -26,10 +25,13 @@ const Step3Detection = ({ onNext, onPrev, initialData }) => {
         const handleSmartError = (errorString, defaultMsg) => {
             if (!isSubscribed) return;
 
-            if (errorString.includes('CARD_DETECTION_FAILED') || errorString.includes('Không phát hiện được')) {
+            // ====================================================================
+            // ĐÃ SỬA: Đẩy mức độ ưu tiên của lỗi Không tìm thấy CCCD lên cao nhất
+            // ====================================================================
+            if (errorString.includes('CARD_DETECTION_FAILED') || errorString.includes('Không phát hiện được') || errorString.includes('không hợp lệ')) {
                 setModalContent({
                     title: 'Không tìm thấy Căn cước công dân',
-                    message: 'Hệ thống không nhận diện được thẻ trong ảnh. Vui lòng đảm bảo chụp đầy đủ 4 góc của thẻ, không bị tay hoặc vật khác che khuất.'
+                    message: 'Hệ thống không nhận diện được thẻ hợp lệ trong ảnh. Vui lòng đảm bảo bạn đang tải lên đúng mặt trước của thẻ CCCD/CMND.'
                 });
                 setShowModal(true);
                 setError('Không phát hiện được CCCD.');
@@ -42,9 +44,6 @@ const Step3Detection = ({ onNext, onPrev, initialData }) => {
                 setShowModal(true);
                 setError('Ảnh CCCD bị mờ/lóa.');
             }
-                // ====================================================================
-                // ĐÃ THÊM: Xử lý lỗi thẻ CCCD hết hạn
-            // ====================================================================
             else if (errorString.toLowerCase().includes('hết hạn') || errorString.includes('EXPIRED') || errorString.includes('het han')) {
                 setModalContent({
                     title: 'Căn cước công dân hết hạn',
@@ -68,11 +67,10 @@ const Step3Detection = ({ onNext, onPrev, initialData }) => {
                 return;
             }
 
-            // 1. BẮT ĐẦU THANH TIẾN TRÌNH
             timerRef.current = setInterval(() => {
                 if (!isSubscribed) return;
                 setProgress((prev) => {
-                    if (prev >= 90) return 90; // Dừng ở 90% đợi API
+                    if (prev >= 90) return 90;
                     if (prev === 20) setCurrentAction('Đang kiểm tra chất lượng ảnh (độ mờ, chói lóa)...');
                     if (prev === 45) setCurrentAction('Đang kết nối AI Server và cắt khung CCCD...');
                     if (prev === 70) setCurrentAction('Đang chạy mô hình OCR trích xuất văn bản...');
@@ -81,28 +79,24 @@ const Step3Detection = ({ onNext, onPrev, initialData }) => {
             }, 400);
 
             try {
-                // 2. GỌI API
                 const apiResponse = await ekycService.detectOcr(frontFile);
 
                 if (!isSubscribed) return;
 
-                // 3. NẾU CÓ KẾT QUẢ (THÀNH CÔNG HOẶC LỖI TỪ API), LẬP TỨC HỦY TIẾN TRÌNH
                 clearInterval(timerRef.current);
 
                 if (apiResponse.success) {
                     setOcrResult(apiResponse.data);
-                    setProgress(100); // Ép lên 100%
+                    setProgress(100);
                     setIsComplete(true);
                     setCurrentAction(apiResponse.message || 'Nhận diện hoàn tất!');
                 } else {
                     const respStr = JSON.stringify(apiResponse);
-                    // ĐÃ SỬA: Ghép thêm câu thông báo vào chuỗi để quét từ khóa
                     handleSmartError(respStr + " " + (apiResponse.message || ''), apiResponse.message);
                 }
             } catch (err) {
                 if (!isSubscribed) return;
 
-                // 3. NẾU SERVER LỖI (VĂNG CATCH), CŨNG PHẢI HỦY TIẾN TRÌNH NGAY LẬP TỨC
                 clearInterval(timerRef.current);
 
                 console.error("Lỗi gọi API OCR:", err);
@@ -111,27 +105,24 @@ const Step3Detection = ({ onNext, onPrev, initialData }) => {
                     : (err.message || '');
 
                 const defaultMsg = err.response?.data?.message || 'Có lỗi xảy ra khi kết nối với máy chủ.';
-                // ĐÃ SỬA: Ghép thêm câu thông báo vào chuỗi để quét từ khóa
                 handleSmartError(errorStr + " " + defaultMsg, defaultMsg);
             }
         };
 
         processAI();
 
-        // Cleanup function: Chạy khi Component bị hủy (khi chuyển trang)
         return () => {
             isSubscribed = false;
             if (timerRef.current) {
                 clearInterval(timerRef.current);
             }
         };
-    }, [frontFile]); // Dependency chỉ phụ thuộc vào ảnh, đảm bảo không bị gọi lại khi Modal hiện lên
+    }, [frontFile]);
 
     const handleNext = () => {
         onNext({ ocrData: ocrResult });
     };
 
-    // GIAO DIỆN MODAL BÁO LỖI
     const ErrorModal = () => (
         <div style={{
             position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,

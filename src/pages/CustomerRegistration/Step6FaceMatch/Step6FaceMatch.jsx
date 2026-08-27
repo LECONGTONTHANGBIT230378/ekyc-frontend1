@@ -82,7 +82,7 @@ const Step6FaceMatch = ({ onNext, onPrev, initialData }) => {
                     score = score * 100;
                 }
                 setMatchScore(score.toFixed(2));
-                setIsMatch(score >= 70);
+                setIsMatch(score >= 60);
             })
             .catch((err) => {
                 if (!isMounted) return;

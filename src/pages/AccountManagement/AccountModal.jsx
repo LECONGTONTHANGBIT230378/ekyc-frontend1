@@ -218,28 +218,18 @@ const AccountModal = ({ isOpen, type, data, onClose, onSave, errorMessage, accou
                             </div>
                         )}
 
-                        <div className={styles.formRow}>
-                            <div className={styles.formGroup}>
-                                <label>Phân quyền (Role) <span style={{color: '#EF4444'}}>*</span></label>
-                                <select name="role" className={styles.selectField} defaultValue={data?.role || 'Nhân viên'} required style={{ marginBottom: '4px' }}>
-                                    <option value="Nhân viên">Nhân viên</option>
-                                    <option value="Admin">Admin</option>
-                                </select>
-                                <span style={{ fontSize: '12px', color: '#D97706', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                    <FiAlertCircle /> Quyền Admin có toàn quyền thay đổi dữ liệu.
-                                </span>
-                            </div>
-
-                            {type === 'edit' && (
-                                <div className={styles.formGroup}>
-                                    <label>Trạng thái</label>
-                                    <select name="status" className={styles.selectField} defaultValue={data?.status || 'active'}>
-                                        <option value="active">Hoạt động</option>
-                                        <option value="inactive">Khóa tài khoản</option>
-                                    </select>
-                                </div>
-                            )}
+                        {/* ĐÃ SỬA: Xóa div styles.formRow và xóa trường Trạng thái */}
+                        <div className={styles.formGroup}>
+                            <label>Phân quyền (Role) <span style={{color: '#EF4444'}}>*</span></label>
+                            <select name="role" className={styles.selectField} defaultValue={data?.role || 'Nhân viên'} required style={{ marginBottom: '4px' }}>
+                                <option value="Nhân viên">Nhân viên</option>
+                                <option value="Admin">Admin</option>
+                            </select>
+                            <span style={{ fontSize: '12px', color: '#D97706', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                <FiAlertCircle /> Quyền Admin có toàn quyền thay đổi dữ liệu.
+                            </span>
                         </div>
+
                     </div>
 
                     <div className={styles.modalFooter}>

@@ -15,8 +15,8 @@ export const authService = {
 
     logout: () => {
         // ĐÃ SỬA: Đồng bộ dùng đúng tên biến là 'token' và xóa cả 'role'
-        localStorage.removeItem('token');
-        localStorage.removeItem('role');
+        sessionStorage.removeItem('token');
+        sessionStorage.removeItem('role');
         window.location.href = '/login'; // Tự động đẩy về trang login khi đăng xuất
     }
 };

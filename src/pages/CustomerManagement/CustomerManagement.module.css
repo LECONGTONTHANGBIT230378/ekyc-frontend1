@@ -541,7 +541,7 @@
     color: #94A3B8;
     padding: 0 4px;
     display: flex;
-    align-items: flex-end;
+    align-items: center;
     justify-content: center;
     user-select: none;
     letter-spacing: 2px;

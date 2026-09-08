@@ -14,7 +14,7 @@ const menuItems = [
 
 const Sidebar = () => {
     // Lấy chức vụ từ localStorage (thay 'role' bằng tên biến của bạn)
-    const userRole = localStorage.getItem('role') || 'EMPLOYEE';
+    const userRole = sessionStorage.getItem('role') || 'EMPLOYEE';
 
     // Danh sách các đường dẫn nhân viên được phép xem
     const allowedEmployeePaths = ['/registration', '/customers', '/history'];

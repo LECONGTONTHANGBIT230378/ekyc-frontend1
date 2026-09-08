@@ -11,9 +11,9 @@ const api = axios.create({
 api.interceptors.request.use(
     (config) => {
         // ====================================================================
-        // ĐÃ SỬA: Đổi 'accessToken' thành 'token' cho khớp với lúc Đăng nhập
+        // ĐÃ SỬA: Lấy token từ sessionStorage thay vì localStorage
         // ====================================================================
-        const token = localStorage.getItem('token');
+        const token = sessionStorage.getItem('token');
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
@@ -34,10 +34,9 @@ api.interceptors.response.use(
             console.error("Phiên đăng nhập đã hết hạn hoặc token không hợp lệ.");
 
             // ====================================================================
-            // ĐÃ MỞ KHÓA: Tự động dọn dẹp và đẩy về trang đăng nhập nếu token sai
+            // ĐÃ SỬA: Dọn dẹp sessionStorage khi token sai/hết hạn
             // ====================================================================
-            localStorage.removeItem('token');
-            localStorage.removeItem('role');
+            sessionStorage.clear();
             window.location.href = '/login';
         }
         return Promise.reject(error);

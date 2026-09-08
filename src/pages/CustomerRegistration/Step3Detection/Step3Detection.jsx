@@ -25,9 +25,8 @@ const Step3Detection = ({ onNext, onPrev, initialData }) => {
         const handleSmartError = (errorString, defaultMsg) => {
             if (!isSubscribed) return;
 
-            // ====================================================================
-            // ĐÃ SỬA: Đẩy mức độ ưu tiên của lỗi Không tìm thấy CCCD lên cao nhất
-            // ====================================================================
+            const errorStrLower = errorString.toLowerCase();
+
             if (errorString.includes('CARD_DETECTION_FAILED') || errorString.includes('Không phát hiện được') || errorString.includes('không hợp lệ')) {
                 setModalContent({
                     title: 'Không tìm thấy Căn cước công dân',
@@ -36,15 +35,37 @@ const Step3Detection = ({ onNext, onPrev, initialData }) => {
                 setShowModal(true);
                 setError('Không phát hiện được CCCD.');
             }
-            else if (errorString.includes('IMAGE_BLURRY') || errorString.includes('BLURRY') || errorString.includes('mờ')) {
+                // ====================================================================
+                // ĐÃ THÊM: Modal phát hiện nhiều thẻ
+            // ====================================================================
+            else if (errorString.includes('MULTIPLE_CARDS') || errorStrLower.includes('nhiều thẻ') || errorStrLower.includes('nhiều cccd')) {
                 setModalContent({
-                    title: 'Ảnh chụp bị mờ',
-                    message: 'Ảnh thẻ của bạn quá mờ hoặc lóa sáng khiến AI không thể đọc được chữ. Vui lòng lau sạch ống kính và chụp lại ở nơi đủ sáng.'
+                    title: 'Phát hiện nhiều Căn cước công dân',
+                    message: 'Hệ thống phát hiện có nhiều hơn 1 thẻ Căn cước công dân trong khung hình. Vui lòng dọn dẹp mặt nền và chỉ chụp duy nhất 1 thẻ để hệ thống xử lý chính xác.'
                 });
                 setShowModal(true);
-                setError('Ảnh CCCD bị mờ/lóa.');
+                setError('Tồn tại nhiều thẻ CCCD trong ảnh.');
             }
-            else if (errorString.toLowerCase().includes('hết hạn') || errorString.includes('EXPIRED') || errorString.includes('het han')) {
+                // ====================================================================
+                // ĐÃ THÊM: Modal ảnh bị chói lóa
+            // ====================================================================
+            else if (errorString.includes('IMAGE_GLARED') || errorString.includes('GLARE') || errorStrLower.includes('chói') || errorStrLower.includes('lóa')) {
+                setModalContent({
+                    title: 'Ảnh chụp bị chói sáng',
+                    message: 'Ảnh thẻ CCCD của bạn đang bị chói/lóa bóng đèn làm lấp thông tin quan trọng. Vui lòng đổi góc chụp hoặc tắt đèn flash và thử lại.'
+                });
+                setShowModal(true);
+                setError('Ảnh CCCD bị chói/lóa.');
+            }
+            else if (errorString.includes('IMAGE_BLURRY') || errorString.includes('BLURRY') || errorStrLower.includes('mờ')) {
+                setModalContent({
+                    title: 'Ảnh chụp bị mờ',
+                    message: 'Ảnh thẻ của bạn quá mờ khiến AI không thể đọc được chữ. Vui lòng lau sạch ống kính, giữ chắc tay và chụp lại ở nơi đủ sáng.'
+                });
+                setShowModal(true);
+                setError('Ảnh CCCD bị mờ.');
+            }
+            else if (errorStrLower.includes('hết hạn') || errorString.includes('EXPIRED') || errorStrLower.includes('het han')) {
                 setModalContent({
                     title: 'Căn cước công dân hết hạn',
                     message: 'Thẻ Căn cước công dân của bạn đã hết hạn sử dụng. Vui lòng sử dụng thẻ CCCD/CMND bản gốc còn hiệu lực để tiếp tục quá trình đăng ký.'

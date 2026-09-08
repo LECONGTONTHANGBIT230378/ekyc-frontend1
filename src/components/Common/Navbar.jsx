@@ -1,6 +1,6 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { FiMoon, FiLogOut } from 'react-icons/fi';
+import { FiLogOut } from 'react-icons/fi';
 import styles from './Navbar.module.css';
 
 const Navbar = () => {
@@ -14,6 +14,17 @@ const Navbar = () => {
         return 'Hệ thống';
     };
 
+    // ==========================================
+    // ĐÃ SỬA: Hàm xử lý đăng xuất chuẩn
+    // ==========================================
+    const handleLogout = () => {
+        // Xóa toàn bộ Token và Role của tab hiện tại
+        sessionStorage.clear();
+
+        // Điều hướng về trang đăng nhập
+        navigate('/login', { replace: true });
+    };
+
     return (
         <header className={styles.navbar}>
             <div className={styles.titleGroup}>
@@ -22,8 +33,8 @@ const Navbar = () => {
             </div>
 
             <div className={styles.actions}>
-                <button className={styles.iconBtn}><FiMoon /></button>
-                <button className={styles.logoutBtn} onClick={() => navigate('/login')}>
+                {/* Gọi hàm handleLogout khi bấm */}
+                <button className={styles.logoutBtn} onClick={handleLogout}>
                     <FiLogOut /> Đăng xuất
                 </button>
             </div>

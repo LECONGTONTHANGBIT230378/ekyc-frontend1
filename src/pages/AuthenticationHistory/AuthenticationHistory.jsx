@@ -5,13 +5,11 @@ import AuthenticationDetailModal from './AuthenticationDetailModal';
 import styles from '../CustomerManagement/CustomerManagement.module.css';
 
 const AuthenticationHistory = () => {
-    // State lưu TOÀN BỘ dữ liệu lấy từ API
     const [fullDataList, setFullDataList] = useState([]);
     const [loading, setLoading] = useState(false);
 
     const [currentPage, setCurrentPage] = useState(0);
 
-    // State quản lý tìm kiếm
     const [inputValue, setInputValue] = useState('');
     const [searchKeyword, setSearchKeyword] = useState('');
 
@@ -19,20 +17,17 @@ const AuthenticationHistory = () => {
     const [viewModalOpen, setViewModalOpen] = useState(false);
     const [selectedHistory, setSelectedHistory] = useState(null);
 
-    // Kích hoạt tính năng tìm kiếm sau 0.5s ngừng gõ phím
     useEffect(() => {
         const delaySearch = setTimeout(() => {
             setSearchKeyword(inputValue);
-            setCurrentPage(0); // Về trang đầu tiên khi có kết quả mới
+            setCurrentPage(0);
         }, 500);
         return () => clearTimeout(delaySearch);
     }, [inputValue]);
 
-    // GỌI API LẤY DỮ LIỆU
     const fetchHistory = async () => {
         setLoading(true);
         try {
-            // Lấy lượng lớn dữ liệu (VD: 1000 bản ghi) để Frontend tự do lọc
             const params = {
                 page: 0,
                 size: 1000,
@@ -66,13 +61,10 @@ const AuthenticationHistory = () => {
         }
     };
 
-    // Chỉ gọi lại API khi đổi trạng thái (ALL/Khớp/Không Khớp)
-    // KHÔNG gọi lại API khi gõ tìm kiếm nữa
     useEffect(() => {
         fetchHistory();
     }, [statusFilter]);
 
-    // HÀM FORMAT HIỂN THỊ
     const getStatusBadgeClass = (status) => {
         const s = status?.toUpperCase() || '';
         if (s === 'VERIFIED' || s === 'SUCCESS' || s === 'MATCHED') return styles.badgeVerified;
@@ -97,15 +89,11 @@ const AuthenticationHistory = () => {
         });
     };
 
-    // ====================================================================
-    // BỘ LỌC MA THUẬT: NHẬP GÌ RA ĐÓ (LỌC TRỰC TIẾP TRÊN FRONTEND)
-    // ====================================================================
     const filteredData = fullDataList.filter(item => {
         if (!searchKeyword) return true;
 
         const kw = searchKeyword.toLowerCase().trim();
 
-        // Dựng lại chính xác các chữ sẽ hiển thị ra màn hình
         const idStr = `#${item.id || item.verification_id}`;
         const cccd = item.cccdNumber || item.customer?.cccdNumber || item.customer?.cccdInformation?.cccdNumber || 'N/A';
         const timeStr = formatDateTime(item.verifyTime);
@@ -117,7 +105,6 @@ const AuthenticationHistory = () => {
         const status = item.result || item.verificationResult || 'N/A';
         const statusStr = status === 'MATCHED' ? 'khớp' : status === 'NOT_MATCHED' ? 'không khớp' : status.toLowerCase();
 
-        // So khớp từ khóa với tất cả các trường
         return idStr.toLowerCase().includes(kw) ||
             cccd.toLowerCase().includes(kw) ||
             timeStr.toLowerCase().includes(kw) ||
@@ -125,48 +112,89 @@ const AuthenticationHistory = () => {
             statusStr.includes(kw);
     });
 
-    // ====================================================================
-    // PHÂN TRANG CỤC BỘ (Tính toán trang hiện tại dựa trên dữ liệu đã lọc)
-    // ====================================================================
     const itemsPerPage = 10;
     const totalPages = Math.ceil(filteredData.length / itemsPerPage) || 1;
     const currentDisplayData = filteredData.slice(currentPage * itemsPerPage, (currentPage + 1) * itemsPerPage);
 
+    // ====================================================================
+    // THUẬT TOÁN PHÂN TRANG MỚI: TỰ ĐỘNG CANH DẤU "..." ĐÚNG YÊU CẦU
+    // ====================================================================
     const renderPagination = () => {
-        const pages = [];
-        const maxVisible = 5;
-        let startPage = Math.max(0, currentPage - Math.floor(maxVisible / 2));
-        let endPage = Math.min(totalPages - 1, startPage + maxVisible - 1);
+        const DOTS = '...';
 
-        if (endPage - startPage + 1 < maxVisible) {
-            startPage = Math.max(0, endPage - maxVisible + 1);
-        }
+        const getPageRange = () => {
+            const totalPageNumbersToShow = 5; // Số trang tối đa hiển thị (không tính dấu ...)
 
-        if (startPage > 0) {
-            pages.push(<button key="first" className={styles.pageBtn} onClick={() => setCurrentPage(0)}>1</button>);
-            if (startPage > 1) pages.push(<span key="dots-start" className={styles.dots}>...</span>);
-        }
+            // Nếu tổng số trang ít, hiển thị tất cả (VD: 1 2 3 4)
+            if (totalPages <= totalPageNumbersToShow) {
+                return Array.from({ length: totalPages }, (_, i) => i);
+            }
 
-        for (let i = startPage; i <= endPage; i++) {
-            pages.push(
-                <button key={i} className={`${styles.pageBtn} ${currentPage === i ? styles.activePage : ''}`} onClick={() => setCurrentPage(i)}>
-                    {i + 1}
-                </button>
-            );
-        }
+            const leftSiblingIndex = Math.max(currentPage - 1, 0);
+            const rightSiblingIndex = Math.min(currentPage + 1, totalPages - 1);
 
-        if (endPage < totalPages - 1) {
-            if (endPage < totalPages - 2) pages.push(<span key="dots-end" className={styles.dots}>...</span>);
-            pages.push(<button key="last" className={styles.pageBtn} onClick={() => setCurrentPage(totalPages - 1)}>{totalPages}</button>);
-        }
+            const shouldShowLeftDots = leftSiblingIndex > 1;
+            const shouldShowRightDots = rightSiblingIndex < totalPages - 2;
+
+            const firstPageIndex = 0;
+            const lastPageIndex = totalPages - 1;
+
+            // Đang ở đoạn đầu (VD trang 1, 2, 3) => 1 2 3 ... Trang Cuối
+            if (!shouldShowLeftDots && shouldShowRightDots) {
+                // Công thức này đảm bảo:
+                // Trang 1 -> Hiện 1, 2
+                // Trang 2 -> Hiện 1, 2, 3
+                let leftItemCount = Math.max(2, currentPage + 2);
+                let leftRange = Array.from({ length: leftItemCount }, (_, i) => i);
+                return [...leftRange, DOTS, lastPageIndex];
+            }
+
+            // Đang ở đoạn cuối (VD trang 8, 9, 10) => 1 ... 8 9 10
+            if (shouldShowLeftDots && !shouldShowRightDots) {
+                let rightItemCount = Math.max(3, totalPages - currentPage + 1);
+                let rightRange = Array.from({ length: rightItemCount }, (_, i) => totalPages - rightItemCount + i);
+                return [firstPageIndex, DOTS, ...rightRange];
+            }
+
+            // Đang ở giữa (VD trang 5) => 1 ... 4 5 6 ... Trang Cuối
+            if (shouldShowLeftDots && shouldShowRightDots) {
+                let middleRange = [leftSiblingIndex, currentPage, rightSiblingIndex];
+                return [firstPageIndex, DOTS, ...middleRange, DOTS, lastPageIndex];
+            }
+        };
+
+        const paginationRange = getPageRange();
 
         return (
             <div className={styles.pagination}>
-                <button className={`${styles.pageBtn} ${currentPage === 0 ? styles.disabledBtn : ''}`} onClick={() => setCurrentPage(prev => Math.max(0, prev - 1))} disabled={currentPage === 0}>
+                <button
+                    className={`${styles.pageBtn} ${currentPage === 0 ? styles.disabledBtn : ''}`}
+                    onClick={() => setCurrentPage(prev => Math.max(0, prev - 1))}
+                    disabled={currentPage === 0}
+                >
                     <FiChevronLeft />
                 </button>
-                {pages}
-                <button className={`${styles.pageBtn} ${currentPage === totalPages - 1 || totalPages === 0 ? styles.disabledBtn : ''}`} onClick={() => setCurrentPage(prev => Math.min(totalPages - 1, prev + 1))} disabled={currentPage === totalPages - 1 || totalPages === 0}>
+
+                {paginationRange.map((pageNumber, index) => {
+                    if (pageNumber === DOTS) {
+                        return <span key={`dots-${index}`} className={styles.dots}>...</span>;
+                    }
+                    return (
+                        <button
+                            key={pageNumber}
+                            className={`${styles.pageBtn} ${currentPage === pageNumber ? styles.activePage : ''}`}
+                            onClick={() => setCurrentPage(pageNumber)}
+                        >
+                            {pageNumber + 1}
+                        </button>
+                    );
+                })}
+
+                <button
+                    className={`${styles.pageBtn} ${currentPage === totalPages - 1 || totalPages === 0 ? styles.disabledBtn : ''}`}
+                    onClick={() => setCurrentPage(prev => Math.min(totalPages - 1, prev + 1))}
+                    disabled={currentPage === totalPages - 1 || totalPages === 0}
+                >
                     <FiChevronRight />
                 </button>
             </div>
@@ -222,9 +250,6 @@ const AuthenticationHistory = () => {
                         ) : currentDisplayData.length === 0 ? (
                             <tr><td colSpan="6" className={styles.emptyState}>Không có lịch sử xác thực nào.</td></tr>
                         ) : (
-                            // ========================================================
-                            // ĐÃ SỬA: Hiển thị từ mảng currentDisplayData (đã lọc & phân trang)
-                            // ========================================================
                             currentDisplayData.map((item) => {
                                 const cccd = item.cccdNumber || item.customer?.cccdNumber || item.customer?.cccdInformation?.cccdNumber || 'N/A';
                                 const time = item.verifyTime;

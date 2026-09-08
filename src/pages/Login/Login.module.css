@@ -418,3 +418,200 @@
         border-radius: 16px;
     }
 }
+
+
+
+
+
+
+
+
+
+
+/* =========================================
+   NỀN ĐỘNG TRỰC QUAN KHOA HỌC (OCR & FACE ID HIỆN ĐẠI)
+   ========================================= */
+.animatedBgContainer {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    overflow: hidden;
+    z-index: 1; /* Nằm dưới nội dung text */
+    background: radial-gradient(circle at 50% 50%, rgba(30, 58, 138, 0.4) 0%, transparent 80%);
+    pointer-events: none; /* Tránh cản trở click chuột vào form/text */
+}
+
+/* Nền chấm bi không gian (Dot grid) */
+.techGrid {
+    position: absolute;
+    top: -50%; left: -50%;
+    width: 200%; height: 200%;
+    background-image: radial-gradient(rgba(255, 255, 255, 0.08) 1.5px, transparent 1.5px);
+    background-size: 30px 30px;
+    transform: perspective(800px) rotateX(45deg);
+    animation: gridScroll 20s linear infinite;
+    opacity: 0.6;
+}
+@keyframes gridScroll {
+    0% { transform: perspective(800px) rotateX(45deg) translateY(0); }
+    100% { transform: perspective(800px) rotateX(45deg) translateY(60px); }
+}
+
+/* === 1. KHU VỰC THẺ CCCD (OCR) === */
+.idCardContainer {
+    position: absolute;
+    top: 12%;
+    right: 5%; /* Neo ở góc trên bên phải của cột trái */
+    width: 280px;
+    height: 175px;
+    animation: floatCard 6s ease-in-out infinite alternate;
+    opacity: 0.85;
+}
+
+@keyframes floatCard {
+    0% { transform: translateY(0px) rotate(-3deg); }
+    100% { transform: translateY(-20px) rotate(2deg); }
+}
+
+.idCardSvg {
+    width: 100%;
+    height: 100%;
+    filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.3));
+}
+
+/* Hiệu ứng chớp nháy khi đọc dữ liệu chữ trên thẻ */
+.dataLine1 { animation: dataBlink 2s infinite; }
+.dataLine2 { animation: dataBlink 2s infinite 0.5s; }
+.dataLine3 { animation: dataBlink 2s infinite 1s; }
+.dataLine4 { animation: dataBlink 2s infinite 1.5s; }
+@keyframes dataBlink {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 1; filter: drop-shadow(0 0 5px #60A5FA); }
+}
+
+/* Tia laser nhỏ quét ngang qua thẻ CCCD */
+.ocrScannerLine {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 2px;
+    background: #4ADE80;
+    box-shadow: 0 0 15px 3px rgba(74, 222, 128, 0.6);
+    animation: scanCard 2.5s ease-in-out infinite;
+}
+@keyframes scanCard {
+    0% { top: 0%; opacity: 0; }
+    10% { opacity: 1; }
+    90% { opacity: 1; }
+    100% { top: 100%; opacity: 0; }
+}
+
+/* === 2. KHU VỰC KHUÔN MẶT (FACE ID) === */
+.faceIdContainer {
+    position: absolute;
+    bottom: 5%;
+    right: 25%; /* Neo ở góc dưới, thụt vào trong */
+    width: 220px;
+    height: 260px;
+    animation: floatFace 7s ease-in-out infinite alternate-reverse;
+    opacity: 0.9;
+}
+@keyframes floatFace {
+    0% { transform: translateY(0px) scale(0.95); }
+    100% { transform: translateY(-20px) scale(1.05); }
+}
+
+/* Khung viền focus nhấp nháy bọc ngoài khuôn mặt */
+.faceFocusBox {
+    position: absolute;
+    top: -15px; left: -15px; right: -15px; bottom: -15px;
+    border: 1px solid rgba(96, 165, 250, 0.15);
+    background: rgba(96, 165, 250, 0.05);
+    animation: boxPulse 2s infinite;
+}
+.cornerTR {
+    position: absolute; top: -1px; right: -1px;
+    width: 25px; height: 25px;
+    border-top: 3px solid #60A5FA; border-right: 3px solid #60A5FA;
+}
+.cornerBL {
+    position: absolute; bottom: -1px; left: -1px;
+    width: 25px; height: 25px;
+    border-bottom: 3px solid #60A5FA; border-left: 3px solid #60A5FA;
+}
+@keyframes boxPulse {
+    0%, 100% { opacity: 0.5; transform: scale(1); box-shadow: 0 0 0 transparent inset; }
+    50% { opacity: 1; transform: scale(1.02); box-shadow: 0 0 25px rgba(96, 165, 250, 0.25) inset; }
+}
+
+.faceWireframeSvg {
+    width: 100%; height: 100%;
+}
+/* Hiệu ứng viền đứt đoạn của khuôn mặt chạy vòng quanh */
+.headOutline {
+    animation: dashOffset 15s linear infinite;
+}
+/* Điểm lưới quét sinh trắc nhấp nháy chớp nháy */
+.pulsePoint {
+    animation: pointPulse 1.5s infinite;
+}
+.pulsePoint2 {
+    animation: pointPulse 1.5s infinite 0.75s;
+}
+@keyframes pointPulse {
+    0%, 100% { r: 4; opacity: 0.6; }
+    50% { r: 6; opacity: 1; filter: drop-shadow(0 0 8px #60A5FA); }
+}
+@keyframes dashOffset {
+    to { stroke-dashoffset: -200; }
+}
+
+/* === 3. TAGS VÀ ĐƯỜNG KẾT NỐI (DATA STREAMS) === */
+.floatingTag {
+    position: absolute;
+    padding: 6px 14px;
+    background: rgba(15, 23, 42, 0.75);
+    border: 1px solid rgba(74, 222, 128, 0.3);
+    border-radius: 20px;
+    color: #4ADE80;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    backdrop-filter: blur(4px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    animation: tagBlink 3s infinite;
+    white-space: nowrap;
+}
+@keyframes tagBlink {
+    0%, 100% { opacity: 0.7; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.05); box-shadow: 0 0 15px rgba(74, 222, 128, 0.4); border-color: rgba(74, 222, 128, 0.8); }
+}
+
+.globalConnections {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+}
+/* Luồng dữ liệu chạy vù vù giữa Thẻ và Khuôn mặt */
+.dataStreamLine {
+    stroke: rgba(255, 255, 255, 0.3);
+    stroke-width: 2;
+    stroke-dasharray: 8 8;
+    animation: streamFlow 2s linear infinite;
+}
+@keyframes streamFlow {
+    from { stroke-dashoffset: 80; }
+    to { stroke-dashoffset: 0; }
+}
+
+/* Tia Laser tổng thể toàn màn hình (Background Scanner) */
+.globalScanner {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 2px;
+    background: linear-gradient(90deg, transparent, rgba(96, 165, 250, 0.4), transparent);
+    box-shadow: 0 0 40px 2px rgba(96, 165, 250, 0.3);
+    animation: globalScan 8s linear infinite;
+    z-index: 1;
+}
+@keyframes globalScan {
+    0% { top: -5%; opacity: 0; }
+    10% { opacity: 1; }
+    90% { opacity: 1; }
+    100% { top: 105%; opacity: 0; }
+}

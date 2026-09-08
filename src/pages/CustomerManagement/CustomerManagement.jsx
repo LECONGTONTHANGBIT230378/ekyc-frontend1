@@ -24,26 +24,25 @@ const CustomerManagement = () => {
         setLoading(true);
         try {
             const params = {
-                page: currentPage,
-                size: 10,
                 keyword: searchKeyword
             };
 
             const response = await customerService.getAllCustomers(params);
 
+            let dataList = [];
             if (response && (response.success === true || response.code === 200)) {
-                setCustomers(response.data || []);
-                setTotalPages(1);
+                dataList = response.data || [];
             } else if (Array.isArray(response)) {
-                setCustomers(response);
-                setTotalPages(1);
-            } else {
-                setCustomers([]);
-                setTotalPages(1);
+                dataList = response;
             }
+
+            setCustomers(dataList);
+            setTotalPages(Math.ceil(dataList.length / 10) || 1);
+
         } catch (error) {
             console.error('Lỗi khi tải danh sách khách hàng:', error);
             setCustomers([]);
+            setTotalPages(1);
         } finally {
             setLoading(false);
         }
@@ -51,43 +50,87 @@ const CustomerManagement = () => {
 
     useEffect(() => {
         fetchCustomers();
-    }, [currentPage, searchKeyword]);
+        setCurrentPage(0);
+    }, [searchKeyword]);
 
+    const indexOfLastItem = (currentPage + 1) * 10;
+    const indexOfFirstItem = currentPage * 10;
+    const currentCustomers = customers.slice(indexOfFirstItem, indexOfLastItem);
+
+    // ====================================================================
+    // THUẬT TOÁN PHÂN TRANG MỚI: TỰ ĐỘNG CANH DẤU "..." ĐÚNG YÊU CẦU
+    // ====================================================================
     const renderPagination = () => {
-        const pages = [];
-        const maxVisible = 5;
-        let startPage = Math.max(0, currentPage - Math.floor(maxVisible / 2));
-        let endPage = Math.min(totalPages - 1, startPage + maxVisible - 1);
+        if (totalPages <= 1) return null;
 
-        if (endPage - startPage + 1 < maxVisible) {
-            startPage = Math.max(0, endPage - maxVisible + 1);
-        }
+        const DOTS = '...';
 
-        if (startPage > 0) {
-            pages.push(<button key="first" className={styles.pageBtn} onClick={() => setCurrentPage(0)}>1</button>);
-            if (startPage > 1) pages.push(<span key="dots-start" className={styles.dots}>...</span>);
-        }
+        const getPageRange = () => {
+            const totalPageNumbersToShow = 5;
 
-        for (let i = startPage; i <= endPage; i++) {
-            pages.push(
-                <button key={i} className={`${styles.pageBtn} ${currentPage === i ? styles.activePage : ''}`} onClick={() => setCurrentPage(i)}>
-                    {i + 1}
-                </button>
-            );
-        }
+            if (totalPages <= totalPageNumbersToShow) {
+                return Array.from({ length: totalPages }, (_, i) => i);
+            }
 
-        if (endPage < totalPages - 1) {
-            if (endPage < totalPages - 2) pages.push(<span key="dots-end" className={styles.dots}>...</span>);
-            pages.push(<button key="last" className={styles.pageBtn} onClick={() => setCurrentPage(totalPages - 1)}>{totalPages}</button>);
-        }
+            const leftSiblingIndex = Math.max(currentPage - 1, 0);
+            const rightSiblingIndex = Math.min(currentPage + 1, totalPages - 1);
+
+            const shouldShowLeftDots = leftSiblingIndex > 1;
+            const shouldShowRightDots = rightSiblingIndex < totalPages - 2;
+
+            const firstPageIndex = 0;
+            const lastPageIndex = totalPages - 1;
+
+            if (!shouldShowLeftDots && shouldShowRightDots) {
+                let leftItemCount = Math.max(2, currentPage + 2);
+                let leftRange = Array.from({ length: leftItemCount }, (_, i) => i);
+                return [...leftRange, DOTS, lastPageIndex];
+            }
+
+            if (shouldShowLeftDots && !shouldShowRightDots) {
+                let rightItemCount = Math.max(3, totalPages - currentPage + 1);
+                let rightRange = Array.from({ length: rightItemCount }, (_, i) => totalPages - rightItemCount + i);
+                return [firstPageIndex, DOTS, ...rightRange];
+            }
+
+            if (shouldShowLeftDots && shouldShowRightDots) {
+                let middleRange = [leftSiblingIndex, currentPage, rightSiblingIndex];
+                return [firstPageIndex, DOTS, ...middleRange, DOTS, lastPageIndex];
+            }
+        };
+
+        const paginationRange = getPageRange();
 
         return (
             <div className={styles.pagination}>
-                <button className={`${styles.pageBtn} ${currentPage === 0 ? styles.disabledBtn : ''}`} onClick={() => setCurrentPage(prev => Math.max(0, prev - 1))} disabled={currentPage === 0}>
+                <button
+                    className={`${styles.pageBtn} ${currentPage === 0 ? styles.disabledBtn : ''}`}
+                    onClick={() => setCurrentPage(prev => Math.max(0, prev - 1))}
+                    disabled={currentPage === 0}
+                >
                     <FiChevronLeft />
                 </button>
-                {pages}
-                <button className={`${styles.pageBtn} ${currentPage === totalPages - 1 || totalPages === 0 ? styles.disabledBtn : ''}`} onClick={() => setCurrentPage(prev => Math.min(totalPages - 1, prev + 1))} disabled={currentPage === totalPages - 1 || totalPages === 0}>
+
+                {paginationRange.map((pageNumber, index) => {
+                    if (pageNumber === DOTS) {
+                        return <span key={`dots-${index}`} className={styles.dots}>...</span>;
+                    }
+                    return (
+                        <button
+                            key={pageNumber}
+                            className={`${styles.pageBtn} ${currentPage === pageNumber ? styles.activePage : ''}`}
+                            onClick={() => setCurrentPage(pageNumber)}
+                        >
+                            {pageNumber + 1}
+                        </button>
+                    );
+                })}
+
+                <button
+                    className={`${styles.pageBtn} ${currentPage === totalPages - 1 ? styles.disabledBtn : ''}`}
+                    onClick={() => setCurrentPage(prev => Math.min(totalPages - 1, prev + 1))}
+                    disabled={currentPage === totalPages - 1}
+                >
                     <FiChevronRight />
                 </button>
             </div>
@@ -103,7 +146,7 @@ const CustomerManagement = () => {
                 </div>
 
                 <CustomerToolbar
-                    onSearch={(keyword) => { setSearchKeyword(keyword); setCurrentPage(0); }}
+                    onSearch={(keyword) => setSearchKeyword(keyword)}
                 />
 
                 <div className={styles.tableWrapper}>
@@ -123,12 +166,12 @@ const CustomerManagement = () => {
                             <tr>
                                 <td colSpan="6" className={styles.emptyState}>Đang tải dữ liệu...</td>
                             </tr>
-                        ) : customers.length === 0 ? (
+                        ) : currentCustomers.length === 0 ? (
                             <tr>
                                 <td colSpan="6" className={styles.emptyState}>Không tìm thấy khách hàng nào.</td>
                             </tr>
                         ) : (
-                            customers.map((customer) => (
+                            currentCustomers.map((customer) => (
                                 <tr key={customer.id}>
                                     <td style={{ fontWeight: 600 }}>#{customer.id}</td>
                                     <td style={{ fontWeight: 500 }}>{customer.fullName || 'Chưa cập nhật'}</td>

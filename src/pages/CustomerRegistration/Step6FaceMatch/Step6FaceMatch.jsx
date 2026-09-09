@@ -10,8 +10,8 @@ const Step6FaceMatch = ({ onNext, onPrev, initialData }) => {
     const [error, setError] = useState(null);
     const [rawResult, setRawResult] = useState(null);
 
-    // SỬA LẠI: Dùng 1 state duy nhất để quản lý các loại Modal cảnh báo
-    const [modalType, setModalType] = useState(null); // 'MULTIPLE_FACES' | 'NO_FACE' | null
+    // ĐÃ SỬA: Thêm trạng thái 'INVALID_ANGLE' để xử lý lỗi không nhìn thẳng
+    const [modalType, setModalType] = useState(null); // 'MULTIPLE_FACES' | 'NO_FACE' | 'INVALID_ANGLE' | null
 
     const apiPromise = useRef(null);
 
@@ -90,12 +90,21 @@ const Step6FaceMatch = ({ onNext, onPrev, initialData }) => {
 
                 // Lấy thông báo lỗi thô từ Backend trả về
                 const errorMsg = err.response?.data?.message || err.message || 'Mất kết nối đến hệ thống AI.';
+                const rawData = JSON.stringify(err.response?.data || ""); // Gom chuỗi JSON để bắt mã lỗi sâu hơn
 
-                // KIỂM TRA MÃ LỖI ĐỂ HIỂN THỊ MODAL TƯƠNG ỨNG
-                if (errorMsg.includes('MULTIPLE_WEBCAM_FACES')) {
+                // ĐÃ SỬA: KIỂM TRA MÃ LỖI ĐỂ HIỂN THỊ MODAL TƯƠNG ỨNG
+                if (errorMsg.includes('MULTIPLE_WEBCAM_FACES') || rawData.includes('MULTIPLE_WEBCAM_FACES')) {
                     setModalType('MULTIPLE_FACES');
-                } else if (errorMsg.includes('WEBCAM_FACE_NOT_FOUND')) {
+                } else if (errorMsg.includes('WEBCAM_FACE_NOT_FOUND') || rawData.includes('WEBCAM_FACE_NOT_FOUND')) {
                     setModalType('NO_FACE');
+                } else if (
+                    errorMsg.includes('FACE_YAW_INVALID') ||
+                    rawData.includes('FACE_YAW_INVALID') ||
+                    rawData.includes('FACE_PITCH_INVALID') ||
+                    rawData.includes('FACE_ROLL_INVALID')
+                ) {
+                    // Bắt trọn bộ các lỗi quay ngang (YAW), cúi/ngửa (PITCH), hoặc nghiêng đầu (ROLL)
+                    setModalType('INVALID_ANGLE');
                 } else {
                     setError(errorMsg);
                 }
@@ -124,16 +133,21 @@ const Step6FaceMatch = ({ onNext, onPrev, initialData }) => {
                             <FiAlertTriangle size={42} />
                         </div>
 
-                        {/* NỘI DUNG THAY ĐỔI THEO LỖI */}
+                        {/* ĐÃ SỬA: NỘI DUNG THAY ĐỔI THEO TỪNG LỖI (Bổ sung INVALID_ANGLE) */}
                         {modalType === 'MULTIPLE_FACES' ? (
                             <>
                                 <h3>Phát hiện nhiều khuôn mặt</h3>
                                 <p>Ảnh chụp selfie của bạn đang có nhiều hơn một người. Vui lòng đảm bảo <b>chỉ có duy nhất bạn</b> xuất hiện trong khung hình để hệ thống đối chiếu chính xác.</p>
                             </>
-                        ) : (
+                        ) : modalType === 'NO_FACE' ? (
                             <>
                                 <h3>Không tìm thấy khuôn mặt</h3>
                                 <p>Hệ thống không nhận diện được khuôn mặt trong ảnh selfie. Vui lòng đảm bảo môi trường <b>đủ sáng</b>, không bị che khuất và <b>nhìn thẳng</b> vào camera.</p>
+                            </>
+                        ) : (
+                            <>
+                                <h3>Khuôn mặt không nhìn thẳng</h3>
+                                <p>Góc chụp ảnh selfie chưa đạt yêu cầu (quay ngang hoặc nghiêng đầu). Vui lòng <b>nhìn thẳng trực diện</b> vào camera để hệ thống nhận diện chính xác.</p>
                             </>
                         )}
 
